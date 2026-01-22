@@ -1,0 +1,178 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Root Variables */
+:root {
+  --font-inter: 'Inter', system-ui, sans-serif;
+  --font-cairo: 'Cairo', system-ui, sans-serif;
+}
+
+/* Base Styles */
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  @apply bg-gray-50 text-gray-900;
+  font-family: var(--font-inter);
+}
+
+/* Arabic Font */
+[dir="rtl"] body {
+  font-family: var(--font-cairo);
+}
+
+/* RTL Support */
+[dir="rtl"] {
+  direction: rtl;
+}
+
+[dir="ltr"] {
+  direction: ltr;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-gray-100;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-400 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-500;
+}
+
+/* Smooth Animations */
+* {
+  @apply transition-colors duration-200;
+}
+
+/* Custom Utility Classes */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  .animate-gradient {
+    background-size: 200% 200%;
+    animation: gradient 3s ease infinite;
+  }
+  
+  @keyframes gradient {
+    0%, 100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+  }
+}
+
+/* Form Improvements */
+input:focus,
+textarea:focus,
+select:focus {
+  @apply ring-2 ring-primary-500 border-primary-500 outline-none;
+}
+
+/* Button Hover Effects */
+button:not(:disabled):hover {
+  @apply transform scale-[1.02];
+}
+
+button:disabled {
+  @apply opacity-50 cursor-not-allowed;
+}
+
+/* Card Hover Effects */
+.card-hover {
+  @apply transition-all duration-300 hover:shadow-xl hover:-translate-y-1;
+}
+
+/* Loading Spinner */
+.spinner {
+  border: 3px solid #f3f4f6;
+  border-top: 3px solid #0ea5e9;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Page Transitions */
+.page-enter {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.page-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 300ms, transform 300ms;
+}
+
+/* Responsive Container */
+.container-custom {
+  @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;
+}
+
+/* Gradient Text */
+.gradient-text {
+  @apply bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent;
+}
+
+/* Glass Effect */
+.glass {
+  @apply bg-white/80 backdrop-blur-lg border border-white/20;
+}
+
+/* Sector Card Styling */
+.sector-card {
+  @apply relative overflow-hidden rounded-2xl shadow-lg transition-all duration-300 hover:shadow-2xl hover:-translate-y-2;
+}
+
+.sector-card::before {
+  content: '';
+  @apply absolute inset-0 bg-gradient-to-br from-primary-500/20 to-secondary-500/20 opacity-0 transition-opacity duration-300;
+}
+
+.sector-card:hover::before {
+  @apply opacity-100;
+}
+
+/* Status Badges */
+.badge-pending {
+  @apply bg-yellow-100 text-yellow-800 border border-yellow-200;
+}
+
+.badge-processing {
+  @apply bg-blue-100 text-blue-800 border border-blue-200;
+}
+
+.badge-in-production {
+  @apply bg-purple-100 text-purple-800 border border-purple-200;
+}
+
+.badge-ready {
+  @apply bg-green-100 text-green-800 border border-green-200;
+}
+
+.badge-delivered {
+  @apply bg-gray-100 text-gray-800 border border-gray-200;
+}
+
+.badge-cancelled {
+  @apply bg-red-100 text-red-800 border border-red-200;
+}

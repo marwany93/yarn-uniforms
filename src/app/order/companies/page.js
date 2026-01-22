@@ -1,0 +1,133 @@
+'use client';
+
+import { useLanguage } from '@/hooks/useLanguage';
+import questionsConfig from '@/config/questionsConfig';
+import DynamicForm from '@/components/forms/DynamicForm';
+import Link from 'next/link';
+
+export default function CompaniesOrderPage() {
+    const { t } = useLanguage();
+
+    const translations = {
+        title: { en: 'Corporate Uniforms Order', ar: 'طلب أزياء الشركات' },
+        subtitle: {
+            en: 'Fill out the form below to request a quote for professional corporate uniforms',
+            ar: 'املأ النموذج أدناه لطلب عرض أسعار للأزياء المؤسسية الاحترافية'
+        },
+        backToHome: { en: '← Back to Home', ar: '→ العودة للرئيسية' },
+        needHelp: { en: 'Need Help?', ar: 'تحتاج مساعدة؟' },
+        contactUs: {
+            en: 'Contact us if you have any questions',
+            ar: 'اتصل بنا إذا كان لديك أي أسئلة'
+        },
+        phone: { en: 'Phone', ar: 'الهاتف' },
+        email: { en: 'Email', ar: 'البريد الإلكتروني' },
+    };
+
+    return (
+        <div className="min-h-screen bg-gradient-to-br from-purple-50 to-pink-50 py-12">
+            <div className="container-custom">
+                <Link
+                    href="/"
+                    className="inline-flex items-center text-primary-600 hover:text-primary-700 font-medium mb-6 transition-colors"
+                >
+                    <svg className="w-5 h-5 mr-2 rtl:ml-2 rtl:mr-0 rtl:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                    </svg>
+                    {t(translations.backToHome)}
+                </Link>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div className="lg:col-span-2">
+                        <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12">
+                            <div className="mb-8">
+                                <div className="flex items-center space-x-3 rtl:space-x-reverse mb-4">
+                                    <div className="text-5xl">🏢</div>
+                                    <div>
+                                        <h1 className="text-3xl font-bold text-gray-900">
+                                            {t(translations.title)}
+                                        </h1>
+                                        <p className="text-gray-600 mt-1">
+                                            {t(translations.subtitle)}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="h-1 w-20 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"></div>
+                            </div>
+
+                            <DynamicForm
+                                questions={questionsConfig.companies}
+                                sector="companies"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="lg:col-span-1">
+                        <div className="bg-white rounded-2xl shadow-xl p-6 sticky top-24">
+                            <h2 className="text-xl font-bold text-gray-900 mb-4">
+                                {t(translations.needHelp)}
+                            </h2>
+                            <p className="text-gray-600 text-sm mb-6">
+                                {t(translations.contactUs)}
+                            </p>
+
+                            <div className="space-y-4">
+                                <div className="flex items-start space-x-3 rtl:space-x-reverse">
+                                    <div className="flex-shrink-0">
+                                        <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
+                                            <svg className="w-5 h-5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-900">{t(translations.phone)}</p>
+                                        <p className="text-sm text-gray-600" dir="ltr">+966 50 000 0000</p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-start space-x-3 rtl:space-x-reverse">
+                                    <div className="flex-shrink-0">
+                                        <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
+                                            <svg className="w-5 h-5 text-primary-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <p className="text-sm font-medium text-gray-900">{t(translations.email)}</p>
+                                        <p className="text-sm text-gray-600">info@yarnuniforms.com.sa</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="mt-8 pt-6 border-t border-gray-200">
+                                <h3 className="text-sm font-semibold text-gray-900 mb-3">
+                                    {t({ en: 'Popular Industries', ar: 'الصناعات الشائعة' })}
+                                </h3>
+                                <ul className="space-y-2 text-sm text-gray-600">
+                                    <li className="flex items-start space-x-2 rtl:space-x-reverse">
+                                        <span className="text-purple-500 mt-0.5">✓</span>
+                                        <span>{t({ en: 'Retail & Stores', ar: 'التجزئة والمتاجر' })}</span>
+                                    </li>
+                                    <li className="flex items-start space-x-2 rtl:space-x-reverse">
+                                        <span className="text-purple-500 mt-0.5">✓</span>
+                                        <span>{t({ en: 'Hotels & Hospitality', ar: 'الفنادق والضيافة' })}</span>
+                                    </li>
+                                    <li className="flex items-start space-x-2 rtl:space-x-reverse">
+                                        <span className="text-purple-500 mt-0.5">✓</span>
+                                        <span>{t({ en: 'Banking & Finance', ar: 'البنوك والمالية' })}</span>
+                                    </li>
+                                    <li className="flex items-start space-x-2 rtl:space-x-reverse">
+                                        <span className="text-purple-500 mt-0.5">✓</span>
+                                        <span>{t({ en: 'Tech Companies', ar: 'شركات التكنولوجيا' })}</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+}

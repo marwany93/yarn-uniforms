@@ -1,0 +1,103 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return isAuthenticated() && 
+             exists(/databases/$(database)/documents/admins/$(request.auth.uid));
+    }
+    
+    // ORDERS COLLECTION
+    match /orders/{orderId} {
+      
+      // Allow anyone to CREATE a new order (client-side ordering)
+      // But ONLY if the document doesn't already exist (prevent ID collision)
+      allow create: if 
+        // Order ID must match the pattern #YARN-XXXX
+        orderId.matches('^#YARN-[A-Z0-9]{3,4}$') &&
+        
+        // Document must not already exist (prevents overwriting)
+        !exists(/databases/$(database)/documents/orders/$(orderId)) &&
+        
+        // Required fields must be present
+        request.resource.data.keys().hasAll([
+          'orderId', 'sector', 'formData', 'status', 
+          'createdAt', 'updatedAt'
+        ]) &&
+        
+        // Order ID in document must match document path
+        request.resource.data.orderId == orderId &&
+        
+        // Status must be 'pending' on creation
+        request.resource.data.status == 'pending' &&
+        
+        // Sector must be one of the four allowed values
+        request.resource.data.sector in ['schools', 'factories', 'companies', 'hospitals'] &&
+        
+        // Timestamps must be server timestamps or valid timestamps
+        request.resource.data.createdAt is timestamp &&
+        request.resource.data.updatedAt is timestamp;
+      
+      // Allow anyone to READ their order with the order ID (tracking)
+      allow read: if true;
+      
+      // Only ADMINS can UPDATE order status
+      allow update: if 
+        isAdmin() &&
+        
+        // Prevent changing the order ID
+        request.resource.data.orderId == resource.data.orderId &&
+        
+        // Status must be one of the allowed values
+        request.resource.data.status in [
+          'pending', 'processing', 'in_production', 
+          'ready_for_delivery', 'delivered', 'cancelled'
+        ] &&
+        
+        // Updated timestamp must change
+        request.resource.data.updatedAt is timestamp;
+      
+      // Only ADMINS can DELETE orders
+      allow delete: if isAdmin();
+    }
+    
+    // ADMINS COLLECTION (for role management)
+    match /admins/{userId} {
+      // Only existing admins can read the admins list
+      allow read: if isAdmin();
+      
+      // Only existing admins can create new admins
+      allow create: if isAdmin();
+      
+      // Only existing admins can update admin data
+      allow update: if isAdmin();
+      
+      // Only existing admins can delete other admins
+      // But prevent deleting yourself (last admin protection)
+      allow delete: if isAdmin() && request.auth.uid != userId;
+    }
+    
+    // FILE UPLOADS METADATA (optional - for tracking uploads)
+    match /uploads/{uploadId} {
+      // Allow anyone to create upload metadata
+      allow create: if true;
+      
+      // Allow anyone to read their upload metadata
+      allow read: if true;
+      
+      // Only admins can delete upload metadata
+      allow delete: if isAdmin();
+    }
+    
+    // DENY ALL OTHER COLLECTIONS BY DEFAULT
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
