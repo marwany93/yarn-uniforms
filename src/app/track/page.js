@@ -1,22 +1,20 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useLanguage } from '@/hooks/useLanguage';
+import { useState, useEffect } from 'react';
 import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs, limit } from 'firebase/firestore';
-import Link from 'next/link';
 
-export default function TrackOrderPage() {
-    const { t } = useLanguage();
+// Component that uses useSearchParams - must be wrapped in Suspense
+function TrackOrderContent() {
     const searchParams = useSearchParams();
-    const orderIdFromUrl = searchParams.get('id');
-
-    const [orderId, setOrderId] = useState(orderIdFromUrl || '');
+    const { t } = useLanguage();
+    const [orderId, setOrderId] = useState('');
     const [order, setOrder] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const [searched, setSearched] = useState(false);
 
     const translations = {
         title: { en: 'Track Your Order', ar: 'تتبع طلبك' },
@@ -32,8 +30,7 @@ export default function TrackOrderPage() {
         orderDetails: { en: 'Order Details', ar: 'تفاصيل الطلب' },
         status: { en: 'Status', ar: 'الحالة' },
         sector: { en: 'Sector', ar: 'القطاع' },
-        createdAt: { en: 'Created', ar: 'تاريخ الإنشاء' },
-        backToHome: { en: '← Back to Home', ar: '→ العودة للرئيسية' },
+        createdAt: { en: 'Created At', ar: 'تاريخ الإنشاء' },
 
         // Sectors
         schools: { en: 'Schools', ar: 'المدارس' },
@@ -50,30 +47,33 @@ export default function TrackOrderPage() {
         cancelled: { en: 'Cancelled', ar: 'ملغي' },
     };
 
-    const statusConfig = {
-        pending: { color: 'yellow', icon: '⏳', progress: 20 },
-        processing: { color: 'blue', icon: '🔄', progress: 40 },
-        in_production: { color: 'purple', icon: '⚙️', progress: 60 },
-        ready_for_delivery: { color: 'green', icon: '📦', progress: 80 },
-        delivered: { color: 'gray', icon: '✅', progress: 100 },
-        cancelled: { color: 'red', icon: '❌', progress: 0 },
+    const statusColors = {
+        pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+        processing: 'bg-blue-100 text-blue-800 border-blue-200',
+        in_production: 'bg-purple-100 text-purple-800 border-purple-200',
+        ready_for_delivery: 'bg-green-100 text-green-800 border-green-200',
+        delivered: 'bg-gray-100 text-gray-800 border-gray-200',
+        cancelled: 'bg-red-100 text-red-800 border-red-200',
     };
 
+    // Check URL params on mount
     useEffect(() => {
-        if (orderIdFromUrl) {
-            handleTrack(null, orderIdFromUrl);
+        const id = searchParams.get('id');
+        if (id) {
+            setOrderId(id);
+            handleTrack(id);
         }
-    }, [orderIdFromUrl]);
+    }, [searchParams]);
 
-    const handleTrack = async (e, searchId = null) => {
-        if (e) e.preventDefault();
-
-        const idToSearch = searchId || orderId.trim();
-        if (!idToSearch) return;
+    const handleTrack = async (idToSearch) => {
+        const searchId = idToSearch || orderId;
+        if (!searchId.trim()) {
+            setError(t(translations.notFound));
+            return;
+        }
 
         setLoading(true);
         setError('');
-        setSearched(true);
         setOrder(null);
 
         try {
@@ -84,8 +84,8 @@ export default function TrackOrderPage() {
             if (querySnapshot.empty) {
                 setError(t(translations.notFound));
             } else {
-                const orderData = querySnapshot.docs[0].data();
-                setOrder({ id: querySnapshot.docs[0].id, ...orderData });
+                const orderData = { id: querySnapshot.docs[0].id, ...querySnapshot.docs[0].data() };
+                setOrder(orderData);
             }
         } catch (err) {
             console.error('Error fetching order:', err);
@@ -108,148 +108,140 @@ export default function TrackOrderPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-12">
-            <div className="container-custom">
-                <Link
-                    href="/"
-                    className="inline-flex items-center text-primary-600 hover:text-primary-700 font-medium mb-6 transition-colors"
-                >
-                    <svg className="w-5 h-5 mr-2 rtl:ml-2 rtl:mr-0 rtl:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                    </svg>
-                    {t(translations.backToHome)}
-                </Link>
+        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-12 px-4">
+            <div className="max-w-2xl mx-auto">
+                {/* Header */}
+                <div className="text-center mb-8">
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary-100 text-primary-600 mb-4 text-3xl">
+                        📦
+                    </div>
+                    <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                        {t(translations.title)}
+                    </h1>
+                    <p className="text-gray-600">
+                        {t(translations.subtitle)}
+                    </p>
+                </div>
 
-                <div className="max-w-3xl mx-auto">
-                    {/* Search Box */}
-                    <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12 mb-8">
-                        <div className="text-center mb-8">
-                            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary-100 text-primary-600 mb-4 text-3xl">
-                                📦
-                            </div>
-                            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                                {t(translations.title)}
-                            </h1>
-                            <p className="text-gray-600">
-                                {t(translations.subtitle)}
+                {/* Search Form */}
+                <div className="bg-white rounded-2xl shadow-xl p-6 md:p-8 mb-6">
+                    <form onSubmit={(e) => { e.preventDefault(); handleTrack(); }} className="space-y-4">
+                        <div>
+                            <label htmlFor="orderId" className="block text-sm font-medium text-gray-700 mb-2">
+                                {t(translations.orderIdLabel)}
+                            </label>
+                            <input
+                                type="text"
+                                id="orderId"
+                                value={orderId}
+                                onChange={(e) => setOrderId(e.target.value)}
+                                placeholder={t(translations.orderIdPlaceholder)}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-center text-lg font-mono"
+                                disabled={loading}
+                            />
+                        </div>
+                        <button
+                            type="submit"
+                            disabled={loading}
+                            className={`w-full py-3 rounded-lg font-semibold text-white shadow-lg transition-all ${loading
+                                    ? 'bg-gray-400 cursor-not-allowed'
+                                    : 'bg-primary-600 hover:bg-primary-700 hover:shadow-xl'
+                                }`}
+                        >
+                            {loading ? t(translations.searching) : t(translations.trackButton)}
+                        </button>
+                    </form>
+                </div>
+
+                {/* Error Message */}
+                {error && (
+                    <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+                        <p className="text-red-800 text-center flex items-center justify-center gap-2">
+                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            {error}
+                        </p>
+                    </div>
+                )}
+
+                {/* Order Details */}
+                {order && (
+                    <div className="bg-white rounded-2xl shadow-xl overflow-hidden animate-slide-up">
+                        {/* Header */}
+                        <div className="bg-gradient-to-r from-primary-600 to-secondary-600 px-6 py-4">
+                            <h2 className="text-xl font-bold text-white mb-1">
+                                {t(translations.orderDetails)}
+                            </h2>
+                            <p className="text-primary-100 text-sm font-mono">
+                                {order.orderId}
                             </p>
                         </div>
 
-                        <form onSubmit={handleTrack} className="space-y-4">
+                        {/* Content */}
+                        <div className="p-6 space-y-4">
+                            {/* Status */}
                             <div>
-                                <label htmlFor="orderId" className="block text-sm font-medium text-gray-700 mb-2">
-                                    {t(translations.orderIdLabel)}
-                                </label>
-                                <input
-                                    type="text"
-                                    id="orderId"
-                                    value={orderId}
-                                    onChange={(e) => setOrderId(e.target.value)}
-                                    placeholder={t(translations.orderIdPlaceholder)}
-                                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-center text-lg"
-                                    required
-                                />
+                                <p className="text-sm text-gray-500 mb-2">{t(translations.status)}</p>
+                                <div className={`inline-block px-4 py-2 rounded-lg border font-semibold ${statusColors[order.status]}`}>
+                                    {t(translations[order.status])}
+                                </div>
                             </div>
-                            <button
-                                type="submit"
-                                disabled={loading}
-                                className={`w-full bg-primary-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-700 shadow-lg hover:shadow-xl transition-all duration-300 ${loading ? 'opacity-50 cursor-not-allowed' : 'hover:scale-105'
-                                    }`}
-                            >
-                                {loading ? t(translations.searching) : t(translations.trackButton)}
-                            </button>
-                        </form>
-                    </div>
 
-                    {/* Order Details */}
-                    {searched && order && (
-                        <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12 animate-fade-in">
-                            <div className="mb-6">
-                                <h2 className="text-2xl font-bold text-gray-900 mb-2">
-                                    {t(translations.orderDetails)}
-                                </h2>
-                                <p className="text-lg text-primary-600 font-mono font-bold">
-                                    {order.orderId}
+                            {/* Sector */}
+                            <div>
+                                <p className="text-sm text-gray-500 mb-1">{t(translations.sector)}</p>
+                                <p className="text-lg font-medium text-gray-900">
+                                    {t(translations[order.sector])}
                                 </p>
                             </div>
 
-                            {/* Status Progress */}
-                            <div className="mb-8">
-                                <div className="flex items-center justify-between mb-2">
-                                    <span className="text-sm font-medium text-gray-700">
-                                        {t(translations.status)}
-                                    </span>
-                                    <span className={`text-sm font-semibold badge-${order.status}`}>
-                                        {statusConfig[order.status]?.icon} {t(translations[order.status])}
-                                    </span>
-                                </div>
-                                <div className="w-full bg-gray-200 rounded-full h-3">
-                                    <div
-                                        className={`h-3 rounded-full transition-all duration-500 ${order.status === 'cancelled' ? 'bg-red-500' :
-                                            order.status === 'delivered' ? 'bg-gray-500' :
-                                                'bg-primary-600'
-                                            }`}
-                                        style={{ width: `${statusConfig[order.status]?.progress || 0}%` }}
-                                    ></div>
-                                </div>
+                            {/* Created Date */}
+                            <div>
+                                <p className="text-sm text-gray-500 mb-1">{t(translations.createdAt)}</p>
+                                <p className="text-gray-900">
+                                    {formatDate(order.createdAt)}
+                                </p>
                             </div>
 
                             {/* Order Info */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-                                <div>
-                                    <p className="text-sm text-gray-500 mb-1">{t(translations.sector)}</p>
-                                    <p className="text-lg font-semibold text-gray-900">
-                                        {t(translations[order.sector])}
-                                    </p>
+                            {order.formData && (
+                                <div className="pt-4 border-t border-gray-200">
+                                    <h3 className="font-semibold text-gray-900 mb-3">Additional Information</h3>
+                                    <div className="space-y-2 text-sm">
+                                        {Object.entries(order.formData).map(([key, value]) => (
+                                            <div key={key} className="flex justify-between">
+                                                <span className="text-gray-600 capitalize">{key.replace(/_/g, ' ')}:</span>
+                                                <span className="text-gray-900 font-medium">
+                                                    {typeof value === 'object' && value !== null
+                                                        ? value.name || JSON.stringify(value)
+                                                        : String(value)}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
-                                <div>
-                                    <p className="text-sm text-gray-500 mb-1">{t(translations.createdAt)}</p>
-                                    <p className="text-lg font-semibold text-gray-900">
-                                        {formatDate(order.createdAt)}
-                                    </p>
-                                </div>
-                            </div>
-
-                            {/* Form Data */}
-                            <div className="border-t border-gray-200 pt-6">
-                                <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                                    {t({ en: 'Order Information', ar: 'معلومات الطلب' })}
-                                </h3>
-                                <div className="space-y-3">
-                                    {Object.entries(order.formData || {}).map(([key, value]) => (
-                                        <div key={key} className="flex justify-between py-2 border-b border-gray-100">
-                                            <span className="text-sm text-gray-600 capitalize">
-                                                {key.replace(/_/g, ' ')}
-                                            </span>
-                                            <span className="text-sm font-medium text-gray-900 text-right">
-                                                {typeof value === 'object' && value.url ? (
-                                                    <a href={value.url} target="_blank" rel="noopener noreferrer" className="text-primary-600 hover:underline">
-                                                        {value.name || 'View File'}
-                                                    </a>
-                                                ) : Array.isArray(value) ? (
-                                                    value.join(', ')
-                                                ) : (
-                                                    String(value)
-                                                )}
-                                            </span>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
+                            )}
                         </div>
-                    )}
-
-                    {/* Error Message */}
-                    {searched && error && (
-                        <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center animate-fade-in">
-                            <svg className="w-12 h-12 text-red-500 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <p className="text-red-800 font-medium">{error}</p>
-                        </div>
-                    )}
-                </div>
+                    </div>
+                )}
             </div>
         </div>
+    );
+}
+
+// Main page component with Suspense boundary
+export default function TrackOrderPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-primary-600 mx-auto mb-4"></div>
+                    <p className="text-gray-600 font-medium">Loading tracking page...</p>
+                </div>
+            </div>
+        }>
+            <TrackOrderContent />
+        </Suspense>
     );
 }
