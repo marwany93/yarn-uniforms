@@ -1,17 +1,26 @@
 import './globals.css';
-import { Cairo, Inter } from 'next/font/google';
+import { Cairo, Roboto, Baloo_Da_2 } from 'next/font/google';
 import { LanguageProvider } from '@/hooks/useLanguage';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 
-// Load Google Fonts
-const inter = Inter({
+// Yarn 2025 Brand Fonts
+const roboto = Roboto({
+    weight: ['300', '400', '500', '700'],
     subsets: ['latin'],
-    variable: '--font-inter',
+    variable: '--font-roboto',
+    display: 'swap',
+});
+
+const balooDa2 = Baloo_Da_2({
+    weight: ['400', '500', '600', '700', '800'],
+    subsets: ['latin'],
+    variable: '--font-baloo',
     display: 'swap',
 });
 
 const cairo = Cairo({
+    weight: ['300', '400', '500', '600', '700'],
     subsets: ['arabic', 'latin'],
     variable: '--font-cairo',
     display: 'swap',
@@ -35,7 +44,10 @@ export const metadata = {
 export default function RootLayout({ children }) {
     return (
         <html lang="en" dir="ltr" suppressHydrationWarning>
-            <body className={`${inter.variable} ${cairo.variable} font-sans antialiased`} suppressHydrationWarning={true}>
+            <body
+                className={`${roboto.variable} ${balooDa2.variable} ${cairo.variable} font-sans antialiased`}
+                suppressHydrationWarning={true}
+            >
                 <LanguageProvider>
                     <div className="flex flex-col min-h-screen">
                         <Header />

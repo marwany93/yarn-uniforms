@@ -8,38 +8,44 @@ module.exports = {
 
     theme: {
         extend: {
-            // Custom colors for Yarn Uniforms brand
+            // Yarn 2025 Brand Colors
             colors: {
                 primary: {
-                    50: '#f0f9ff',
-                    100: '#e0f2fe',
-                    200: '#bae6fd',
-                    300: '#7dd3fc',
-                    400: '#38bdf8',
-                    500: '#0ea5e9',
-                    600: '#0284c7',
-                    700: '#0369a1',
-                    800: '#075985',
-                    900: '#0c4a6e',
+                    DEFAULT: '#192E4F', // Royal Navy
+                    50: '#e8ecf1',
+                    100: '#d1d9e3',
+                    200: '#a3b3c7',
+                    300: '#758dab',
+                    400: '#47678f',
+                    500: '#192E4F', // Main
+                    600: '#14253f',
+                    700: '#0f1c2f',
+                    800: '#0a1320',
+                    900: '#050910',
                 },
                 secondary: {
-                    50: '#fdf4ff',
-                    100: '#fae8ff',
-                    200: '#f5d0fe',
-                    300: '#f0abfc',
-                    400: '#e879f9',
-                    500: '#d946ef',
-                    600: '#c026d3',
-                    700: '#a21caf',
-                    800: '#86198f',
-                    900: '#701a75',
+                    DEFAULT: '#e5d7ca', // Warm Desert Tan
+                    50: '#faf8f6',
+                    100: '#f5f1ed',
+                    200: '#ebe3db',
+                    300: '#e5d7ca', // Main
+                    400: '#d9c5b3',
+                    500: '#cdb39c',
+                    600: '#b89675',
+                    700: '#9b7854',
+                    800: '#75593f',
+                    900: '#4e3a2a',
                 },
+                dark: '#10182A', // Charcoal Navy - Main text
+                background: '#fcf9f7', // Seashell White - Body background
+                white: '#FFFFFF', // Pure white for cards
             },
 
-            // Custom fonts (add Google Fonts in layout.js)
+            // Yarn 2025 Typography
             fontFamily: {
-                sans: ['Inter', 'Cairo', 'system-ui', 'sans-serif'],
-                arabic: ['Cairo', 'system-ui', 'sans-serif'],
+                sans: ['var(--font-roboto)', 'var(--font-cairo)', 'system-ui', 'sans-serif'], // Default body
+                display: ['var(--font-baloo)', 'var(--font-cairo)', 'system-ui', 'sans-serif'], // Headings
+                arabic: ['var(--font-cairo)', 'system-ui', 'sans-serif'], // Arabic fallback
             },
 
             // Custom spacing for better Arabic/English compatibility
@@ -77,8 +83,6 @@ module.exports = {
     // RTL Support Plugin
     plugins: [
         require('@tailwindcss/forms'),
-        // Uncomment below if you install tailwindcss-rtl plugin
-        // require('tailwindcss-rtl'),
     ],
 
     // Enable dark mode (optional)

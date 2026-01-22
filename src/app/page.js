@@ -1,82 +1,51 @@
 'use client';
 
-import Link from 'next/link';
-import { useLanguage } from '@/hooks/useLanguage';
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import Image from 'next/image';
+import { useLanguage } from '@/hooks/useLanguage';
 
 export default function HomePage() {
-    const { t } = useLanguage();
-    const [trackingId, setTrackingId] = useState('');
+    const router = useRouter();
+    const { t, language } = useLanguage();
+    const [orderId, setOrderId] = useState('');
+
+    const handleTrack = (e) => {
+        e.preventDefault();
+        if (orderId.trim()) {
+            router.push(`/track?id=${orderId.trim()}`);
+        }
+    };
 
     const translations = {
-        heroTitle: {
-            en: 'Professional Uniforms for Every Sector',
-            ar: 'أزياء موحدة احترافية لكل القطاعات'
-        },
-        heroSubtitle: {
-            en: 'Custom uniform solutions for schools, factories, companies, and hospitals',
-            ar: 'حلول الزي الموحد المخصصة للمدارس والمصانع والشركات والمستشفيات'
-        },
+        // Hero
+        heroTitle: { en: 'Professional Uniforms', ar: 'زي موحد احترافي' },
+        heroSubtitle: { en: 'Quality uniforms for schools, factories, companies & hospitals', ar: 'زي موحد عالي الجودة للمدارس والمصانع والشركات والمستشفيات' },
         orderNow: { en: 'Order Now', ar: 'اطلب الآن' },
-        trackYourOrder: { en: 'Track Your Order', ar: 'تتبع طلبك' },
+        trackYourOrder: { en: 'Track Order', ar: 'تتبع طلبك' },
 
         // Sectors
-        chooseSector: { en: 'Choose Your Sector', ar: 'اختر القطاع الخاص بك' },
-        sectorSubtitle: {
-            en: 'Select the sector that best matches your needs',
-            ar: 'اختر القطاع الذي يناسب احتياجاتك'
-        },
-
+        chooseSector: { en: 'Choose Your Sector', ar: 'اختر قطاعك' },
+        sectorSubtitle: { en: 'Specialized uniform solutions for every industry', ar: 'حلول زي موحد متخصصة لكل صناعة' },
         schools: { en: 'Schools', ar: 'المدارس' },
-        schoolsDesc: {
-            en: 'Quality uniforms for students and educational institutions',
-            ar: 'أزياء موحدة عالية الجودة للطلاب والمؤسسات التعليمية'
-        },
-
+        schoolsDesc: { en: 'Comfortable & durable uniforms for students', ar: 'زي موحد مريح ومتين للطلاب' },
         factories: { en: 'Factories', ar: 'المصانع' },
-        factoriesDesc: {
-            en: 'Durable workwear with safety features for industrial workers',
-            ar: 'ملابس عمل متينة بمميزات سلامة لعمال المصانع'
-        },
-
+        factoriesDesc: { en: 'Safety-compliant workwear for industrial settings', ar: 'ملابس عمل متوافقة مع معايير السلامة' },
         companies: { en: 'Companies', ar: 'الشركات' },
-        companiesDesc: {
-            en: 'Professional corporate uniforms for all business sectors',
-            ar: 'أزياء موحدة احترافية لجميع قطاعات الأعمال'
-        },
-
+        companiesDesc: { en: 'Professional corporate uniforms', ar: 'زي موحد احترافي للشركات' },
         hospitals: { en: 'Hospitals', ar: 'المستشفيات' },
-        hospitalsDesc: {
-            en: 'Medical scrubs and healthcare uniforms for professionals',
-            ar: 'الزي الطبي للمهنيين الصحيين'
-        },
+        hospitalsDesc: { en: 'Hygienic medical scrubs & uniforms', ar: 'سكراب طبي وزي موحد صحي' },
 
-        // Tracking
+        // Quality Section
+        detailsMatter: { en: 'Details Matter', ar: 'التفاصيل مهمة' },
+        qualityDesc: { en: 'Every stitch, every fabric, every design is crafted with precision and care', ar: 'كل غرزة، كل قماش، كل تصميم مصنوع بدقة وعناية' },
+
+        // Track Section
         trackOrder: { en: 'Track Your Order', ar: 'تتبع طلبك' },
-        trackOrderDesc: {
-            en: 'Enter your order ID to check the status',
-            ar: 'أدخل رقم الطلب للتحقق من الحالة'
-        },
+        trackDesc: { en: 'Enter your order ID to check the status', ar: 'أدخل رقم الطلب للتحقق من الحالة' },
         orderIdPlaceholder: { en: 'Enter Order ID', ar: 'أدخل رقم الطلب' },
         track: { en: 'Track', ar: 'تتبع' },
-
-        // Features
-        whyChooseUs: { en: 'Why Choose Yarn Uniforms?', ar: 'لماذا تختار يارن للزي الموحد؟' },
-        qualityTitle: { en: 'Premium Quality', ar: 'جودة عالية' },
-        qualityDesc: {
-            en: 'High-quality fabrics and professional craftsmanship',
-            ar: 'أقمشة عالية الجودة وحرفية احترافية'
-        },
-        customTitle: { en: 'Fully Customizable', ar: 'قابل للتخصيص بالكامل' },
-        customDesc: {
-            en: 'Tailor-made designs to match your brand identity',
-            ar: 'تصاميم مخصصة لتتناسب مع هوية علامتك التجارية'
-        },
-        fastTitle: { en: 'Fast Delivery', ar: 'تسليم سريع' },
-        fastDesc: {
-            en: 'Timely production and delivery to meet your deadlines',
-            ar: 'إنتاج وتسليم في الوقت المحدد'
-        },
     };
 
     const sectors = [
@@ -85,7 +54,7 @@ export default function HomePage() {
             name: t(translations.schools),
             description: t(translations.schoolsDesc),
             icon: '🎓',
-            color: 'from-blue-500 to-cyan-500',
+            image: '/assets/sector-schools.png',
             href: '/order/schools'
         },
         {
@@ -93,15 +62,15 @@ export default function HomePage() {
             name: t(translations.factories),
             description: t(translations.factoriesDesc),
             icon: '🏭',
-            color: 'from-orange-500 to-red-500',
+            image: null,
             href: '/order/factories'
         },
         {
             id: 'companies',
             name: t(translations.companies),
             description: t(translations.companiesDesc),
-            icon: '🏢',
-            color: 'from-purple-500 to-pink-500',
+            icon: '💼',
+            image: '/assets/hero-group-overhead.png',
             href: '/order/companies'
         },
         {
@@ -109,80 +78,75 @@ export default function HomePage() {
             name: t(translations.hospitals),
             description: t(translations.hospitalsDesc),
             icon: '🏥',
-            color: 'from-green-500 to-emerald-500',
+            image: null,
             href: '/order/hospitals'
-        }
-    ];
-
-    const features = [
-        {
-            title: t(translations.qualityTitle),
-            description: t(translations.qualityDesc),
-            icon: '✨'
         },
-        {
-            title: t(translations.customTitle),
-            description: t(translations.customDesc),
-            icon: '🎨'
-        },
-        {
-            title: t(translations.fastTitle),
-            description: t(translations.fastDesc),
-            icon: '⚡'
-        }
     ];
-
-    const handleTrack = (e) => {
-        e.preventDefault();
-        if (trackingId.trim()) {
-            window.location.href = `/track?id=${encodeURIComponent(trackingId.trim())}`;
-        }
-    };
 
     return (
         <div className="min-h-screen">
-            {/* Hero Section */}
-            <section className="relative bg-gradient-to-br from-primary-600 via-primary-700 to-secondary-700 text-white py-20 overflow-hidden">
-                {/* Animated Background Pattern */}
+            {/* Hero Section - Yarn 2025 Brand Design */}
+            <section className="relative bg-primary text-white py-20 lg:py-32 overflow-hidden">
+                {/* Background Pattern */}
                 <div className="absolute inset-0 opacity-10">
-                    <div className="absolute inset-0" style={{
-                        backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")",
-                    }}></div>
+                    <Image
+                        src="/assets/pattern-wavy-lines.png"
+                        alt=""
+                        fill
+                        className="object-cover"
+                        priority
+                    />
                 </div>
 
                 <div className="container-custom relative z-10">
-                    <div className="max-w-4xl mx-auto text-center">
-                        <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 animate-slide-down">
-                            {t(translations.heroTitle)}
-                        </h1>
-                        <p className="text-xl md:text-2xl mb-8 text-blue-100 animate-slide-up">
-                            {t(translations.heroSubtitle)}
-                        </p>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                        {/* Left Column - Text Content */}
+                        <div className="text-center lg:text-left">
+                            <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-6 leading-tight text-white">
+                                {t(translations.heroTitle)}
+                            </h1>
+                            <p className="text-xl md:text-2xl mb-8 text-white leading-relaxed">
+                                {t(translations.heroSubtitle)}
+                            </p>
 
-                        {/* CTA Buttons */}
-                        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-in">
-                            <a
-                                href="#sectors"
-                                className="px-8 py-4 bg-white text-primary-600 rounded-lg font-semibold hover:bg-gray-100 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-                            >
-                                {t(translations.orderNow)}
-                            </a>
-                            <a
-                                href="#track"
-                                className="px-8 py-4 bg-transparent border-2 border-white text-white rounded-lg font-semibold hover:bg-white hover:text-primary-600 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-                            >
-                                {t(translations.trackYourOrder)}
-                            </a>
+                            {/* CTA Buttons - Brand Compliant */}
+                            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                                <a
+                                    href="#sectors"
+                                    className="px-8 py-4 bg-secondary text-primary rounded-lg font-semibold hover:bg-secondary/90 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                                >
+                                    {t(translations.orderNow)}
+                                </a>
+                                <a
+                                    href="#track"
+                                    className="px-8 py-4 bg-transparent border-2 border-white text-white rounded-lg font-semibold hover:bg-white hover:text-primary shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                                >
+                                    {t(translations.trackYourOrder)}
+                                </a>
+                            </div>
+                        </div>
+
+                        {/* Right Column - Hero Image */}
+                        <div className="hidden lg:flex items-center justify-center">
+                            <div className="relative w-full h-96">
+                                <Image
+                                    src="/assets/hero-main-group.png"
+                                    alt="Professional Uniforms"
+                                    fill
+                                    className="object-contain"
+                                    priority
+                                />
+                            </div>
                         </div>
                     </div>
                 </div>
             </section>
 
             {/* Sectors Section */}
-            <section id="sectors" className="py-16 bg-white">
+            <section id="sectors" className="py-16 bg-background">
                 <div className="container-custom">
                     <div className="text-center mb-12">
-                        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                        <h2 className="text-3xl md:text-4xl font-display font-bold text-dark mb-4">
                             {t(translations.chooseSector)}
                         </h2>
                         <p className="text-lg text-gray-600">
@@ -195,21 +159,33 @@ export default function HomePage() {
                             <Link
                                 key={sector.id}
                                 href={sector.href}
-                                className="sector-card group bg-white border border-gray-200 p-6"
+                                className="group bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border-b-4 border-secondary hover:border-primary transform hover:-translate-y-1"
                             >
-                                <div className="text-center">
-                                    <div className={`inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br ${sector.color} mb-4 text-4xl transform group-hover:scale-110 transition-transform duration-300`}>
-                                        {sector.icon}
+                                {sector.image && (
+                                    <div className="relative h-48 overflow-hidden">
+                                        <Image
+                                            src={sector.image}
+                                            alt={sector.name}
+                                            fill
+                                            className="object-cover group-hover:scale-105 transition-transform duration-300"
+                                        />
                                     </div>
-                                    <h3 className="text-xl font-bold text-gray-900 mb-2">
+                                )}
+                                <div className="p-6 text-center">
+                                    {!sector.image && (
+                                        <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/10 mb-4 text-4xl">
+                                            {sector.icon}
+                                        </div>
+                                    )}
+                                    <h3 className="text-xl font-display font-bold text-dark mb-2">
                                         {sector.name}
                                     </h3>
                                     <p className="text-gray-600 text-sm mb-4">
                                         {sector.description}
                                     </p>
-                                    <span className="inline-flex items-center text-primary-600 font-semibold group-hover:text-primary-700">
+                                    <span className="inline-flex items-center text-primary font-semibold group-hover:text-primary-600">
                                         {t(translations.orderNow)}
-                                        <svg className="w-4 h-4 ml-2 rtl:mr-2 rtl:ml-0 rtl:rotate-180 group-hover:translate-x-1 rtl:group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <svg className="w-4 h-4 ltr:ml-2 rtl:mr-2 rtl:rotate-180 group-hover:translate-x-1 rtl:group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                         </svg>
                                     </span>
@@ -220,70 +196,59 @@ export default function HomePage() {
                 </div>
             </section>
 
-            {/* Order Tracking Section */}
-            <section id="track" className="py-16 bg-gradient-to-br from-gray-50 to-gray-100">
+            {/* Quality Section - NEW */}
+            <section className="py-20 bg-white">
                 <div className="container-custom">
-                    <div className="max-w-2xl mx-auto">
-                        <div className="bg-white rounded-2xl shadow-xl p-8 md:p-12">
-                            <div className="text-center mb-8">
-                                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary-100 text-primary-600 mb-4 text-3xl">
-                                    📦
-                                </div>
-                                <h2 className="text-3xl font-bold text-gray-900 mb-2">
-                                    {t(translations.trackOrder)}
-                                </h2>
-                                <p className="text-gray-600">
-                                    {t(translations.trackOrderDesc)}
-                                </p>
-                            </div>
-
-                            <form onSubmit={handleTrack} className="space-y-4">
-                                <div>
-                                    <input
-                                        type="text"
-                                        value={trackingId}
-                                        onChange={(e) => setTrackingId(e.target.value)}
-                                        placeholder={t(translations.orderIdPlaceholder)}
-                                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-center text-lg"
-                                        required
-                                    />
-                                </div>
-                                <button
-                                    type="submit"
-                                    className="w-full bg-primary-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-700 shadow-lg hover:shadow-xl transition-all duration-300"
-                                >
-                                    {t(translations.track)}
-                                </button>
-                            </form>
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                        <div className="relative h-96 lg:h-[500px]">
+                            <Image
+                                src="/assets/feature-quality-mockup.png"
+                                alt="Quality Details"
+                                fill
+                                className="object-contain"
+                            />
+                        </div>
+                        <div>
+                            <h2 className="text-4xl md:text-5xl font-display font-bold text-dark mb-6">
+                                {t(translations.detailsMatter)}
+                            </h2>
+                            <p className="text-xl text-gray-600 leading-relaxed">
+                                {t(translations.qualityDesc)}
+                            </p>
                         </div>
                     </div>
                 </div>
             </section>
 
-            {/* Features Section */}
-            <section className="py-16 bg-white">
+            {/* Track Order Section */}
+            <section id="track" className="py-16 bg-background">
                 <div className="container-custom">
-                    <div className="text-center mb-12">
-                        <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-                            {t(translations.whyChooseUs)}
+                    <div className="max-w-2xl mx-auto text-center">
+                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 text-primary text-3xl mb-6">
+                            📦
+                        </div>
+                        <h2 className="text-3xl md:text-4xl font-display font-bold text-dark mb-4">
+                            {t(translations.trackOrder)}
                         </h2>
-                    </div>
+                        <p className="text-gray-600 mb-8">
+                            {t(translations.trackDesc)}
+                        </p>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                        {features.map((feature, index) => (
-                            <div
-                                key={index}
-                                className="text-center p-6 rounded-xl hover:bg-gray-50 transition-colors duration-300"
+                        <form onSubmit={handleTrack} className="space-y-4">
+                            <input
+                                type="text"
+                                value={orderId}
+                                onChange={(e) => setOrderId(e.target.value)}
+                                placeholder={t(translations.orderIdPlaceholder)}
+                                className="w-full px-6 py-4 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none text-center text-lg font-mono"
+                            />
+                            <button
+                                type="submit"
+                                className="w-full bg-primary text-white px-8 py-4 rounded-lg font-semibold hover:bg-primary-600 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
                             >
-                                <div className="text-5xl mb-4">{feature.icon}</div>
-                                <h3 className="text-xl font-bold text-gray-900 mb-2">
-                                    {feature.title}
-                                </h3>
-                                <p className="text-gray-600">
-                                    {feature.description}
-                                </p>
-                            </div>
-                        ))}
+                                {t(translations.track)}
+                            </button>
+                        </form>
                     </div>
                 </div>
             </section>

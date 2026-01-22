@@ -4,22 +4,43 @@
 
 /* Root Variables */
 :root {
-  --font-inter: 'Inter', system-ui, sans-serif;
+  --font-roboto: 'Roboto', system-ui, sans-serif;
+  --font-baloo: 'Baloo Da 2', system-ui, sans-serif;
   --font-cairo: 'Cairo', system-ui, sans-serif;
 }
 
-/* Base Styles */
+/* Base Styles - Yarn 2025 Brand */
 html {
   scroll-behavior: smooth;
 }
 
 body {
-  @apply bg-gray-50 text-gray-900;
-  font-family: var(--font-inter);
+  @apply bg-background text-dark;
+  font-family: var(--font-roboto);
 }
 
 /* Arabic Font */
 [dir="rtl"] body {
+  font-family: var(--font-cairo);
+}
+
+/* Typography - Headings use Display Font */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-baloo);
+  @apply text-dark font-bold;
+}
+
+[dir="rtl"] h1,
+[dir="rtl"] h2,
+[dir="rtl"] h3,
+[dir="rtl"] h4,
+[dir="rtl"] h5,
+[dir="rtl"] h6 {
   font-family: var(--font-cairo);
 }
 
@@ -42,11 +63,11 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-gray-400 rounded-full;
+  @apply bg-primary/40 rounded-full;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-gray-500;
+  @apply bg-primary/60;
 }
 
 /* Smooth Animations */
@@ -59,16 +80,19 @@ body {
   .text-balance {
     text-wrap: balance;
   }
-  
+
   .animate-gradient {
     background-size: 200% 200%;
     animation: gradient 3s ease infinite;
   }
-  
+
   @keyframes gradient {
-    0%, 100% {
+
+    0%,
+    100% {
       background-position: 0% 50%;
     }
+
     50% {
       background-position: 100% 50%;
     }
@@ -79,16 +103,24 @@ body {
 input:focus,
 textarea:focus,
 select:focus {
-  @apply ring-2 ring-primary-500 border-primary-500 outline-none;
+  @apply ring-2 ring-primary border-primary outline-none;
 }
 
-/* Button Hover Effects */
+/* Button Styles - Yarn 2025 Brand */
 button:not(:disabled):hover {
   @apply transform scale-[1.02];
 }
 
 button:disabled {
   @apply opacity-50 cursor-not-allowed;
+}
+
+.btn-primary {
+  @apply bg-primary text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary-600 transition-all shadow-lg hover:shadow-xl;
+}
+
+.btn-secondary {
+  @apply bg-secondary text-dark px-6 py-3 rounded-lg font-semibold hover:bg-secondary-400 transition-all shadow-md hover:shadow-lg;
 }
 
 /* Card Hover Effects */
@@ -99,7 +131,7 @@ button:disabled {
 /* Loading Spinner */
 .spinner {
   border: 3px solid #f3f4f6;
-  border-top: 3px solid #0ea5e9;
+  border-top: 3px solid #192E4F;
   border-radius: 50%;
   width: 40px;
   height: 40px;
@@ -107,8 +139,13 @@ button:disabled {
 }
 
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* Page Transitions */
@@ -128,9 +165,9 @@ button:disabled {
   @apply mx-auto max-w-7xl px-4 sm:px-6 lg:px-8;
 }
 
-/* Gradient Text */
+/* Gradient Text - Yarn 2025 Brand Gradient */
 .gradient-text {
-  @apply bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent;
+  @apply bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent;
 }
 
 /* Glass Effect */
@@ -145,7 +182,7 @@ button:disabled {
 
 .sector-card::before {
   content: '';
-  @apply absolute inset-0 bg-gradient-to-br from-primary-500/20 to-secondary-500/20 opacity-0 transition-opacity duration-300;
+  @apply absolute inset-0 bg-gradient-to-br from-primary/20 to-secondary/20 opacity-0 transition-opacity duration-300;
 }
 
 .sector-card:hover::before {

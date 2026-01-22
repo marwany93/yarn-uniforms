@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useState } from 'react';
 
@@ -29,15 +30,17 @@ const Header = () => {
         <header className="bg-white shadow-md sticky top-0 z-50">
             <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8" aria-label="Top">
                 <div className="flex w-full items-center justify-between py-4">
-                    {/* Logo */}
+                    {/* Logo - Larger Navy Logo */}
                     <div className="flex items-center">
-                        <Link href="/" className="flex items-center space-x-2 rtl:space-x-reverse">
-                            <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-primary-500 to-secondary-500 flex items-center justify-center">
-                                <span className="text-white font-bold text-xl">Y</span>
-                            </div>
-                            <span className="text-2xl font-bold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
-                                Yarn Uniforms
-                            </span>
+                        <Link href="/" className="flex items-center">
+                            <Image
+                                src="/assets/logo-navy-bilingual.png"
+                                alt="Yarn Uniforms"
+                                width={200}
+                                height={70}
+                                className="h-16 w-auto object-contain"
+                                priority
+                            />
                         </Link>
                     </div>
 
@@ -45,7 +48,7 @@ const Header = () => {
                     <div className="hidden lg:flex lg:items-center lg:space-x-6 rtl:space-x-reverse">
                         <Link
                             href="/"
-                            className="text-gray-700 hover:text-primary-600 transition-colors duration-200 font-medium"
+                            className="text-[#192E4F] font-medium hover:text-[#e5d7ca] transition-colors duration-200"
                         >
                             {t(translations.home)}
                         </Link>
@@ -54,7 +57,7 @@ const Header = () => {
                             <Link
                                 key={item.sector}
                                 href={item.href}
-                                className="text-gray-700 hover:text-primary-600 transition-colors duration-200 font-medium"
+                                className="text-[#192E4F] font-medium hover:text-[#e5d7ca] transition-colors duration-200"
                             >
                                 {item.name}
                             </Link>
@@ -62,35 +65,33 @@ const Header = () => {
 
                         <Link
                             href="/track"
-                            className="text-gray-700 hover:text-primary-600 transition-colors duration-200 font-medium"
+                            className="text-[#192E4F] font-medium hover:text-[#e5d7ca] transition-colors duration-200"
                         >
                             {t(translations.trackOrder)}
                         </Link>
 
                         <Link
                             href="/admin"
-                            className="text-gray-500 hover:text-gray-700 transition-colors duration-200 text-sm"
+                            className="text-gray-500 hover:text-[#192E4F] transition-colors duration-200 text-sm"
                         >
                             {t(translations.admin)}
                         </Link>
 
-                        {/* Language Switcher */}
-                        <div className="flex items-center space-x-2 rtl:space-x-reverse border-l border-gray-300 pl-6 rtl:border-r rtl:pr-6 rtl:pl-0 rtl:border-l-0">
+                        {/* Language Switcher - White Background Theme */}
+                        <div className="flex items-center gap-2 border-l border-gray-200 pl-4 ml-4 rtl:border-r rtl:pr-4 rtl:pl-0 rtl:ml-0 rtl:mr-4 rtl:border-l-0">
                             <button
                                 onClick={() => changeLanguage('en')}
-                                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200 ${language === 'en'
-                                        ? 'bg-primary-500 text-white shadow-sm'
-                                        : 'text-gray-600 hover:bg-gray-100'
-                                    }`}
+                                className={language === 'en'
+                                    ? 'px-3 py-1.5 rounded-md bg-[#192E4F] text-white font-bold shadow-sm transition-all'
+                                    : 'px-3 py-1.5 rounded-md text-[#192E4F] hover:bg-gray-100 transition-all'}
                             >
                                 EN
                             </button>
                             <button
                                 onClick={() => changeLanguage('ar')}
-                                className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200 ${language === 'ar'
-                                        ? 'bg-primary-500 text-white shadow-sm'
-                                        : 'text-gray-600 hover:bg-gray-100'
-                                    }`}
+                                className={language === 'ar'
+                                    ? 'px-3 py-1.5 rounded-md bg-[#192E4F] text-white font-bold shadow-sm transition-all'
+                                    : 'px-3 py-1.5 rounded-md text-[#192E4F] hover:bg-gray-100 transition-all'}
                             >
                                 عربي
                             </button>
@@ -102,7 +103,7 @@ const Header = () => {
                         {/* Mobile Language Switcher */}
                         <button
                             onClick={() => changeLanguage(language === 'en' ? 'ar' : 'en')}
-                            className="px-3 py-1.5 rounded-md text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 transition-colors"
+                            className="px-3 py-1.5 rounded-md text-sm font-medium bg-gray-100 text-[#192E4F] hover:bg-gray-200 transition-colors"
                         >
                             {language === 'en' ? 'عربي' : 'EN'}
                         </button>
@@ -110,7 +111,7 @@ const Header = () => {
                         <button
                             type="button"
                             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                            className="inline-flex items-center justify-center rounded-md p-2 text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-500"
+                            className="inline-flex items-center justify-center rounded-md p-2 text-[#192E4F] hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#192E4F]"
                         >
                             <span className="sr-only">Open menu</span>
                             {!mobileMenuOpen ? (
@@ -132,7 +133,7 @@ const Header = () => {
                         <div className="space-y-1">
                             <Link
                                 href="/"
-                                className="block px-3 py-2 rounded-md text-gray-700 hover:bg-gray-100 font-medium"
+                                className="block px-3 py-2 rounded-md text-[#192E4F] font-medium hover:bg-gray-50"
                                 onClick={() => setMobileMenuOpen(false)}
                             >
                                 {t(translations.home)}
@@ -142,7 +143,7 @@ const Header = () => {
                                 <Link
                                     key={item.sector}
                                     href={item.href}
-                                    className="block px-3 py-2 rounded-md text-gray-700 hover:bg-gray-100 font-medium"
+                                    className="block px-3 py-2 rounded-md text-[#192E4F] font-medium hover:bg-gray-50"
                                     onClick={() => setMobileMenuOpen(false)}
                                 >
                                     {item.name}
@@ -151,7 +152,7 @@ const Header = () => {
 
                             <Link
                                 href="/track"
-                                className="block px-3 py-2 rounded-md text-gray-700 hover:bg-gray-100 font-medium"
+                                className="block px-3 py-2 rounded-md text-[#192E4F] font-medium hover:bg-gray-50"
                                 onClick={() => setMobileMenuOpen(false)}
                             >
                                 {t(translations.trackOrder)}
@@ -159,7 +160,7 @@ const Header = () => {
 
                             <Link
                                 href="/admin"
-                                className="block px-3 py-2 rounded-md text-gray-500 hover:bg-gray-100 text-sm"
+                                className="block px-3 py-2 rounded-md text-gray-500 hover:bg-gray-50 text-sm"
                                 onClick={() => setMobileMenuOpen(false)}
                             >
                                 {t(translations.admin)}
