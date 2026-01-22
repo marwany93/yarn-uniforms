@@ -4,33 +4,46 @@ import { useState, useEffect, createContext, useContext } from 'react';
 const LanguageContext = createContext();
 
 export function LanguageProvider({ children }) {
-    // Default to English if running on server or no preference found
+    // Default to English
     const [language, setLanguage] = useState('en');
 
+    // Load saved language preference on mount (runs once)
     useEffect(() => {
-        // Load saved language preference
+        if (typeof window === 'undefined') return;
+
         const savedLang = localStorage.getItem('language');
-        if (savedLang) {
+        if (savedLang && (savedLang === 'en' || savedLang === 'ar')) {
             setLanguage(savedLang);
         } else {
             // Check browser language
             const browserLang = navigator.language.startsWith('ar') ? 'ar' : 'en';
             setLanguage(browserLang);
         }
+    }, []); // Only run on mount
 
-        // Set html dir attribute
+    // Update DOM and localStorage when language changes
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+
         document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
         document.documentElement.lang = language;
-    }, [language]);
+        localStorage.setItem('language', language);
+    }, [language]); // Run when language changes
 
+    // Function to change to a specific language
+    const changeLanguage = (newLang) => {
+        if (newLang === 'en' || newLang === 'ar') {
+            setLanguage(newLang);
+        }
+    };
+
+    // Function to toggle between languages
     const toggleLanguage = () => {
         const newLang = language === 'en' ? 'ar' : 'en';
         setLanguage(newLang);
-        localStorage.setItem('language', newLang);
-        document.documentElement.dir = newLang === 'ar' ? 'rtl' : 'ltr';
-        document.documentElement.lang = newLang;
     };
 
+    // Translation function with defensive check
     const t = (translations) => {
         // 🛡️ SECURITY PATCH: Prevent crash if translations is undefined/null
         if (!translations) return '';
@@ -40,12 +53,16 @@ export function LanguageProvider({ children }) {
     };
 
     return (
-        <LanguageContext.Provider value={{ language, toggleLanguage, t }}>
+        <LanguageContext.Provider value={{ language, changeLanguage, toggleLanguage, t }}>
             {children}
         </LanguageContext.Provider>
     );
 }
 
 export function useLanguage() {
-    return useContext(LanguageContext);
+    const context = useContext(LanguageContext);
+    if (!context) {
+        throw new Error('useLanguage must be used within a LanguageProvider');
+    }
+    return context;
 }
