@@ -27,6 +27,7 @@ function TrackOrderContent() {
         trackButton: { en: 'Track Order', ar: 'تتبع الطلب' },
         searching: { en: 'Searching...', ar: 'جاري البحث...' },
         notFound: { en: 'Order not found. Please check your order ID.', ar: 'الطلب غير موجود. يرجى التحقق من رقم الطلب.' },
+        enterOrderId: { en: 'Please enter an Order ID', ar: 'يرجى إدخال رقم الطلب' },
         orderDetails: { en: 'Order Details', ar: 'تفاصيل الطلب' },
         status: { en: 'Status', ar: 'الحالة' },
         sector: { en: 'Sector', ar: 'القطاع' },
@@ -59,16 +60,20 @@ function TrackOrderContent() {
     // Check URL params on mount
     useEffect(() => {
         const id = searchParams.get('id');
-        if (id) {
-            setOrderId(id);
-            handleTrack(id);
+        if (id && id.trim()) {
+            setOrderId(id.trim());
+            handleTrack(id.trim());
         }
     }, [searchParams]);
 
-    const handleTrack = async (idToSearch) => {
-        const searchId = idToSearch || orderId;
-        if (!searchId.trim()) {
-            setError(t(translations.notFound));
+    const handleTrack = async (idToSearch = null) => {
+        // Use provided ID or input value, and trim it
+        const searchId = (idToSearch || orderId).trim();
+
+        // GUARD CLAUSE: Check if ID is empty
+        if (!searchId) {
+            setError(t(translations.enterOrderId));
+            setOrder(null);
             return;
         }
 
@@ -78,7 +83,8 @@ function TrackOrderContent() {
 
         try {
             const ordersRef = collection(db, 'orders');
-            const q = query(ordersRef, where('orderId', '==', idToSearch), limit(1));
+            // Only create query if searchId is valid
+            const q = query(ordersRef, where('orderId', '==', searchId), limit(1));
             const querySnapshot = await getDocs(q);
 
             if (querySnapshot.empty) {
@@ -97,14 +103,33 @@ function TrackOrderContent() {
 
     const formatDate = (timestamp) => {
         if (!timestamp) return 'N/A';
-        const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
-        return date.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
+        try {
+            // Properly handle Firestore Timestamp
+            const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        } catch (err) {
+            console.error('Error formatting date:', err);
+            return 'N/A';
+        }
+    };
+
+    const formatValue = (value) => {
+        // Handle file objects
+        if (typeof value === 'object' && value !== null) {
+            if (value.name) return value.name;
+            if (value.url) return 'File attached';
+            return JSON.stringify(value);
+        }
+        // Handle arrays
+        if (Array.isArray(value)) return value.join(', ');
+        // Handle regular values
+        return String(value);
     };
 
     return (
@@ -205,20 +230,25 @@ function TrackOrderContent() {
                             </div>
 
                             {/* Order Info */}
-                            {order.formData && (
+                            {order.formData && Object.keys(order.formData).length > 0 && (
                                 <div className="pt-4 border-t border-gray-200">
                                     <h3 className="font-semibold text-gray-900 mb-3">Additional Information</h3>
                                     <div className="space-y-2 text-sm">
-                                        {Object.entries(order.formData).map(([key, value]) => (
-                                            <div key={key} className="flex justify-between">
-                                                <span className="text-gray-600 capitalize">{key.replace(/_/g, ' ')}:</span>
-                                                <span className="text-gray-900 font-medium">
-                                                    {typeof value === 'object' && value !== null
-                                                        ? value.name || JSON.stringify(value)
-                                                        : String(value)}
-                                                </span>
-                                            </div>
-                                        ))}
+                                        {Object.entries(order.formData).map(([key, value]) => {
+                                            // Skip null/undefined values
+                                            if (value === null || value === undefined) return null;
+
+                                            return (
+                                                <div key={key} className="flex justify-between items-start gap-4">
+                                                    <span className="text-gray-600 capitalize flex-shrink-0">
+                                                        {key.replace(/_/g, ' ')}:
+                                                    </span>
+                                                    <span className="text-gray-900 font-medium text-right">
+                                                        {formatValue(value)}
+                                                    </span>
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                 </div>
                             )}
