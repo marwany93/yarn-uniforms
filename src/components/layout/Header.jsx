@@ -67,13 +67,6 @@ const Header = () => {
                         ))}
 
                         <Link
-                            href="/track"
-                            className="text-[#192E4F] font-medium hover:text-[#e5d7ca] transition-colors duration-200"
-                        >
-                            {t(translations.trackOrder)}
-                        </Link>
-
-                        <Link
                             href="/admin"
                             className="text-gray-500 hover:text-[#192E4F] transition-colors duration-200 text-sm"
                         >
