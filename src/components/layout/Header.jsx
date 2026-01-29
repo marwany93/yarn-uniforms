@@ -11,10 +11,6 @@ const Header = () => {
     const { getCartItemCount } = useCart();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-    const handleCartClick = () => {
-        console.log('Open Cart Drawer');
-    };
-
     const translations = {
         home: { en: 'Home', ar: 'الرئيسية' },
         schools: { en: 'Schools', ar: 'المدارس' },
@@ -84,8 +80,8 @@ const Header = () => {
                         </Link>
 
                         {/* Shopping Cart Icon */}
-                        <button
-                            onClick={handleCartClick}
+                        <Link
+                            href="/cart"
                             className="relative p-2 text-[#192E4F] hover:text-[#e5d7ca] transition-colors duration-200"
                             aria-label="Shopping Cart"
                         >
@@ -98,7 +94,7 @@ const Header = () => {
                                     {getCartItemCount()}
                                 </span>
                             )}
-                        </button>
+                        </Link>
 
                         {/* Language Switcher - White Background Theme */}
                         <div className="flex items-center gap-2 border-l border-gray-200 pl-4 ml-4 rtl:border-r rtl:pr-4 rtl:pl-0 rtl:ml-0 rtl:mr-4 rtl:border-l-0">
@@ -124,8 +120,8 @@ const Header = () => {
                     {/* Mobile menu button */}
                     <div className="flex items-center space-x-4 rtl:space-x-reverse lg:hidden">
                         {/* Mobile Cart Icon */}
-                        <button
-                            onClick={handleCartClick}
+                        <Link
+                            href="/cart"
                             className="relative p-2 text-[#192E4F] hover:text-[#e5d7ca] transition-colors duration-200"
                             aria-label="Shopping Cart"
                         >
@@ -137,7 +133,7 @@ const Header = () => {
                                     {getCartItemCount()}
                                 </span>
                             )}
-                        </button>
+                        </Link>
 
                         {/* Mobile Language Switcher */}
                         <button
