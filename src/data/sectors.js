@@ -12,7 +12,7 @@ export const sectors = [
         description: 'Premium school uniforms designed for comfort, durability, and style. Perfect for students of all ages.',
         descriptionAr: 'زي مدرسي فاخر مصمم للراحة والمتانة والأناقة. مثالي للطلاب من جميع الأعمار.',
         color: '#3B82F6', // Blue
-        image: '/images/sectors/schools.jpg', // Placeholder
+        image: '/assets/sector-schools.png',
     },
     {
         id: 'medical',
@@ -22,7 +22,7 @@ export const sectors = [
         description: 'Professional medical scrubs and uniforms that meet healthcare industry standards with superior comfort.',
         descriptionAr: 'زي طبي احترافي يلبي معايير الصناعة الصحية مع راحة فائقة.',
         color: '#10B981', // Green
-        image: '/images/sectors/medical.jpg', // Placeholder
+        image: '/assets/sector-medical.png',
     },
     {
         id: 'corporate',
@@ -32,7 +32,7 @@ export const sectors = [
         description: 'High-quality corporate and industrial uniforms built for safety, functionality, and professional appearance.',
         descriptionAr: 'زي شركات وصناعي عالي الجودة مصمم للسلامة والوظائف والمظهر المهني.',
         color: '#F59E0B', // Amber
-        image: '/images/sectors/corporate.jpg', // Placeholder
+        image: '/assets/sector-corporate.png',
     },
     {
         id: 'hospitality',
@@ -42,7 +42,7 @@ export const sectors = [
         description: 'Elegant hospitality uniforms that enhance your brand image while ensuring staff comfort and mobility.',
         descriptionAr: 'زي ضيافة أنيق يعزز صورة علامتك التجارية مع ضمان راحة وحركة الموظفين.',
         color: '#8B5CF6', // Purple
-        image: '/images/sectors/hospitality.jpg', // Placeholder
+        image: '/assets/sector-hospitality.png',
     },
 ];
 

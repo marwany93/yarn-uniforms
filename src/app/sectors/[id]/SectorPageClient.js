@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { useLanguage } from '@/hooks/useLanguage';
 import { getSectorTitle, getSectorDescription } from '@/data/sectors';
+import SchoolWizard from '@/components/wizard/SchoolWizard';
 
 export default function SectorPageClient({ sector }) {
     const { t, language } = useLanguage();
@@ -29,10 +30,44 @@ export default function SectorPageClient({ sector }) {
             en: 'Our streamlined production process ensures your uniforms are delivered on time, every time, without compromising on quality.',
             ar: 'تضمن عملية الإنتاج المبسطة لدينا تسليم زيك الموحد في الوقت المحدد، في كل مرة، دون المساس بالجودة.'
         },
+        comingSoon: { en: 'Coming Soon', ar: 'قريباً' },
+        wizardInDevelopment: {
+            en: 'Our custom uniform designer for this sector is currently in development. Contact us directly for inquiries.',
+            ar: 'مصمم الزي الموحد المخصص لهذا القطاع قيد التطوير حالياً. اتصل بنا مباشرة للاستفسارات.'
+        }
     };
 
+    // If this is the schools sector, render the School Wizard
+    if (sector.id === 'schools') {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+                {/* Header Section */}
+                <div className="bg-primary text-white py-12">
+                    <div className="container-custom text-center">
+                        <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm text-5xl mb-4">
+                            {sector.icon}
+                        </div>
+                        <h1 className="text-4xl md:text-5xl font-display font-bold mb-3">
+                            {language === 'ar' ? 'مصمم الزي المدرسي' : 'School Uniform Designer'}
+                        </h1>
+                        <p className="text-xl text-white/90 max-w-2xl mx-auto">
+                            {language === 'ar'
+                                ? 'صمم الزي المدرسي المثالي باستخدام معالج التصميم التفاعلي الخاص بنا'
+                                : 'Create the perfect school uniform with our interactive design wizard'
+                            }
+                        </p>
+                    </div>
+                </div>
+
+                {/* Wizard Component */}
+                <SchoolWizard />
+            </div>
+        );
+    }
+
+    // For other sectors, render the generic page with "Coming Soon"
     const handleStartDesigning = () => {
-        console.log('Navigate to Wizard');
+        console.log('Navigate to Wizard - Coming Soon');
     };
 
     const benefits = [
@@ -95,20 +130,14 @@ export default function SectorPageClient({ sector }) {
                             {getSectorDescription(sector, language)}
                         </p>
 
-                        {/* Primary CTA */}
-                        <button
-                            onClick={handleStartDesigning}
-                            className="inline-flex items-center gap-3 px-10 py-5 bg-white text-primary rounded-lg font-bold text-lg hover:bg-gray-100 shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-105"
-                            style={{ color: sector.color }}
-                        >
-                            <span>{t(translations.startDesigning)}</span>
-                            <svg className="w-6 h-6 ltr:block rtl:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                            </svg>
-                            <svg className="w-6 h-6 ltr:hidden rtl:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 17l-5-5m0 0l5-5m-5 5h12" />
-                            </svg>
-                        </button>
+                        {/* Coming Soon Badge */}
+                        <div className="inline-block px-8 py-4 bg-white/20 backdrop-blur-sm rounded-full mb-6">
+                            <span className="text-2xl font-bold">{t(translations.comingSoon)}</span>
+                        </div>
+
+                        <p className="text-lg text-white/80">
+                            {t(translations.wizardInDevelopment)}
+                        </p>
                     </div>
                 </div>
             </section>
@@ -156,22 +185,21 @@ export default function SectorPageClient({ sector }) {
                         </h3>
                         <p className="text-xl mb-8 text-white/90">
                             {language === 'ar'
-                                ? 'دعنا نساعدك في إنشاء زي موحد مثالي لمؤسستك'
-                                : "Let's help you create the perfect uniforms for your organization"
-                            }
+                                ? 'اتصل بنا للحصول على عرض أسعار مخصص'
+                                : 'Contact us for a custom quote'}
                         </p>
-                        <button
-                            onClick={handleStartDesigning}
+                        <a
+                            href="/contact"
                             className="inline-flex items-center gap-3 px-10 py-5 bg-secondary text-primary rounded-lg font-bold text-lg hover:bg-secondary/90 shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-105"
                         >
-                            <span>{t(translations.startDesigning)}</span>
+                            <span>{language === 'ar' ? 'اتصل بنا' : 'Contact Us'}</span>
                             <svg className="w-6 h-6 ltr:block rtl:hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                             </svg>
                             <svg className="w-6 h-6 ltr:hidden rtl:block" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 17l-5-5m0 0l5-5m-5 5h12" />
                             </svg>
-                        </button>
+                        </a>
                     </div>
                 </div>
             </section>
