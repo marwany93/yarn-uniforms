@@ -130,29 +130,55 @@ export default function OrderDetailsDrawer({ order, isOpen, onClose }) {
                         </div>
                     </div>
 
-                    {/* Status Control */}
+                    {/* Status Control - FUNCTIONAL */}
                     <div className="bg-white border border-gray-200 rounded-lg p-4">
-                        <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">Order Status</h3>
-                        <div className="space-y-3">
+                        <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">Order Status & Timeline</h3>
+                        <div className="space-y-4">
+                            {/* Current Status Display */}
                             <div>
                                 <label className="block text-sm text-gray-600 mb-2">Current Status</label>
                                 <span className={`px-3 py-1 inline-flex text-sm font-semibold rounded-full ${statusColors[order.status] || 'bg-gray-100 text-gray-800'}`}>
                                     {order.status || 'Order Received'}
                                 </span>
-                                {/* Status Update Dropdown */}
-                                <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">Update Status</label>
-                                    <select
-                                        value={newStatus}
-                                        onChange={(e) => setNewStatus(e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white"
-                                    >
-                                        {STATUS_STAGES.map(status => (
-                                            <option key={status} value={status}>{status}</option>
-                                        ))}
-                                    </select>
-                                </div>
                             </div>
+
+                            {/* Status Update Dropdown */}
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">Update Status</label>
+                                <select
+                                    value={newStatus}
+                                    onChange={(e) => setNewStatus(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white"
+                                >
+                                    {STATUS_STAGES.map(status => (
+                                        <option key={status} value={status}>{status}</option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            {/* Expected Completion Date */}
+                            <div>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">Expected Completion Date</label>
+                                <input
+                                    type="date"
+                                    value={targetDate}
+                                    onChange={(e) => setTargetDate(e.target.value)}
+                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                                />
+                                <p className="text-xs text-gray-500 mt-1">Set an estimated delivery/completion date</p>
+                            </div>
+
+                            {/* Save Button */}
+                            <button
+                                onClick={handleUpdateOrder}
+                                disabled={updating}
+                                className={`w-full py-2 px-4 rounded-lg font-semibold transition-colors ${updating
+                                        ? 'bg-gray-400 cursor-not-allowed'
+                                        : 'bg-primary-600 hover:bg-primary-700 text-white'
+                                    }`}
+                            >
+                                {updating ? '⏳ Updating...' : '💾 Save Changes'}
+                            </button>
                         </div>
                     </div>
 
