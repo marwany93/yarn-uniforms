@@ -111,67 +111,83 @@ export default function OrderDetailsDrawer({ order, isOpen, onClose }) {
                         <div className="space-y-4">
                             {order.items && order.items.length > 0 ? (
                                 order.items.map((item, index) => (
-                                    <div key={index} className="border-b border-gray-100 pb-4 last:border-0 last:pb-0">
-                                        <div className="flex gap-3">
+                                    <div key={index} className="bg-gray-50 p-3 rounded-lg border border-gray-200">
+                                        <div className="flex gap-3 mb-3">
                                             {/* Product Image */}
-                                            {item.product?.image && (
+                                            {item.image && (
                                                 <img
-                                                    src={item.product.image}
-                                                    alt={item.product.name}
-                                                    className="w-16 h-16 object-cover rounded-lg border border-gray-200"
+                                                    src={item.image}
+                                                    alt={item.productName || item.name || 'Product'}
+                                                    className="w-20 h-20 object-cover rounded-lg border-2 border-gray-300 flex-shrink-0"
                                                 />
                                             )}
 
-                                            {/* Product Details */}
+                                            {/* Product Name & Code */}
                                             <div className="flex-1">
-                                                <h4 className="font-semibold text-gray-900">{item.product?.name || 'Product'}</h4>
-                                                <div className="mt-2 space-y-1 text-sm">
-                                                    {item.details?.material && (
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="text-gray-600">Material:</span>
-                                                            <span className="text-gray-900">{item.details.material}</span>
-                                                        </div>
-                                                    )}
-                                                    {item.details?.stage && (
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="text-gray-600">Stage:</span>
-                                                            <span className="text-gray-900">{item.details.stage}</span>
-                                                        </div>
-                                                    )}
-                                                    {item.details?.logo && (
-                                                        <div className="flex items-center gap-2">
-                                                            <span className="text-gray-600">Logo:</span>
-                                                            <span className="text-green-600 font-medium">Included</span>
-                                                        </div>
-                                                    )}
-                                                    {item.details?.notes && (
-                                                        <div className="flex items-start gap-2">
-                                                            <span className="text-gray-600">Notes:</span>
-                                                            <span className="text-gray-900 text-xs">{item.details.notes}</span>
-                                                        </div>
-                                                    )}
-                                                </div>
-
-                                                {/* Size Breakdown */}
-                                                {item.sizes && Object.keys(item.sizes).length > 0 && (
-                                                    <div className="mt-3">
-                                                        <p className="text-xs font-semibold text-gray-700 mb-2">Size Breakdown:</p>
-                                                        <div className="flex flex-wrap gap-2">
-                                                            {Object.entries(item.sizes).map(([size, qty]) => (
-                                                                qty > 0 && (
-                                                                    <span key={size} className="px-2 py-1 bg-primary-50 text-primary-700 text-xs font-medium rounded">
-                                                                        {size}: {qty}
-                                                                    </span>
-                                                                )
-                                                            ))}
-                                                        </div>
-                                                        <p className="text-xs text-gray-500 mt-2">
-                                                            Total: <span className="font-semibold">{item.quantity || 0} items</span>
-                                                        </p>
-                                                    </div>
+                                                <h4 className="font-bold text-gray-900 text-base">
+                                                    {item.productName || item.name || item.title || 'Product'}
+                                                </h4>
+                                                {item.code && (
+                                                    <p className="text-xs text-gray-500 mt-1">Code: {item.code}</p>
                                                 )}
+                                                <div className="mt-2">
+                                                    <span className="text-xs font-semibold text-primary-600 bg-primary-50 px-2 py-1 rounded">
+                                                        Total Qty: {item.quantity || 0}
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
+
+                                        {/* Specifications */}
+                                        <div className="mb-3 flex flex-wrap gap-2">
+                                            {item.details?.material && (
+                                                <span className="text-xs bg-white border border-gray-300 px-2 py-1 rounded">
+                                                    🧶 {item.details.material}
+                                                </span>
+                                            )}
+                                            {item.details?.stage && (
+                                                <span className="text-xs bg-white border border-gray-300 px-2 py-1 rounded">
+                                                    🏫 {item.details.stage}
+                                                </span>
+                                            )}
+                                            {item.details?.logo && (
+                                                <span className="text-xs bg-green-50 border border-green-300 text-green-700 px-2 py-1 rounded font-medium">
+                                                    🏷️ Logo: {item.details.logo}
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        {/* SIZE BREAKDOWN - THE CRITICAL PART */}
+                                        {item.details?.sizes && Object.keys(item.details.sizes).length > 0 ? (
+                                            <div className="bg-white p-3 rounded border-2 border-blue-100">
+                                                <p className="text-xs text-gray-500 mb-2 uppercase font-bold tracking-wider">📏 Size Breakdown</p>
+                                                <div className="flex flex-wrap gap-2">
+                                                    {Object.entries(item.details.sizes).map(([size, qty]) => (
+                                                        qty > 0 && (
+                                                            <div key={size} className="text-xs bg-blue-50 text-blue-700 px-3 py-1.5 rounded border border-blue-200 font-medium">
+                                                                <span className="text-gray-600">Size </span>
+                                                                <span className="font-bold text-blue-900">{size}</span>
+                                                                <span className="text-gray-600">: </span>
+                                                                <span className="font-bold text-blue-900">{qty}</span>
+                                                                <span className="text-xs text-gray-500"> pcs</span>
+                                                            </div>
+                                                        )
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className="bg-red-50 p-2 rounded border border-red-200">
+                                                <p className="text-xs text-red-600">⚠️ No size data found for this item</p>
+                                            </div>
+                                        )}
+
+                                        {/* Notes */}
+                                        {item.details?.notes && (
+                                            <div className="mt-3 text-xs text-gray-600 bg-yellow-50 p-2 rounded border border-yellow-200">
+                                                <span className="font-semibold">📝 Notes: </span>
+                                                {item.details.notes}
+                                            </div>
+                                        )}
                                     </div>
                                 ))
                             ) : (
