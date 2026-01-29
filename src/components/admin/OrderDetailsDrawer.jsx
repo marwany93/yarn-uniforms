@@ -73,10 +73,6 @@ export default function OrderDetailsDrawer({ order, isOpen, onClose }) {
                                 <span className="text-sm text-gray-600">Phone:</span>
                                 <span className="text-sm font-medium text-gray-900">{order.customer?.phone || 'N/A'}</span>
                             </div>
-                            <div className="flex justify-between">
-                                <span className="text-sm text-gray-600">Governorate:</span>
-                                <span className="text-sm font-medium text-gray-900">{order.customer?.governorate || 'N/A'}</span>
-                            </div>
                         </div>
                     </div>
 

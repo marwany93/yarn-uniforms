@@ -82,11 +82,10 @@ export default function CartPage() {
             const orderData = {
                 orderId: newOrderId,
                 customer: {
-                    name: contactInfo.name || 'N/A',
+                    name: contactInfo.contactPerson || contactInfo.name || 'N/A',
                     email: contactInfo.email || 'N/A',
                     phone: contactInfo.phone || 'N/A',
-                    schoolName: contactInfo.schoolName || 'N/A',
-                    governorate: contactInfo.governorate || 'N/A'
+                    schoolName: contactInfo.schoolName || 'N/A'
                 },
                 items: cart,
                 sector: 'Schools',
