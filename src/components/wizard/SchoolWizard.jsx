@@ -183,17 +183,26 @@ export default function SchoolWizard() {
 
     // Save current item and move to next
     const handleSaveAndNext = () => {
+        console.log('🔵 handleSaveAndNext: Function called');
+        console.log('🔍 Current product:', currentProduct);
+        console.log('🔍 Total items:', totalItems);
+
         // Validation
         if (!currentProduct) {
+            console.log('❌ Validation failed: No product selected');
             alert(t(translations.selectProduct));
             return;
         }
         if (totalItems === 0) {
+            console.log('❌ Validation failed: No items in size matrix');
             alert(t(translations.atLeastOne));
             return;
         }
 
+        console.log('✅ Validation passed');
+
         const product = getProductById(currentProduct);
+        console.log('📦 Product details:', product);
 
         // Create cart item
         const cartItem = {
@@ -216,11 +225,19 @@ export default function SchoolWizard() {
             price: 0
         };
 
+        console.log('🛒 Cart item constructed:', cartItem);
+        console.log('🚀 Calling addToCart...');
+
         // Add to cart
         addToCart(cartItem);
 
+        console.log('✅ addToCart called successfully');
+        console.log('📊 Current category index:', currentCategoryIndex);
+        console.log('📊 Total categories:', selectedCategoryIds.length);
+
         // Check if more items to customize
         if (currentCategoryIndex < selectedCategoryIds.length - 1) {
+            console.log('➡️ Moving to next category');
             // Move to next category
             setCurrentCategoryIndex(prev => prev + 1);
             setCurrentProduct(null);
@@ -232,6 +249,7 @@ export default function SchoolWizard() {
             });
             setSizeQuantities({});
         } else {
+            console.log('🎉 All categories complete - showing completion modal');
             // All done - show completion modal
             setShowCompleteModal(true);
         }
@@ -335,8 +353,8 @@ export default function SchoolWizard() {
                 onClick={handleContinueToCatalog}
                 disabled={!isContactFormValid()}
                 className={`w-full py-4 rounded-lg font-bold text-lg shadow-lg transition-all duration-300 ${isContactFormValid()
-                        ? 'bg-primary text-white hover:bg-primary-700 hover:shadow-xl'
-                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    ? 'bg-primary text-white hover:bg-primary-700 hover:shadow-xl'
+                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                     }`}
             >
                 {t(translations.continue)}
@@ -375,8 +393,8 @@ export default function SchoolWizard() {
                             key={category.id}
                             onClick={() => handleCategoryToggle(category.id)}
                             className={`group relative p-6 rounded-xl border-4 transition-all duration-300 ${isSelected
-                                    ? 'border-green-500 bg-green-50 shadow-xl scale-105'
-                                    : 'border-gray-300 hover:border-primary hover:shadow-lg bg-white'
+                                ? 'border-green-500 bg-green-50 shadow-xl scale-105'
+                                : 'border-gray-300 hover:border-primary hover:shadow-lg bg-white'
                                 }`}
                         >
                             {/* Selected Badge */}
@@ -406,8 +424,8 @@ export default function SchoolWizard() {
                     onClick={handleStartCustomizing}
                     disabled={selectedCategoryIds.length === 0}
                     className={`px-10 py-4 rounded-lg font-bold text-lg shadow-lg transition-all duration-300 ${selectedCategoryIds.length > 0
-                            ? 'bg-primary text-white hover:bg-primary-700 hover:shadow-xl'
-                            : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        ? 'bg-primary text-white hover:bg-primary-700 hover:shadow-xl'
+                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                         }`}
                 >
                     {t(translations.startCustomizing)} ({selectedCategoryIds.length} {t(translations.items)})
@@ -523,8 +541,8 @@ export default function SchoolWizard() {
                                 <button
                                     onClick={() => setDetails({ ...details, stage: 'kg_primary' })}
                                     className={`p-4 rounded-lg border-2 transition-all ${details.stage === 'kg_primary'
-                                            ? 'border-primary bg-primary/10'
-                                            : 'border-gray-300 hover:border-primary'
+                                        ? 'border-primary bg-primary/10'
+                                        : 'border-gray-300 hover:border-primary'
                                         }`}
                                 >
                                     <div className="text-2xl mb-2">🎒</div>
@@ -533,8 +551,8 @@ export default function SchoolWizard() {
                                 <button
                                     onClick={() => setDetails({ ...details, stage: 'prep_secondary' })}
                                     className={`p-4 rounded-lg border-2 transition-all ${details.stage === 'prep_secondary'
-                                            ? 'border-primary bg-primary/10'
-                                            : 'border-gray-300 hover:border-primary'
+                                        ? 'border-primary bg-primary/10'
+                                        : 'border-gray-300 hover:border-primary'
                                         }`}
                                 >
                                     <div className="text-2xl mb-2">🎓</div>
@@ -628,8 +646,8 @@ export default function SchoolWizard() {
                             onClick={handleSaveAndNext}
                             disabled={totalItems === 0}
                             className={`w-full py-4 rounded-lg font-bold text-lg shadow-lg transition-all duration-300 ${totalItems > 0
-                                    ? 'bg-primary text-white hover:bg-primary-700 hover:shadow-xl'
-                                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                                ? 'bg-primary text-white hover:bg-primary-700 hover:shadow-xl'
+                                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                                 }`}
                         >
                             {t(translations.saveAndNext)}
