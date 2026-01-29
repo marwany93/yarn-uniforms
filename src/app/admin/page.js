@@ -80,39 +80,39 @@ export default function AdminDashboard() {
                                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider rtl:text-left">{t(translations.actions)}</th>
                             </tr></thead>
                             <tbody className="bg-white divide-y divide-gray-200">
-                                {orders.length === 0 ? (<tr><td colSpan="6" className="px-6 py-4 text-center text-sm text-gray-500">{t(translations.noOrders)}</td></tr>) : (orders.map((order) => (
-                                    <tr key={order.id} className="hover:bg-gray-50 cursor-pointer transition-colors" onClick={() => { setSelectedOrder(order); setIsModalOpen(true); }}>
-                                        <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="flex items-center">
-                                                <span className="text-sm font-medium text-primary-600 hover:text-primary-900">{order.orderId || 'N/A'}</span>
-
-                                                {/* --- TABLE COPY BUTTON --- */}
-                                                <button
-                                                    onClick={(e) => copyToClipboard(order.orderId, e)}
-                                                    className="text-gray-400 hover:text-primary-600 transition-colors p-1 ltr:ml-2 rtl:mr-2"
-                                                    title="Copy Order ID"
-                                                >
-                                                    {copiedId === order.orderId ? (
-                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
-                                                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                                        </svg>
-                                                    ) : (
-                                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                                            <path strokeLinecap="round" strokeLinejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
-                                                        </svg>
-                                                    )}
-                                                </button>
-                                                {/* ------------------------- */}
-
-                                            </div>
-                                        </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{order.customer?.schoolName || order.customer?.name || 'N/A'}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{order.sector || 'N/A'}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap"><span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColors[order.status] || 'bg-gray-100 text-gray-800'}`}>{t(translations[order.status?.toLowerCase()?.replace(/ /g, '_') + '_status']) || order.status || 'N/A'}</span></td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.createdAt?.toDate ? order.createdAt.toDate().toLocaleDateString() : (order.createdAt?.seconds ? new Date(order.createdAt.seconds * 1000).toLocaleDateString() : 'N/A')}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium ltr:text-right rtl:text-left"><button onClick={(e) => { e.stopPropagation(); console.log('Order Details:', order); setSelectedOrder(order); setIsModalOpen(true); }} className="text-primary-600 hover:text-primary-900 transition-colors font-semibold">{t(translations.viewDetails)}</button></td>
-                                    </tr>
-                                )))}}
+                                {orders.length === 0 ? (
+                                    <tr><td colSpan="6" className="px-6 py-4 text-center text-sm text-gray-500">{t(translations.noOrders)}</td></tr>
+                                ) : (
+                                    orders.map((order) => (
+                                        <tr key={order.id} className="hover:bg-gray-50 cursor-pointer transition-colors" onClick={() => { setSelectedOrder(order); setIsModalOpen(true); }}>
+                                            <td className="px-6 py-4 whitespace-nowrap">
+                                                <div className="flex items-center">
+                                                    <span className="text-sm font-medium text-primary-600 hover:text-primary-900">{order.orderId || 'N/A'}</span>
+                                                    <button
+                                                        onClick={(e) => copyToClipboard(order.orderId, e)}
+                                                        className="text-gray-400 hover:text-primary-600 transition-colors p-1 ltr:ml-2 rtl:mr-2"
+                                                        title="Copy Order ID"
+                                                    >
+                                                        {copiedId === order.orderId ? (
+                                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                                                                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                                            </svg>
+                                                        ) : (
+                                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                                                <path strokeLinecap="round" strokeLinejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                                            </svg>
+                                                        )}
+                                                    </button>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{order.customer?.schoolName || order.customer?.name || 'N/A'}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{order.sector || 'N/A'}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap"><span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColors[order.status] || 'bg-gray-100 text-gray-800'}`}>{t(translations[order.status?.toLowerCase()?.replace(/ /g, '_') + '_status']) || order.status || 'N/A'}</span></td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.createdAt?.toDate ? order.createdAt.toDate().toLocaleDateString() : (order.createdAt?.seconds ? new Date(order.createdAt.seconds * 1000).toLocaleDateString() : 'N/A')}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium ltr:text-right rtl:text-left"><button onClick={(e) => { e.stopPropagation(); console.log('Order Details:', order); setSelectedOrder(order); setIsModalOpen(true); }} className="text-primary-600 hover:text-primary-900 transition-colors font-semibold">{t(translations.viewDetails)}</button></td>
+                                        </tr>
+                                    ))
+                                )}
                             </tbody>
                         </table>
                     </div>
