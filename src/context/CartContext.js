@@ -4,9 +4,12 @@ import { createContext, useContext, useState, useEffect, useRef } from 'react';
 
 const CartContext = createContext({
   cart: [],
-  addToCart: () => {},
-  removeFromCart: () => {},
-  clearCart: () => {},
+  addToCart: () => {
+    console.error("🚨 CRITICAL ERROR: CartProvider is missing!");
+    alert("🚨 CRITICAL ERROR:\n\nThe CartProvider is NOT wrapping this component!\n\nThis means layout.js is not properly configured.\n\nData CANNOT be saved.");
+  },
+  removeFromCart: () => { },
+  clearCart: () => { },
   getCartItemCount: () => 0, // Placeholder
   cartItems: []
 });
@@ -26,6 +29,7 @@ export function CartProvider({ children }) {
         try {
           const parsed = JSON.parse(saved);
           setCart(parsed);
+          console.log('✅ Cart loaded:', parsed.length, 'items');
         } catch (e) {
           console.error('Error parsing cart', e);
         }
@@ -38,11 +42,13 @@ export function CartProvider({ children }) {
   useEffect(() => {
     if (isLoaded.current) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(cart));
+      console.log('💾 Cart saved:', cart.length, 'items');
     }
   }, [cart]);
 
   // Actions
   const addToCart = (item) => {
+    console.log('➕ Adding item to cart:', item);
     setCart((prev) => [...prev, item]);
   };
 
@@ -63,11 +69,11 @@ export function CartProvider({ children }) {
   };
 
   return (
-    <CartContext.Provider value={{ 
-      cart, 
-      cartItems: cart, 
-      addToCart, 
-      removeFromCart, 
+    <CartContext.Provider value={{
+      cart,
+      cartItems: cart,
+      addToCart,
+      removeFromCart,
       clearCart,
       getCartItemCount // <--- Added back here
     }}>
