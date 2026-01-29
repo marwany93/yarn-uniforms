@@ -15,6 +15,7 @@ export default function CartPage() {
 
     const { t, language } = useLanguage();
     const [showSuccess, setShowSuccess] = useState(false);
+    const [orderId, setOrderId] = useState(null);
 
     const translations = {
         pageTitle: { en: 'Quotation Request Review', ar: 'مراجعة طلب عرض السعر' },
@@ -44,8 +45,8 @@ export default function CartPage() {
         emptyCart: { en: 'Your cart is empty', ar: 'سلتك فارغة' },
         startOrdering: { en: 'Start Ordering', ar: 'بدء الطلب' },
         thankYou: { en: 'Thank you!', ar: 'شكراً لك!' },
-        requestSent: { en: 'Your request for', ar: 'تم إرسال طلبك لـ' },
-        hasBeen: { en: 'has been sent', ar: '' },
+        requestSent: { en: 'Your quotation request has been sent successfully.', ar: 'تم إرسال طلب عرض السعر بنجاح.' },
+        orderReference: { en: 'Order Reference', ar: 'رقم الطلب' },
         weWillContact: { en: 'We will contact you shortly with a detailed quotation.', ar: 'سنتواصل معك قريباً مع عرض سعر مفصل.' },
         backToHome: { en: 'Back to Home', ar: 'العودة للرئيسية' },
         newOrder: { en: 'New Order', ar: 'طلب جديد' },
@@ -66,6 +67,10 @@ export default function CartPage() {
 
     const handleSubmit = () => {
         if (cart.length === 0) return;
+
+        // Generate unique order ID
+        const newOrderId = 'ORD-' + Math.floor(100000 + Math.random() * 900000);
+        setOrderId(newOrderId);
 
         // In production, this would submit to backend/Firebase
         // For now, just show success and clear
@@ -115,8 +120,19 @@ export default function CartPage() {
                     <h1 className="text-4xl font-bold text-gray-900 mb-4">
                         {t(translations.thankYou)}
                     </h1>
+
+                    {/* Order Reference Number */}
+                    <div className="bg-gray-100 p-4 rounded-lg mb-6">
+                        <p className="text-sm text-gray-500 font-semibold mb-1">
+                            {t(translations.orderReference)}
+                        </p>
+                        <p className="text-3xl font-bold text-primary">
+                            {orderId}
+                        </p>
+                    </div>
+
                     <p className="text-xl text-gray-700 mb-2">
-                        {t(translations.requestSent)} <span className="font-bold text-primary">{contactInfo?.schoolName}</span> {language === 'en' && t(translations.hasBeen)}
+                        {t(translations.requestSent)}
                     </p>
                     <p className="text-gray-600 mb-8">
                         {t(translations.weWillContact)}
