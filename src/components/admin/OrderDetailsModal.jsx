@@ -3,6 +3,7 @@ import { useLanguage } from '@/hooks/useLanguage';
 import { useEffect, useState } from 'react';
 import { db } from '@/lib/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
+import Image from 'next/image';
 
 const OrderDetailsModal = ({ order, isOpen, onClose }) => {
   const { t, language } = useLanguage();
@@ -113,8 +114,8 @@ const OrderDetailsModal = ({ order, isOpen, onClose }) => {
         <div className="flex flex-col space-y-3">
           <span className="text-sm text-gray-600">{value.name || 'File'}</span>
           {isImage && (
-            <div className="border border-gray-200 rounded-lg p-3 bg-gray-50 flex justify-center items-center">
-              <img src={value.url} alt="Preview" className="w-32 h-32 object-contain rounded" onError={(e) => { e.target.style.display = 'none'; }} />
+            <div className="border border-gray-200 rounded-lg p-3 bg-gray-50 flex justify-center items-center relative">
+              <Image src={value.url} alt="Preview" width={128} height={128} className="object-contain rounded" onError={(e) => { e.target.style.display = 'none'; }} />
             </div>
           )}
           <div className="flex space-x-2 rtl:space-x-reverse">

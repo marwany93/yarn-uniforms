@@ -3,7 +3,7 @@
 import { Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { useLanguage } from '@/hooks/useLanguage';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs, limit } from 'firebase/firestore';
 
@@ -57,16 +57,7 @@ function TrackOrderContent() {
         cancelled: 'bg-red-100 text-red-800 border-red-200',
     };
 
-    // Check URL params on mount
-    useEffect(() => {
-        const id = searchParams.get('id');
-        if (id && id.trim()) {
-            setOrderId(id.trim());
-            handleTrack(id.trim());
-        }
-    }, [searchParams]);
-
-    const handleTrack = async (idToSearch = null) => {
+    const handleTrack = useCallback(async (idToSearch = null) => {
         // Use provided ID or input value, and trim it
         const searchId = (idToSearch || orderId).trim();
 
@@ -99,7 +90,16 @@ function TrackOrderContent() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [orderId, t, translations.enterOrderId, translations.notFound]);
+
+    // Check URL params on mount
+    useEffect(() => {
+        const id = searchParams.get('id');
+        if (id && id.trim()) {
+            setOrderId(id.trim());
+            handleTrack(id.trim());
+        }
+    }, [searchParams, handleTrack]);
 
     const formatDate = (timestamp) => {
         if (!timestamp) return 'N/A';
@@ -169,8 +169,8 @@ function TrackOrderContent() {
                             type="submit"
                             disabled={loading}
                             className={`w-full py-3 rounded-lg font-semibold text-white shadow-lg transition-all ${loading
-                                    ? 'bg-gray-400 cursor-not-allowed'
-                                    : 'bg-primary-600 hover:bg-primary-700 hover:shadow-xl'
+                                ? 'bg-gray-400 cursor-not-allowed'
+                                : 'bg-primary-600 hover:bg-primary-700 hover:shadow-xl'
                                 }`}
                         >
                             {loading ? t(translations.searching) : t(translations.trackButton)}

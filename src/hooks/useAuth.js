@@ -16,7 +16,7 @@ export const AuthProvider = ({ children }) => {
 
     // HARD TIMEOUT: Force loading to false after 2 seconds
     const timeoutId = setTimeout(() => {
-      if (isSubscribed && loading) {
+      if (isSubscribed) {
         console.log('⏰ Auth: TIMEOUT HIT! Forcing loading to false');
         setLoading(false);
         setUser(null);
@@ -30,7 +30,7 @@ export const AuthProvider = ({ children }) => {
       auth,
       (currentUser) => {
         console.log('✅ Auth: Firebase responded! User:', currentUser ? 'LOGGED IN' : 'NOT LOGGED IN');
-        
+
         if (!isSubscribed) {
           console.log('⚠️ Auth: Component unmounted, ignoring response');
           return;
@@ -43,7 +43,7 @@ export const AuthProvider = ({ children }) => {
       },
       (error) => {
         console.error('❌ Auth: Error from Firebase:', error.message);
-        
+
         if (!isSubscribed) return;
 
         clearTimeout(timeoutId);
@@ -62,6 +62,7 @@ export const AuthProvider = ({ children }) => {
       clearTimeout(timeoutId);
       unsubscribe();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Log current state whenever it changes
@@ -84,11 +85,11 @@ export const AuthProvider = ({ children }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  
+
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
-  
+
   return context;
 };
 
