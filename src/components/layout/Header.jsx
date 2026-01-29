@@ -22,7 +22,7 @@ const Header = () => {
     };
 
     const navigation = [
-        { name: t(translations.schools), href: '/order/schools', sector: 'schools' },
+        { name: t(translations.schools), href: '/sectors/schools', sector: 'schools' },
         { name: t(translations.factories), href: '/order/factories', sector: 'factories' },
         { name: t(translations.companies), href: '/order/companies', sector: 'companies' },
         { name: t(translations.hospitals), href: '/order/hospitals', sector: 'hospitals' },

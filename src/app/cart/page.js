@@ -68,8 +68,8 @@ export default function CartPage() {
     const handleSubmit = () => {
         if (cart.length === 0) return;
 
-        // Generate unique order ID
-        const newOrderId = 'ORD-' + Math.floor(100000 + Math.random() * 900000);
+        // Generate secure alphanumeric order ID (format: YARN-A1B2C3D)
+        const newOrderId = 'YARN-' + Math.random().toString(36).substring(2, 9).toUpperCase();
         setOrderId(newOrderId);
 
         // In production, this would submit to backend/Firebase
