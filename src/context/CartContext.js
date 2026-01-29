@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { createContext, useContext, useState, useEffect } from 'react';
 
 const CartContext = createContext({
   cart: [],
@@ -10,45 +10,50 @@ const CartContext = createContext({
   },
   removeFromCart: () => { },
   clearCart: () => { },
-  getCartItemCount: () => 0, // Placeholder
+  getCartItemCount: () => 0,
   cartItems: []
 });
 
 const STORAGE_KEY = 'yarn_b2b_cart';
 
 export function CartProvider({ children }) {
-  console.log('🛒 CartProvider: Component mounting...');
-
   // 1. Initialize Empty (Server-Safe)
   const [cart, setCart] = useState([]);
-  const isLoaded = useRef(false);
+  // 2. Use STATE for initialization status (triggers re-render when ready)
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  console.log('🛒 CartProvider: State initialized, cart length:', cart.length);
-
-  // 2. Load Data (Run ONCE on Mount)
+  // 3. LOAD Effect (Runs ONCE on Mount)
   useEffect(() => {
+    console.log('🛒 CartProvider: MOUNTED');
     if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        try {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
           const parsed = JSON.parse(saved);
           setCart(parsed);
-          console.log('✅ Cart loaded:', parsed.length, 'items');
-        } catch (e) {
-          console.error('Error parsing cart', e);
+          console.log(`✅ Cart LOADED from storage: ${parsed.length} items`);
+        } else {
+          console.log('ℹ️ Storage empty, starting fresh.');
         }
+      } catch (e) {
+        console.error('❌ Error parsing cart:', e);
       }
-      isLoaded.current = true;
+      // CRITICAL: Mark as initialized only after loading attempt finishes
+      setIsInitialized(true);
     }
   }, []);
 
-  // 3. Save Data (Run on Update, BUT ONLY after loading)
+  // 4. SAVE Effect (Runs only when cart changes AND isInitialized is true)
   useEffect(() => {
-    if (isLoaded.current) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(cart));
-      console.log('💾 Cart saved:', cart.length, 'items');
+    if (!isInitialized) {
+      // 🛡️ BLOCKER: Do not save if we haven't finished loading yet!
+      console.log('🛡️ BLOCKED: Save attempt prevented (not initialized yet)');
+      return;
     }
-  }, [cart]);
+
+    console.log(`💾 Saving cart to storage: ${cart.length} items`);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(cart));
+  }, [cart, isInitialized]);
 
   // Actions
   const addToCart = (item) => {
@@ -57,22 +62,21 @@ export function CartProvider({ children }) {
   };
 
   const removeFromCart = (id) => {
+    console.log(`🗑️ Removing item from cart: ${id}`);
     setCart((prev) => prev.filter((item) => item.id !== id));
   };
 
   const clearCart = () => {
+    console.log('🧹 Clearing cart');
     setCart([]);
     if (typeof window !== 'undefined') {
-      localStorage.removeItem(STORAGE_KEY);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify([]));
     }
   };
 
-  // ✅ THIS WAS MISSING: Helper to count total items
   const getCartItemCount = () => {
     return cart.reduce((total, item) => total + (item.quantity || 0), 0);
   };
-
-  console.log('🛒 CartProvider: Rendering with cart length:', cart.length);
 
   return (
     <CartContext.Provider value={{
@@ -81,7 +85,7 @@ export function CartProvider({ children }) {
       addToCart,
       removeFromCart,
       clearCart,
-      getCartItemCount // <--- Added back here
+      getCartItemCount
     }}>
       {children}
     </CartContext.Provider>
