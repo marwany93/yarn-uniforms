@@ -183,9 +183,6 @@ export default function SchoolWizard() {
 
     // Save current item and move to next
     const handleSaveAndNext = () => {
-        // DEBUG: Alert on function entry
-        alert('🔵 DEBUG: Save Button Clicked!\nFunction: handleSaveAndNext');
-
         console.log('🔵 handleSaveAndNext: Function called');
         console.log('🔍 Current product:', currentProduct);
         console.log('🔍 Total items:', totalItems);
@@ -242,9 +239,6 @@ export default function SchoolWizard() {
         if (currentCategoryIndex < selectedCategoryIds.length - 1) {
             console.log('➡️ Moving to next category');
 
-            // DEBUG: Alert moving to next
-            alert(`➡️ MOVING TO NEXT CATEGORY\nCompleted: ${currentCategoryIndex + 1} of ${selectedCategoryIds.length}\nNext category loading...`);
-
             // Move to next category
             setCurrentCategoryIndex(prev => prev + 1);
             setCurrentProduct(null);
@@ -257,9 +251,6 @@ export default function SchoolWizard() {
             setSizeQuantities({});
         } else {
             console.log('🎉 All categories complete - showing completion modal');
-
-            // DEBUG: Alert completion
-            alert(`🎉 ORDER COMPLETE!\nAll ${selectedCategoryIds.length} categories processed.\nShowing completion modal...`);
 
             // All done - show completion modal
             setShowCompleteModal(true);
