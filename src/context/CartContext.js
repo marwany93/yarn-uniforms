@@ -17,9 +17,13 @@ const CartContext = createContext({
 const STORAGE_KEY = 'yarn_b2b_cart';
 
 export function CartProvider({ children }) {
+  console.log('🛒 CartProvider: Component mounting...');
+
   // 1. Initialize Empty (Server-Safe)
   const [cart, setCart] = useState([]);
   const isLoaded = useRef(false);
+
+  console.log('🛒 CartProvider: State initialized, cart length:', cart.length);
 
   // 2. Load Data (Run ONCE on Mount)
   useEffect(() => {
@@ -67,6 +71,8 @@ export function CartProvider({ children }) {
   const getCartItemCount = () => {
     return cart.reduce((total, item) => total + (item.quantity || 0), 0);
   };
+
+  console.log('🛒 CartProvider: Rendering with cart length:', cart.length);
 
   return (
     <CartContext.Provider value={{

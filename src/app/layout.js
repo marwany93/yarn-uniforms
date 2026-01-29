@@ -43,6 +43,9 @@ export const metadata = {
 };
 
 export default function RootLayout({ children }) {
+    // Debug: Verify layout is loading
+    console.log('🏗️ RootLayout: Mounting with CartProvider...');
+
     return (
         <html lang="en" dir="ltr" suppressHydrationWarning>
             <body
