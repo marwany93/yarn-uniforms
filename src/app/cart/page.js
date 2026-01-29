@@ -5,6 +5,8 @@ import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
 import { useLanguage } from '@/hooks/useLanguage';
+import { db } from '@/lib/firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 
 export default function CartPage() {
     const router = useRouter();
@@ -65,19 +67,55 @@ export default function CartPage() {
         return cart.reduce((sum, item) => sum + item.quantity, 0);
     };
 
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (cart.length === 0) return;
 
-        // Generate secure alphanumeric order ID (format: YARN-A1B2C3D)
-        const newOrderId = 'YARN-' + Math.random().toString(36).substring(2, 9).toUpperCase();
-        setOrderId(newOrderId);
+        try {
+            // Generate secure alphanumeric order ID (format: YARN-A1B2C3D)
+            const newOrderId = 'YARN-' + Math.random().toString(36).substring(2, 9).toUpperCase();
+            setOrderId(newOrderId);
 
-        // Clear cart immediately
-        clearCart();
+            // Get contact info from first cart item
+            const contactInfo = cart[0]?.contactInfo || {};
 
-        // In production, this would submit to backend/Firebase
-        // For now, just show success
-        setShowSuccess(true);
+            // Create structured order object for Firestore
+            const orderData = {
+                orderId: newOrderId,
+                customer: {
+                    name: contactInfo.name || 'N/A',
+                    email: contactInfo.email || 'N/A',
+                    phone: contactInfo.phone || 'N/A',
+                    schoolName: contactInfo.schoolName || 'N/A',
+                    governorate: contactInfo.governorate || 'N/A'
+                },
+                items: cart,
+                sector: 'Schools',
+                status: 'Order Received',
+                statusHistory: [
+                    {
+                        status: 'Order Received',
+                        date: new Date(),
+                        note: 'Initial submission'
+                    }
+                ],
+                expectedCompletionDate: null,
+                createdAt: serverTimestamp(),
+                totalItems: getCartItemCount()
+            };
+
+            // Save order to Firestore
+            await addDoc(collection(db, 'orders'), orderData);
+            console.log('✅ Order saved to Firestore:', newOrderId);
+
+            // Clear cart after successful save
+            clearCart();
+
+            // Show success modal
+            setShowSuccess(true);
+        } catch (error) {
+            console.error('❌ Error saving order to Firestore:', error);
+            alert('Failed to submit order. Please try again.');
+        }
     };
 
     const handleNewOrder = () => {
