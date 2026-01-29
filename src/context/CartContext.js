@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 
 // Create context with default value to prevent undefined errors
 const CartContext = createContext({
@@ -23,24 +23,34 @@ export const useCart = () => {
 };
 
 export const CartProvider = ({ children }) => {
-    // Initialize from localStorage using lazy initialization
-    // This prevents hydration mismatches and reads localStorage only once
-    const [cartItems, setCartItems] = useState(() => {
+    // Initialize with empty array to match server-side render
+    // This prevents hydration mismatches
+    const [cartItems, setCartItems] = useState([]);
+
+    // Track if component has mounted to prevent overwriting localStorage with empty state
+    const isMounted = useRef(false);
+
+    // Load cart from localStorage AFTER component mounts (client-side only)
+    useEffect(() => {
         if (typeof window !== 'undefined') {
-            try {
-                const savedCart = localStorage.getItem('yarnUniformsCart');
-                return savedCart ? JSON.parse(savedCart) : [];
-            } catch (error) {
-                console.error('Failed to load cart from localStorage:', error);
-                return [];
+            const savedCart = localStorage.getItem('yarnUniformsCart');
+            if (savedCart) {
+                try {
+                    setCartItems(JSON.parse(savedCart));
+                } catch (error) {
+                    console.error('Failed to load cart from localStorage:', error);
+                }
             }
         }
-        return [];
-    });
+        isMounted.current = true;
+    }, []);
 
     // Save cart to localStorage whenever it changes
+    // BUT skip the first render to avoid overwriting with empty array
     useEffect(() => {
-        localStorage.setItem('yarnUniformsCart', JSON.stringify(cartItems));
+        if (isMounted.current) {
+            localStorage.setItem('yarnUniformsCart', JSON.stringify(cartItems));
+        }
     }, [cartItems]);
 
     const addToCart = (item) => {
