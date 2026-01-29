@@ -13,7 +13,7 @@ export default function CartPage() {
 
     // Defensive coding: provide fallback values
     const cartContext = useCart();
-    const { cart = [], removeFromCart = () => { }, clearCart = () => { } } = cartContext || {};
+    const { cart = [], removeFromCart = () => { }, clearCart = () => { }, getCartItemCount = () => 0 } = cartContext || {};
 
     const { t, language } = useLanguage();
     const [showSuccess, setShowSuccess] = useState(false);
