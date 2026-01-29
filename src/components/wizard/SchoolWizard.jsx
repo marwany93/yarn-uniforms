@@ -183,6 +183,9 @@ export default function SchoolWizard() {
 
     // Save current item and move to next
     const handleSaveAndNext = () => {
+        // DEBUG: Alert on function entry
+        alert('🔵 DEBUG: Save Button Clicked!\nFunction: handleSaveAndNext');
+
         console.log('🔵 handleSaveAndNext: Function called');
         console.log('🔍 Current product:', currentProduct);
         console.log('🔍 Total items:', totalItems);
@@ -190,14 +193,17 @@ export default function SchoolWizard() {
         // Validation
         if (!currentProduct) {
             console.log('❌ Validation failed: No product selected');
-            alert(t(translations.selectProduct));
+            alert('❌ FAILED: No product selected\nPlease select a product style first.');
             return;
         }
         if (totalItems === 0) {
             console.log('❌ Validation failed: No items in size matrix');
-            alert(t(translations.atLeastOne));
+            alert('❌ FAILED: No items in size matrix\nPlease enter quantities for at least one size.');
             return;
         }
+
+        // DEBUG: Alert validation passed
+        alert(`✅ VALIDATION PASSED!\nProduct: ${currentProduct}\nTotal Items: ${totalItems}`);
 
         console.log('✅ Validation passed');
 
@@ -228,8 +234,14 @@ export default function SchoolWizard() {
         console.log('🛒 Cart item constructed:', cartItem);
         console.log('🚀 Calling addToCart...');
 
+        // DEBUG: Alert before calling addToCart
+        alert(`🚀 ADDING TO CART:\nProduct: ${product.name}\nCode: ${product.code}\nQty: ${totalItems}\n\nAbout to call addToCart()...`);
+
         // Add to cart
         addToCart(cartItem);
+
+        // DEBUG: Alert after calling addToCart
+        alert('✅ addToCart() CALLED SUCCESSFULLY!\nItem has been added to cart.');
 
         console.log('✅ addToCart called successfully');
         console.log('📊 Current category index:', currentCategoryIndex);
@@ -238,6 +250,10 @@ export default function SchoolWizard() {
         // Check if more items to customize
         if (currentCategoryIndex < selectedCategoryIds.length - 1) {
             console.log('➡️ Moving to next category');
+
+            // DEBUG: Alert moving to next
+            alert(`➡️ MOVING TO NEXT CATEGORY\nCompleted: ${currentCategoryIndex + 1} of ${selectedCategoryIds.length}\nNext category loading...`);
+
             // Move to next category
             setCurrentCategoryIndex(prev => prev + 1);
             setCurrentProduct(null);
@@ -250,6 +266,10 @@ export default function SchoolWizard() {
             setSizeQuantities({});
         } else {
             console.log('🎉 All categories complete - showing completion modal');
+
+            // DEBUG: Alert completion
+            alert(`🎉 ORDER COMPLETE!\nAll ${selectedCategoryIds.length} categories processed.\nShowing completion modal...`);
+
             // All done - show completion modal
             setShowCompleteModal(true);
         }
