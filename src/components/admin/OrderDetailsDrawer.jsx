@@ -139,20 +139,19 @@ export default function OrderDetailsDrawer({ order, isOpen, onClose }) {
                                 <span className={`px-3 py-1 inline-flex text-sm font-semibold rounded-full ${statusColors[order.status] || 'bg-gray-100 text-gray-800'}`}>
                                     {order.status || 'Order Received'}
                                 </span>
-                            </div>
-                            <div>
-                                <label className="block text-sm text-gray-600 mb-2">Update Status (Coming Soon)</label>
-                                <select
-                                    value={newStatus}
-                                    onChange={(e) => setNewStatus(e.target.value)}
-                                    disabled
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-500 cursor-not-allowed"
-                                >
-                                    {statusOptions.map(status => (
-                                        <option key={status} value={status}>{status}</option>
-                                    ))}
-                                </select>
-                                <p className="text-xs text-gray-500 mt-1">Status updates will be enabled in a future version</p>
+                                {/* Status Update Dropdown */}
+                                <div>
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">Update Status</label>
+                                    <select
+                                        value={newStatus}
+                                        onChange={(e) => setNewStatus(e.target.value)}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white"
+                                    >
+                                        {STATUS_STAGES.map(status => (
+                                            <option key={status} value={status}>{status}</option>
+                                        ))}
+                                    </select>
+                                </div>
                             </div>
                         </div>
                     </div>
