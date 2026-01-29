@@ -75,8 +75,8 @@ export default function CartPage() {
             const newOrderId = 'YARN-' + Math.random().toString(36).substring(2, 9).toUpperCase();
             setOrderId(newOrderId);
 
-            // Get contact info from first cart item
-            const contactInfo = cart[0]?.contactInfo || {};
+            // Get contact info from first cart item (from details.contactInfo)
+            const contactInfo = cart[0]?.details?.contactInfo || {};
 
             // Create structured order object for Firestore
             const orderData = {

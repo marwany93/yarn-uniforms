@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { db } from '@/lib/firebase';
 import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
 import OrderDetailsModal from '@/components/admin/OrderDetailsModal';
+import OrderDetailsDrawer from '@/components/admin/OrderDetailsDrawer';
 
 export default function AdminDashboard() {
     const { user, loading } = useAuth();
@@ -118,7 +119,11 @@ export default function AdminDashboard() {
                     </div>
                 </div>
             </main>
-            <OrderDetailsModal order={selectedOrder} isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setSelectedOrder(null); }} />
+            <OrderDetailsDrawer
+                order={selectedOrder}
+                isOpen={isModalOpen}
+                onClose={() => { setIsModalOpen(false); setSelectedOrder(null); }}
+            />
         </div>
     );
 }
