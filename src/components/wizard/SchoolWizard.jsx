@@ -193,17 +193,14 @@ export default function SchoolWizard() {
         // Validation
         if (!currentProduct) {
             console.log('❌ Validation failed: No product selected');
-            alert('❌ FAILED: No product selected\nPlease select a product style first.');
+            alert(t(translations.selectProduct));
             return;
         }
         if (totalItems === 0) {
             console.log('❌ Validation failed: No items in size matrix');
-            alert('❌ FAILED: No items in size matrix\nPlease enter quantities for at least one size.');
+            alert(t(translations.atLeastOne));
             return;
         }
-
-        // DEBUG: Alert validation passed
-        alert(`✅ VALIDATION PASSED!\nProduct: ${currentProduct}\nTotal Items: ${totalItems}`);
 
         console.log('✅ Validation passed');
 
@@ -234,14 +231,8 @@ export default function SchoolWizard() {
         console.log('🛒 Cart item constructed:', cartItem);
         console.log('🚀 Calling addToCart...');
 
-        // DEBUG: Alert before calling addToCart
-        alert(`🚀 ADDING TO CART:\nProduct: ${product.name}\nCode: ${product.code}\nQty: ${totalItems}\n\nAbout to call addToCart()...`);
-
         // Add to cart
         addToCart(cartItem);
-
-        // DEBUG: Alert after calling addToCart
-        alert('✅ addToCart() CALLED SUCCESSFULLY!\nItem has been added to cart.');
 
         console.log('✅ addToCart called successfully');
         console.log('📊 Current category index:', currentCategoryIndex);
