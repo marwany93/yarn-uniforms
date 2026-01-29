@@ -49,8 +49,8 @@ export default function AdminDashboard() {
 
     if (loading || !user) return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600"></div></div>;
 
-    const translations = { dashboard: { en: 'Admin Dashboard', ar: 'لوحة تحكم المسؤول' }, manageOrders: { en: 'Manage all uniform orders', ar: 'إدارة جميع طلبات الزي الموحد' }, logout: { en: 'Logout', ar: 'تسجيل خروج' }, totalOrders: { en: 'Total Orders', ar: 'إجمالي الطلبات' }, pending: { en: 'Pending', ar: 'قيد المراجعة' }, inProduction: { en: 'In Production', ar: 'قيد الإنتاج' }, delivered: { en: 'Delivered', ar: 'تم التسليم' }, recentOrders: { en: 'Recent Orders', ar: 'أحدث الطلبات' }, orderId: { en: 'Order ID', ar: 'رقم الطلب' }, sector: { en: 'Sector', ar: 'القطاع' }, status: { en: 'Status', ar: 'الحالة' }, created: { en: 'Created', ar: 'تاريخ الإنشاء' }, actions: { en: 'Actions', ar: 'إجراءات' }, viewDetails: { en: 'View Details', ar: 'عرض التفاصيل' }, noOrders: { en: 'No orders found.', ar: 'لا توجد طلبات.' }, schools: { en: 'Schools', ar: 'المدارس' }, factories: { en: 'Factories', ar: 'المصانع' }, companies: { en: 'Companies', ar: 'الشركات' }, hospitals: { en: 'Hospitals', ar: 'المستشفيات' }, pending_status: { en: 'Pending', ar: 'قيد المراجعة' }, processing: { en: 'Processing', ar: 'قيد المعالجة' }, in_production: { en: 'In Production', ar: 'قيد الإنتاج' }, ready_for_delivery: { en: 'Ready for Delivery', ar: 'جاهز للتسليم' }, delivered_status: { en: 'Delivered', ar: 'تم التسليم' }, cancelled: { en: 'Cancelled', ar: 'ملغي' } };
-    const statusColors = { pending: 'bg-yellow-100 text-yellow-800', processing: 'bg-blue-100 text-blue-800', in_production: 'bg-purple-100 text-purple-800', ready_for_delivery: 'bg-green-100 text-green-800', delivered: 'bg-gray-100 text-gray-800', cancelled: 'bg-red-100 text-red-800' };
+    const translations = { dashboard: { en: 'Admin Dashboard', ar: 'لوحة تحكم المسؤول' }, manageOrders: { en: 'Manage all uniform orders', ar: 'إدارة جميع طلبات الزي الموحد' }, logout: { en: 'Logout', ar: 'تسجيل خروج' }, totalOrders: { en: 'Total Orders', ar: 'إجمالي الطلبات' }, pending: { en: 'Pending', ar: 'قيد المراجعة' }, inProduction: { en: 'In Production', ar: 'قيد الإنتاج' }, delivered: { en: 'Delivered', ar: 'تم التسليم' }, recentOrders: { en: 'Recent Orders', ar: 'أحدث الطلبات' }, orderId: { en: 'Order ID', ar: 'رقم الطلب' }, customer: { en: 'Customer', ar: 'العميل' }, sector: { en: 'Sector', ar: 'القطاع' }, status: { en: 'Status', ar: 'الحالة' }, created: { en: 'Created', ar: 'تاريخ الإنشاء' }, actions: { en: 'Actions', ar: 'إجراءات' }, viewDetails: { en: 'View Details', ar: 'عرض التفاصيل' }, noOrders: { en: 'No orders found.', ar: 'لا توجد طلبات.' }, schools: { en: 'Schools', ar: 'المدارس' }, factories: { en: 'Factories', ar: 'المصانع' }, companies: { en: 'Companies', ar: 'الشركات' }, hospitals: { en: 'Hospitals', ar: 'المستشفيات' }, pending_status: { en: 'Pending', ar: 'قيد المراجعة' }, processing: { en: 'Processing', ar: 'قيد المعالجة' }, in_production: { en: 'In Production', ar: 'قيد الإنتاج' }, ready_for_delivery: { en: 'Ready for Delivery', ar: 'جاهز للتسليم' }, delivered_status: { en: 'Delivered', ar: 'تم التسليم' }, cancelled: { en: 'Cancelled', ar: 'ملغي' }, order_received: { en: 'Order Received', ar: 'تم استلام الطلب' } };
+    const statusColors = { 'Order Received': 'bg-yellow-100 text-yellow-800', pending: 'bg-yellow-100 text-yellow-800', processing: 'bg-blue-100 text-blue-800', in_production: 'bg-purple-100 text-purple-800', ready_for_delivery: 'bg-green-100 text-green-800', delivered: 'bg-gray-100 text-gray-800', cancelled: 'bg-red-100 text-red-800' };
 
     return (
         <div className="min-h-screen bg-gray-50" dir={language === 'ar' ? 'rtl' : 'ltr'}>
@@ -73,17 +73,18 @@ export default function AdminDashboard() {
                         <table className="min-w-full divide-y divide-gray-200">
                             <thead className="bg-gray-50"><tr>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider rtl:text-right">{t(translations.orderId)}</th>
+                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider rtl:text-right">{t(translations.customer)}</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider rtl:text-right">{t(translations.sector)}</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider rtl:text-right">{t(translations.status)}</th>
                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider rtl:text-right">{t(translations.created)}</th>
                                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider rtl:text-left">{t(translations.actions)}</th>
                             </tr></thead>
                             <tbody className="bg-white divide-y divide-gray-200">
-                                {orders.length === 0 ? (<tr><td colSpan="5" className="px-6 py-4 text-center text-sm text-gray-500">{t(translations.noOrders)}</td></tr>) : (orders.map((order) => (
+                                {orders.length === 0 ? (<tr><td colSpan="6" className="px-6 py-4 text-center text-sm text-gray-500">{t(translations.noOrders)}</td></tr>) : (orders.map((order) => (
                                     <tr key={order.id} className="hover:bg-gray-50 cursor-pointer transition-colors" onClick={() => { setSelectedOrder(order); setIsModalOpen(true); }}>
                                         <td className="px-6 py-4 whitespace-nowrap">
                                             <div className="flex items-center">
-                                                <span className="text-sm font-medium text-primary-600 hover:text-primary-900">{order.orderId}</span>
+                                                <span className="text-sm font-medium text-primary-600 hover:text-primary-900">{order.orderId || 'N/A'}</span>
 
                                                 {/* --- TABLE COPY BUTTON --- */}
                                                 <button
@@ -105,12 +106,13 @@ export default function AdminDashboard() {
 
                                             </div>
                                         </td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{t(translations[order.sector])}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap"><span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColors[order.status]}`}>{t(translations[order.status + '_status'] || translations[order.status])}</span></td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.createdAt?.toDate().toLocaleDateString() || 'N/A'}</td>
-                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium ltr:text-right rtl:text-left"><button className="text-primary-600 hover:text-primary-900 transition-colors font-semibold">{t(translations.viewDetails)}</button></td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{order.customer?.schoolName || order.customer?.name || 'N/A'}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{order.sector || 'N/A'}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap"><span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColors[order.status] || 'bg-gray-100 text-gray-800'}`}>{t(translations[order.status?.toLowerCase()?.replace(/ /g, '_') + '_status']) || order.status || 'N/A'}</span></td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.createdAt?.toDate ? order.createdAt.toDate().toLocaleDateString() : (order.createdAt?.seconds ? new Date(order.createdAt.seconds * 1000).toLocaleDateString() : 'N/A')}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium ltr:text-right rtl:text-left"><button onClick={(e) => { e.stopPropagation(); console.log('Order Details:', order); setSelectedOrder(order); setIsModalOpen(true); }} className="text-primary-600 hover:text-primary-900 transition-colors font-semibold">{t(translations.viewDetails)}</button></td>
                                     </tr>
-                                )))}
+                                )))}}
                             </tbody>
                         </table>
                     </div>
