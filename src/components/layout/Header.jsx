@@ -3,11 +3,17 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useLanguage } from '@/hooks/useLanguage';
+import { useCart } from '@/context/CartContext';
 import { useState } from 'react';
 
 const Header = () => {
     const { language, changeLanguage, t } = useLanguage();
+    const { getCartItemCount } = useCart();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+    const handleCartClick = () => {
+        console.log('Open Cart Drawer');
+    };
 
     const translations = {
         home: { en: 'Home', ar: 'الرئيسية' },
@@ -77,6 +83,23 @@ const Header = () => {
                             {t(translations.admin)}
                         </Link>
 
+                        {/* Shopping Cart Icon */}
+                        <button
+                            onClick={handleCartClick}
+                            className="relative p-2 text-[#192E4F] hover:text-[#e5d7ca] transition-colors duration-200"
+                            aria-label="Shopping Cart"
+                        >
+                            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                            </svg>
+                            {/* Badge */}
+                            {getCartItemCount() > 0 && (
+                                <span className="absolute -top-1 -right-1 flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
+                                    {getCartItemCount()}
+                                </span>
+                            )}
+                        </button>
+
                         {/* Language Switcher - White Background Theme */}
                         <div className="flex items-center gap-2 border-l border-gray-200 pl-4 ml-4 rtl:border-r rtl:pr-4 rtl:pl-0 rtl:ml-0 rtl:mr-4 rtl:border-l-0">
                             <button
@@ -100,6 +123,22 @@ const Header = () => {
 
                     {/* Mobile menu button */}
                     <div className="flex items-center space-x-4 rtl:space-x-reverse lg:hidden">
+                        {/* Mobile Cart Icon */}
+                        <button
+                            onClick={handleCartClick}
+                            className="relative p-2 text-[#192E4F] hover:text-[#e5d7ca] transition-colors duration-200"
+                            aria-label="Shopping Cart"
+                        >
+                            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                            </svg>
+                            {getCartItemCount() > 0 && (
+                                <span className="absolute -top-1 -right-1 flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
+                                    {getCartItemCount()}
+                                </span>
+                            )}
+                        </button>
+
                         {/* Mobile Language Switcher */}
                         <button
                             onClick={() => changeLanguage(language === 'en' ? 'ar' : 'en')}

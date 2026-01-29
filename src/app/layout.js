@@ -1,6 +1,7 @@
 import './globals.css';
 import { Cairo, Roboto, Baloo_Da_2 } from 'next/font/google';
 import { LanguageProvider } from '@/hooks/useLanguage';
+import { CartProvider } from '@/context/CartContext';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 
@@ -49,13 +50,15 @@ export default function RootLayout({ children }) {
                 suppressHydrationWarning={true}
             >
                 <LanguageProvider>
-                    <div className="flex flex-col min-h-screen">
-                        <Header />
-                        <main className="flex-grow">
-                            {children}
-                        </main>
-                        <Footer />
-                    </div>
+                    <CartProvider>
+                        <div className="flex flex-col min-h-screen">
+                            <Header />
+                            <main className="flex-grow">
+                                {children}
+                            </main>
+                            <Footer />
+                        </div>
+                    </CartProvider>
                 </LanguageProvider>
             </body>
         </html>

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useLanguage } from '@/hooks/useLanguage';
+import { sectors, getSectorTitle, getSectorDescription } from '@/data/sectors';
 
 export default function HomePage() {
     const router = useRouter();
@@ -25,21 +26,13 @@ export default function HomePage() {
         orderNow: { en: 'Order Now', ar: 'اطلب الآن' },
         trackYourOrder: { en: 'Track Order', ar: 'تتبع طلبك' },
 
+        // Partners
+        trustedBy: { en: 'Trusted by Industry Leaders', ar: 'موثوق به من قادة الصناعة' },
+
         // Sectors
         chooseSector: { en: 'Choose Your Sector', ar: 'اختر قطاعك' },
         sectorSubtitle: { en: 'Specialized uniform solutions for every industry', ar: 'حلول زي موحد متخصصة لكل صناعة' },
-        schools: { en: 'Schools', ar: 'المدارس' },
-        schoolsDesc: { en: 'Comfortable & durable uniforms for students', ar: 'زي موحد مريح ومتين للطلاب' },
-        factories: { en: 'Factories', ar: 'المصانع' },
-        factoriesDesc: { en: 'Safety-compliant workwear for industrial settings', ar: 'ملابس عمل متوافقة مع معايير السلامة' },
-        companies: { en: 'Companies', ar: 'الشركات' },
-        companiesDesc: { en: 'Professional corporate uniforms', ar: 'زي موحد احترافي للشركات' },
-        hospitals: { en: 'Hospitals', ar: 'المستشفيات' },
-        hospitalsDesc: { en: 'Hygienic medical scrubs & uniforms', ar: 'سكراب طبي وزي موحد صحي' },
-
-        // Quality Section
-        detailsMatter: { en: 'Details Matter', ar: 'التفاصيل مهمة' },
-        qualityDesc: { en: 'Every stitch, every fabric, every design is crafted with precision and care', ar: 'كل غرزة، كل قماش، كل تصميم مصنوع بدقة وعناية' },
+        exploreSector: { en: 'Explore', ar: 'استكشف' },
 
         // Track Section
         trackOrder: { en: 'Track Your Order', ar: 'تتبع طلبك' },
@@ -48,44 +41,9 @@ export default function HomePage() {
         track: { en: 'Track', ar: 'تتبع' },
     };
 
-    const sectors = [
-        {
-            id: 'schools',
-            name: t(translations.schools),
-            description: t(translations.schoolsDesc),
-            icon: '🎓',
-            image: '/assets/sector-schools.png',
-            href: '/order/schools'
-        },
-        {
-            id: 'factories',
-            name: t(translations.factories),
-            description: t(translations.factoriesDesc),
-            icon: '🏭',
-            image: null,
-            href: '/order/factories'
-        },
-        {
-            id: 'companies',
-            name: t(translations.companies),
-            description: t(translations.companiesDesc),
-            icon: '💼',
-            image: '/assets/hero-group-overhead.png',
-            href: '/order/companies'
-        },
-        {
-            id: 'hospitals',
-            name: t(translations.hospitals),
-            description: t(translations.hospitalsDesc),
-            icon: '🏥',
-            image: null,
-            href: '/order/hospitals'
-        },
-    ];
-
     return (
         <div className="min-h-screen">
-            {/* Hero Section - Yarn 2025 Brand Design */}
+            {/* 1. Hero Section - Yarn 2025 Brand Design */}
             <section className="relative bg-primary text-white py-20 lg:py-32 overflow-hidden">
                 {/* Background Pattern */}
                 <div className="absolute inset-0 opacity-10">
@@ -142,8 +100,62 @@ export default function HomePage() {
                 </div>
             </section>
 
-            {/* Sectors Section */}
-            <section id="sectors" className="py-16 bg-background">
+            {/* 2. Success Partners Strip - NEW */}
+            <section className="py-12 bg-gray-100 border-y border-gray-200">
+                <div className="container-custom">
+                    <p className="text-center text-sm font-medium text-gray-500 uppercase tracking-wider mb-8">
+                        {t(translations.trustedBy)}
+                    </p>
+
+                    {/* Partner Logos Grid */}
+                    <div className="flex flex-wrap items-center justify-center gap-8 md:gap-12">
+                        {/* Placeholder Logo 1 */}
+                        <div className="flex items-center justify-center opacity-50 grayscale hover:opacity-75 hover:grayscale-0 transition-all duration-300">
+                            <div className="w-24 h-24 md:w-32 md:h-32 bg-gray-300 rounded-lg flex items-center justify-center">
+                                <span className="text-3xl md:text-4xl">🏢</span>
+                            </div>
+                        </div>
+
+                        {/* Placeholder Logo 2 */}
+                        <div className="flex items-center justify-center opacity-50 grayscale hover:opacity-75 hover:grayscale-0 transition-all duration-300">
+                            <div className="w-24 h-24 md:w-32 md:h-32 bg-gray-300 rounded-lg flex items-center justify-center">
+                                <span className="text-3xl md:text-4xl">🏥</span>
+                            </div>
+                        </div>
+
+                        {/* Placeholder Logo 3 */}
+                        <div className="flex items-center justify-center opacity-50 grayscale hover:opacity-75 hover:grayscale-0 transition-all duration-300">
+                            <div className="w-24 h-24 md:w-32 md:h-32 bg-gray-300 rounded-lg flex items-center justify-center">
+                                <span className="text-3xl md:text-4xl">🎓</span>
+                            </div>
+                        </div>
+
+                        {/* Placeholder Logo 4 */}
+                        <div className="flex items-center justify-center opacity-50 grayscale hover:opacity-75 hover:grayscale-0 transition-all duration-300">
+                            <div className="w-24 h-24 md:w-32 md:h-32 bg-gray-300 rounded-lg flex items-center justify-center">
+                                <span className="text-3xl md:text-4xl">🏭</span>
+                            </div>
+                        </div>
+
+                        {/* Placeholder Logo 5 */}
+                        <div className="flex items-center justify-center opacity-50 grayscale hover:opacity-75 hover:grayscale-0 transition-all duration-300">
+                            <div className="w-24 h-24 md:w-32 md:h-32 bg-gray-300 rounded-lg flex items-center justify-center">
+                                <span className="text-3xl md:text-4xl">🍽️</span>
+                            </div>
+                        </div>
+
+                        {/* Placeholder Logo 6 */}
+                        <div className="flex items-center justify-center opacity-50 grayscale hover:opacity-75 hover:grayscale-0 transition-all duration-300">
+                            <div className="w-24 h-24 md:w-32 md:h-32 bg-gray-300 rounded-lg flex items-center justify-center">
+                                <span className="text-3xl md:text-4xl">💼</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            {/* 3. Sector Selection Grid - THE CORE */}
+            <section id="sectors" className="py-20 bg-background">
                 <div className="container-custom">
                     <div className="text-center mb-12">
                         <h2 className="text-3xl md:text-4xl font-display font-bold text-dark mb-4">
@@ -154,41 +166,54 @@ export default function HomePage() {
                         </p>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {/* Responsive Sector Cards Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
                         {sectors.map((sector) => (
                             <Link
                                 key={sector.id}
-                                href={sector.href}
-                                className="group bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 border-b-4 border-secondary hover:border-primary transform hover:-translate-y-1"
+                                href={`/sectors/${sector.id}`}
+                                className="group bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border-b-4 hover:-translate-y-2"
+                                style={{ borderBottomColor: sector.color }}
                             >
-                                {sector.image && (
-                                    <div className="relative h-48 overflow-hidden">
-                                        <Image
-                                            src={sector.image}
-                                            alt={sector.name}
-                                            fill
-                                            className="object-cover group-hover:scale-105 transition-transform duration-300"
-                                        />
+                                {/* Icon/Image Section */}
+                                <div
+                                    className="relative h-48 flex items-center justify-center text-white overflow-hidden"
+                                    style={{ backgroundColor: sector.color }}
+                                >
+                                    {/* Subtle Pattern Overlay */}
+                                    <div className="absolute inset-0 opacity-10">
+                                        <div className="absolute inset-0" style={{
+                                            backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)',
+                                            backgroundSize: '20px 20px'
+                                        }}></div>
                                     </div>
-                                )}
+
+                                    <span className="relative z-10 text-7xl group-hover:scale-110 transition-transform duration-300">
+                                        {sector.icon}
+                                    </span>
+                                </div>
+
+                                {/* Content Section */}
                                 <div className="p-6 text-center">
-                                    {!sector.image && (
-                                        <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/10 mb-4 text-4xl">
-                                            {sector.icon}
-                                        </div>
-                                    )}
-                                    <h3 className="text-xl font-display font-bold text-dark mb-2">
-                                        {sector.name}
+                                    <h3 className="text-xl font-display font-bold text-dark mb-3">
+                                        {getSectorTitle(sector, language)}
                                     </h3>
-                                    <p className="text-gray-600 text-sm mb-4">
-                                        {sector.description}
+                                    <p className="text-gray-600 text-sm mb-4 leading-relaxed min-h-[3rem]">
+                                        {getSectorDescription(sector, language)}
                                     </p>
-                                    <span className="inline-flex items-center text-primary font-semibold group-hover:text-primary-600">
-                                        {t(translations.orderNow)}
-                                        <svg className="w-4 h-4 ltr:ml-2 rtl:mr-2 rtl:rotate-180 group-hover:translate-x-1 rtl:group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+
+                                    {/* Hover Action */}
+                                    <div className="flex items-center justify-center gap-2 font-semibold group-hover:gap-3 transition-all" style={{ color: sector.color }}>
+                                        <span>{t(translations.exploreSector)}</span>
+                                        <svg
+                                            className="w-5 h-5 ltr:group-hover:translate-x-1 rtl:group-hover:-translate-x-1 rtl:rotate-180 transition-transform"
+                                            fill="none"
+                                            viewBox="0 0 24 24"
+                                            stroke="currentColor"
+                                        >
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                         </svg>
-                                    </span>
+                                    </div>
                                 </div>
                             </Link>
                         ))}
@@ -196,55 +221,34 @@ export default function HomePage() {
                 </div>
             </section>
 
-            {/* Quality Section - NEW */}
-            <section className="py-20 bg-white">
-                <div className="container-custom">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-                        <div className="relative h-96 lg:h-[500px]">
-                            <Image
-                                src="/assets/feature-quality-mockup.png"
-                                alt="Quality Details"
-                                fill
-                                className="object-contain"
-                            />
-                        </div>
-                        <div>
-                            <h2 className="text-4xl md:text-5xl font-display font-bold text-dark mb-6">
-                                {t(translations.detailsMatter)}
-                            </h2>
-                            <p className="text-xl text-gray-600 leading-relaxed">
-                                {t(translations.qualityDesc)}
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            {/* Track Order Section */}
-            <section id="track" className="py-16 bg-background">
+            {/* 4. Track Order Section - Dark Blue Background */}
+            <section id="track" className="py-20 bg-primary text-white">
                 <div className="container-custom">
                     <div className="max-w-2xl mx-auto text-center">
-                        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 text-primary text-3xl mb-6">
+                        {/* Icon */}
+                        <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-white/10 backdrop-blur-sm text-5xl mb-6">
                             📦
                         </div>
-                        <h2 className="text-3xl md:text-4xl font-display font-bold text-dark mb-4">
+
+                        <h2 className="text-3xl md:text-4xl font-display font-bold mb-4">
                             {t(translations.trackOrder)}
                         </h2>
-                        <p className="text-gray-600 mb-8">
+                        <p className="text-white/80 text-lg mb-10">
                             {t(translations.trackDesc)}
                         </p>
 
+                        {/* Track Form */}
                         <form onSubmit={handleTrack} className="space-y-4">
                             <input
                                 type="text"
                                 value={orderId}
                                 onChange={(e) => setOrderId(e.target.value)}
                                 placeholder={t(translations.orderIdPlaceholder)}
-                                className="w-full px-6 py-4 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary outline-none text-center text-lg font-mono"
+                                className="w-full px-6 py-4 border-2 border-white/30 bg-white/10 backdrop-blur-sm text-white placeholder-white/60 rounded-lg focus:ring-2 focus:ring-secondary focus:border-secondary outline-none text-center text-lg font-mono"
                             />
                             <button
                                 type="submit"
-                                className="w-full bg-primary text-white px-8 py-4 rounded-lg font-semibold hover:bg-primary-600 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                                className="w-full bg-secondary text-primary px-8 py-4 rounded-lg font-semibold hover:bg-secondary/90 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
                             >
                                 {t(translations.track)}
                             </button>
