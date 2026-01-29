@@ -1,28 +1,82 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { db } from '@/lib/firebase';
+import { doc, updateDoc } from 'firebase/firestore';
 
 export default function OrderDetailsDrawer({ order, isOpen, onClose }) {
-    const [newStatus, setNewStatus] = useState(order?.status || 'Order Received');
+    const [newStatus, setNewStatus] = useState('');
+    const [targetDate, setTargetDate] = useState('');
+    const [updating, setUpdating] = useState(false);
+
+    // Initialize status and date when drawer opens
+    useEffect(() => {
+        if (order && isOpen) {
+            setNewStatus(order.status || 'Order Received');
+            // Format date if exists
+            if (order.expectedCompletionDate) {
+                // Handle both date string and Firestore timestamp
+                const dateStr = typeof order.expectedCompletionDate === 'string'
+                    ? order.expectedCompletionDate
+                    : order.expectedCompletionDate?.toDate?.()?.toISOString()?.split('T')[0] || '';
+                setTargetDate(dateStr);
+            } else {
+                setTargetDate('');
+            }
+        }
+    }, [order, isOpen]);
 
     if (!isOpen || !order) return null;
 
-    const statusOptions = [
+    const STATUS_STAGES = [
         'Order Received',
-        'Processing',
-        'In Production',
-        'Ready for Delivery',
+        'Contacting',
+        'Quotation Sent',
+        'Sample Production',
+        'Manufacturing',
         'Delivered',
         'Cancelled'
     ];
 
     const statusColors = {
         'Order Received': 'bg-yellow-100 text-yellow-800',
+        'Contacting': 'bg-blue-100 text-blue-800',
+        'Quotation Sent': 'bg-indigo-100 text-indigo-800',
+        'Sample Production': 'bg-purple-100 text-purple-800',
+        'Manufacturing': 'bg-orange-100 text-orange-800',
+        'Delivered': 'bg-green-100 text-green-800',
+        'Cancelled': 'bg-red-100 text-red-800',
+        // Legacy statuses
         'Processing': 'bg-blue-100 text-blue-800',
         'In Production': 'bg-purple-100 text-purple-800',
-        'Ready for Delivery': 'bg-green-100 text-green-800',
-        'Delivered': 'bg-gray-100 text-gray-800',
-        'Cancelled': 'bg-red-100 text-red-800'
+        'Ready for Delivery': 'bg-green-100 text-green-800'
+    };
+
+    const handleUpdateOrder = async () => {
+        if (!order?.id) {
+            alert('Error: Order ID not found');
+            return;
+        }
+
+        setUpdating(true);
+        try {
+            const orderRef = doc(db, 'orders', order.id);
+            await updateDoc(orderRef, {
+                status: newStatus,
+                expectedCompletionDate: targetDate || null,
+                lastUpdated: new Date()
+            });
+            alert('✅ Order updated successfully!');
+            // Optionally close drawer or refresh
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        } catch (error) {
+            console.error('Update failed:', error);
+            alert('❌ Failed to update order: ' + error.message);
+        } finally {
+            setUpdating(false);
+        }
     };
 
     return (
