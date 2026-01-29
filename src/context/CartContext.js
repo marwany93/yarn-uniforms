@@ -23,19 +23,20 @@ export const useCart = () => {
 };
 
 export const CartProvider = ({ children }) => {
-    const [cartItems, setCartItems] = useState([]);
-
-    // Load cart from localStorage on mount
-    useEffect(() => {
-        const savedCart = localStorage.getItem('yarnUniformsCart');
-        if (savedCart) {
+    // Initialize from localStorage using lazy initialization
+    // This prevents hydration mismatches and reads localStorage only once
+    const [cartItems, setCartItems] = useState(() => {
+        if (typeof window !== 'undefined') {
             try {
-                setCartItems(JSON.parse(savedCart));
+                const savedCart = localStorage.getItem('yarnUniformsCart');
+                return savedCart ? JSON.parse(savedCart) : [];
             } catch (error) {
                 console.error('Failed to load cart from localStorage:', error);
+                return [];
             }
         }
-    }, []);
+        return [];
+    });
 
     // Save cart to localStorage whenever it changes
     useEffect(() => {
