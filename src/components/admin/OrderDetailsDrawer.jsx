@@ -28,6 +28,9 @@ export default function OrderDetailsDrawer({ order, isOpen, onClose }) {
 
     if (!isOpen || !order) return null;
 
+    // Calculate today's date for min date restriction
+    const today = new Date().toISOString().split('T')[0];
+
     const STATUS_STAGES = [
         'Order Received',
         'Contacting',
@@ -161,6 +164,7 @@ export default function OrderDetailsDrawer({ order, isOpen, onClose }) {
                                 <label className="block text-sm font-semibold text-gray-700 mb-2">Expected Completion Date</label>
                                 <input
                                     type="date"
+                                    min={today}
                                     value={targetDate}
                                     onChange={(e) => setTargetDate(e.target.value)}
                                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
@@ -173,8 +177,8 @@ export default function OrderDetailsDrawer({ order, isOpen, onClose }) {
                                 onClick={handleUpdateOrder}
                                 disabled={updating}
                                 className={`w-full py-2 px-4 rounded-lg font-semibold transition-colors ${updating
-                                        ? 'bg-gray-400 cursor-not-allowed'
-                                        : 'bg-primary-600 hover:bg-primary-700 text-white'
+                                    ? 'bg-gray-400 cursor-not-allowed'
+                                    : 'bg-primary-600 hover:bg-primary-700 text-white'
                                     }`}
                             >
                                 {updating ? '⏳ Updating...' : '💾 Save Changes'}
