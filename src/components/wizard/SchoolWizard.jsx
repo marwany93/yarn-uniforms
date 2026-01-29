@@ -14,62 +14,78 @@ import {
 export default function SchoolWizard() {
     const { t, language } = useLanguage();
     const { addToCart } = useCart();
-    const [step, setStep] = useState(1);
-    const [config, setConfig] = useState({
-        gender: null,
-        stage: null
+
+    // Step 0: Contact Info, Step 1: Category Grid, Step 2: Styles, Step 3: Details
+    const [step, setStep] = useState(0);
+
+    // Contact information (Step 0)
+    const [contactInfo, setContactInfo] = useState({
+        schoolName: '',
+        contactPerson: '',
+        email: '',
+        phone: ''
     });
+
+    // Product selection state
     const [selection, setSelection] = useState({
         category: null,
         product: null
     });
 
-    // Step 4 state
+    // Product details state (Step 3)
     const [details, setDetails] = useState({
         material: '100% Cotton',
         logo: null,
-        notes: ''
+        notes: '',
+        stage: 'kg_primary' // Default stage for size matrix
     });
     const [sizeQuantities, setSizeQuantities] = useState({});
     const [showSuccess, setShowSuccess] = useState(false);
 
     const translations = {
-        // View 1: Configuration
-        whoShopping: { en: 'Who are we shopping for?', ar: 'لمن نتسوق؟' },
-        boys: { en: 'Boys', ar: 'بنين' },
-        girls: { en: 'Girls', ar: 'بنات' },
-        schoolStage: { en: 'School Stage?', ar: 'المرحلة الدراسية؟' },
-        kgPrimary: { en: 'KG & Primary', ar: 'روضة وابتدائي' },
-        prepSecondary: { en: 'Prep & Secondary', ar: 'إعدادي وثانوي' },
+        // Step 0: Contact Info
+        contactInfo: { en: 'Contact Information', ar: 'معلومات الاتصال' },
+        schoolName: { en: 'School Name', ar: 'اسم المدرسة' },
+        schoolNamePlaceholder: { en: 'Enter school name', ar: 'أدخل اسم المدرسة' },
+        contactPerson: { en: 'Contact Person', ar: 'شخص الاتصال' },
+        contactPersonPlaceholder: { en: 'Enter your name', ar: 'أدخل اسمك' },
+        email: { en: 'Email', ar: 'البريد الإلكتروني' },
+        emailPlaceholder: { en: 'your.email@school.sa', ar: 'your.email@school.sa' },
+        phone: { en: 'Phone Number', ar: 'رقم الهاتف' },
+        phonePlaceholder: { en: '+966 5X XXX XXXX', ar: '+966 5X XXX XXXX' },
+        required: { en: 'Required', ar: 'مطلوب' },
+        continue: { en: 'Continue to Catalog', ar: 'متابعة إلى الكتالوج' },
+        fillAllFields: { en: 'Please fill all required fields', ar: 'يرجى ملء جميع الحقول المطلوبة' },
 
-        // View 2: Categories
-        selectCategory: { en: 'Select Category', ar: 'اختر الفئة' },
+        // Step 1: Category Grid
+        selectCategory: { en: 'Select Product Category', ar: 'اختر فئة المنتج' },
+        catalogMenu: { en: 'Product Catalog', ar: 'كتالوج المنتجات' },
 
-        // View 3: Styles
+        // Step 2: Styles
         selectStyle: { en: 'Select Style', ar: 'اختر التصميم' },
 
-        // View 4: Details
+        // Step 3: Details
         productDetails: { en: 'Product Details', ar: 'تفاصيل المنتج' },
         material: { en: 'Material', ar: 'الخامة' },
         uploadLogo: { en: 'Upload School Logo', ar: 'رفع شعار المدرسة' },
         optionalLogo: { en: 'Optional', ar: 'اختياري' },
         specialInstructions: { en: 'Special Instructions', ar: 'تعليمات خاصة' },
         notesPlaceholder: { en: 'e.g., embroidery placement, special requirements...', ar: 'مثال: موضع التطريز، متطلبات خاصة...' },
+        schoolStage: { en: 'School Stage', ar: 'المرحلة الدراسية' },
+        kgPrimary: { en: 'KG & Primary', ar: 'روضة وابتدائي' },
+        prepSecondary: { en: 'Prep & Secondary', ar: 'إعدادي وثانوي' },
         sizeMatrix: { en: 'Size & Quantity', ar: 'المقاسات والكميات' },
-        size: { en: 'Size', ar: 'المقاس' },
-        quantity: { en: 'Qty', ar: 'الكمية' },
         totalItems: { en: 'Total Items', ar: 'إجمالي القطع' },
         addToCart: { en: 'Add to Cart 🛒', ar: 'إضافة للسلة 🛒' },
         atLeastOne: { en: 'Please add at least one item', ar: 'يرجى إضافة قطعة واحدة على الأقل' },
         addedToCart: { en: 'Added to Cart!', ar: 'تمت الإضافة للسلة!' },
-        designAnother: { en: 'Design another item?', ar: 'تصميم منتج آخر؟' },
-        yes: { en: 'Yes', ar: 'نعم' },
+        addAnother: { en: 'Add another item?', ar: 'إضافة منتج آخر؟' },
+        yes: { en: 'Yes, Add More', ar: 'نعم، إضافة المزيد' },
         viewCart: { en: 'View Cart', ar: 'عرض السلة' },
 
         // Navigation
         back: { en: 'Back', ar: 'رجوع' },
         next: { en: 'Next', ar: 'التالي' },
-        continue: { en: 'Continue', ar: 'متابعة' },
     };
 
     // Material options
@@ -90,46 +106,25 @@ export default function SchoolWizard() {
         return Object.values(sizeQuantities).reduce((sum, qty) => sum + (parseInt(qty) || 0), 0);
     }, [sizeQuantities]);
 
-    // Filter categories based on gender
-    const getAvailableCategories = () => {
-        if (!config.gender) return productCategories;
-
-        return productCategories.filter(category => {
-            const categoryProducts = getProductsByCategory(category.id);
-            return categoryProducts.some(product =>
-                product.type === config.gender || product.type === 'unisex'
-            );
-        });
+    // Check if contact form is valid
+    const isContactFormValid = () => {
+        return contactInfo.schoolName.trim() !== '' &&
+            contactInfo.contactPerson.trim() !== '' &&
+            contactInfo.email.trim() !== '' &&
+            contactInfo.phone.trim() !== '';
     };
 
-    // Get products for selected category filtered by gender
-    const getFilteredProducts = () => {
-        if (!selection.category) return [];
-
-        const categoryProducts = getProductsByCategory(selection.category);
-
-        if (!config.gender) return categoryProducts;
-
-        return categoryProducts.filter(product =>
-            product.type === config.gender || product.type === 'unisex'
-        );
-    };
-
-    const handleGenderSelect = (gender) => {
-        setConfig({ ...config, gender });
-    };
-
-    const handleStageSelect = (stage) => {
-        setConfig({ ...config, stage });
-        // Auto-advance to next step when both are selected
-        if (config.gender) {
-            setStep(2);
+    const handleContinueToCatalog = () => {
+        if (isContactFormValid()) {
+            setStep(1);
+        } else {
+            alert(t(translations.fillAllFields));
         }
     };
 
     const handleCategorySelect = (categoryId) => {
-        setSelection({ ...selection, category: categoryId, product: null });
-        setStep(3);
+        setSelection({ category: categoryId, product: null });
+        setStep(2);
     };
 
     const handleProductSelect = (productId) => {
@@ -137,9 +132,7 @@ export default function SchoolWizard() {
     };
 
     const handleNext = () => {
-        // Advance to Step 4 (Details)
-        setStep(4);
-        // Reset size quantities
+        setStep(3);
         setSizeQuantities({});
     };
 
@@ -159,7 +152,6 @@ export default function SchoolWizard() {
     };
 
     const handleAddToCart = () => {
-        // Validation
         if (totalItems === 0) {
             alert(t(translations.atLeastOne));
             return;
@@ -167,7 +159,6 @@ export default function SchoolWizard() {
 
         const product = getProductById(selection.product);
 
-        // Construct cart item
         const cartItem = {
             id: `${selection.product}-${Date.now()}`,
             productId: selection.product,
@@ -176,156 +167,170 @@ export default function SchoolWizard() {
             image: product.image,
             details: {
                 material: details.material,
-                stage: config.stage,
-                gender: config.gender,
+                stage: details.stage,
                 sizes: Object.fromEntries(
                     Object.entries(sizeQuantities).filter(([_, qty]) => qty > 0)
                 ),
                 logo: details.logo?.name || null,
-                notes: details.notes
+                notes: details.notes,
+                // Include contact info in cart item
+                contactInfo: contactInfo
             },
             quantity: totalItems,
-            price: 0 // Placeholder for B2B quotation
+            price: 0
         };
 
-        // Add to cart
         addToCart(cartItem);
-
-        // Show success message
         setShowSuccess(true);
     };
 
-    const handleDesignAnother = () => {
-        // Reset to category selection
-        setStep(2);
-        setSelection({ ...selection, product: null });
-        setDetails({ material: '100% Cotton', logo: null, notes: '' });
+    const handleAddAnother = () => {
+        // Reset to category grid (Step 1)
+        setStep(1);
+        setSelection({ category: null, product: null });
+        setDetails({ material: '100% Cotton', logo: null, notes: '', stage: 'kg_primary' });
         setSizeQuantities({});
         setShowSuccess(false);
     };
 
-    // View 1: Configuration
-    const renderConfigView = () => (
-        <div className="space-y-8 animate-fade-in">
-            {/* Gender Selection */}
-            <div>
-                <h2 className="text-2xl font-bold text-center text-gray-900 mb-6">
-                    {t(translations.whoShopping)}
-                </h2>
-                <div className="grid grid-cols-2 gap-4">
-                    <button
-                        onClick={() => handleGenderSelect('boys')}
-                        className={`p-6 rounded-xl border-2 transition-all duration-300 ${config.gender === 'boys'
-                                ? 'border-primary bg-primary/10 shadow-lg scale-105'
-                                : 'border-gray-300 hover:border-primary hover:shadow-md'
-                            }`}
-                    >
-                        <div className="text-5xl mb-3">👦</div>
-                        <div className="text-xl font-bold text-gray-900">
-                            {t(translations.boys)}
-                        </div>
-                    </button>
-                    <button
-                        onClick={() => handleGenderSelect('girls')}
-                        className={`p-6 rounded-xl border-2 transition-all duration-300 ${config.gender === 'girls'
-                                ? 'border-primary bg-primary/10 shadow-lg scale-105'
-                                : 'border-gray-300 hover:border-primary hover:shadow-md'
-                            }`}
-                    >
-                        <div className="text-5xl mb-3">👧</div>
-                        <div className="text-xl font-bold text-gray-900">
-                            {t(translations.girls)}
-                        </div>
-                    </button>
+    // Step 0: Contact Info Form
+    const renderContactInfoStep = () => (
+        <div className="space-y-6 animate-fade-in max-w-2xl mx-auto">
+            <div className="text-center mb-8">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 text-4xl mb-4">
+                    📝
                 </div>
+                <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                    {t(translations.contactInfo)}
+                </h2>
+                <p className="text-gray-600">
+                    {language === 'ar'
+                        ? 'يرجى تقديم معلومات المدرسة الخاصة بك لبدء عملية الطلب'
+                        : 'Please provide your school information to begin the ordering process'
+                    }
+                </p>
             </div>
 
-            {/* Stage Selection - Only show if gender is selected */}
-            {config.gender && (
-                <div className="animate-slide-up">
-                    <h2 className="text-2xl font-bold text-center text-gray-900 mb-6">
-                        {t(translations.schoolStage)}
-                    </h2>
-                    <div className="grid grid-cols-2 gap-4">
-                        <button
-                            onClick={() => handleStageSelect('kg_primary')}
-                            className={`p-6 rounded-xl border-2 transition-all duration-300 ${config.stage === 'kg_primary'
-                                    ? 'border-primary bg-primary/10 shadow-lg scale-105'
-                                    : 'border-gray-300 hover:border-primary hover:shadow-md'
-                                }`}
-                        >
-                            <div className="text-5xl mb-3">🎒</div>
-                            <div className="text-xl font-bold text-gray-900">
-                                {t(translations.kgPrimary)}
-                            </div>
-                        </button>
-                        <button
-                            onClick={() => handleStageSelect('prep_secondary')}
-                            className={`p-6 rounded-xl border-2 transition-all duration-300 ${config.stage === 'prep_secondary'
-                                    ? 'border-primary bg-primary/10 shadow-lg scale-105'
-                                    : 'border-gray-300 hover:border-primary hover:shadow-md'
-                                }`}
-                        >
-                            <div className="text-5xl mb-3">🎓</div>
-                            <div className="text-xl font-bold text-gray-900">
-                                {t(translations.prepSecondary)}
-                            </div>
-                        </button>
-                    </div>
-                </div>
-            )}
+            {/* School Name */}
+            <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    {t(translations.schoolName)} <span className="text-red-500">*</span>
+                </label>
+                <input
+                    type="text"
+                    value={contactInfo.schoolName}
+                    onChange={(e) => setContactInfo({ ...contactInfo, schoolName: e.target.value })}
+                    placeholder={t(translations.schoolNamePlaceholder)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                />
+            </div>
+
+            {/* Contact Person */}
+            <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    {t(translations.contactPerson)} <span className="text-red-500">*</span>
+                </label>
+                <input
+                    type="text"
+                    value={contactInfo.contactPerson}
+                    onChange={(e) => setContactInfo({ ...contactInfo, contactPerson: e.target.value })}
+                    placeholder={t(translations.contactPersonPlaceholder)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                />
+            </div>
+
+            {/* Email */}
+            <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    {t(translations.email)} <span className="text-red-500">*</span>
+                </label>
+                <input
+                    type="email"
+                    value={contactInfo.email}
+                    onChange={(e) => setContactInfo({ ...contactInfo, email: e.target.value })}
+                    placeholder={t(translations.emailPlaceholder)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                />
+            </div>
+
+            {/* Phone */}
+            <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    {t(translations.phone)} <span className="text-red-500">*</span>
+                </label>
+                <input
+                    type="tel"
+                    value={contactInfo.phone}
+                    onChange={(e) => setContactInfo({ ...contactInfo, phone: e.target.value })}
+                    placeholder={t(translations.phonePlaceholder)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                />
+            </div>
+
+            {/* Continue Button */}
+            <button
+                onClick={handleContinueToCatalog}
+                disabled={!isContactFormValid()}
+                className={`w-full py-4 rounded-lg font-bold text-lg shadow-lg transition-all duration-300 ${isContactFormValid()
+                        ? 'bg-primary text-white hover:bg-primary-700 hover:shadow-xl'
+                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                    }`}
+            >
+                {t(translations.continue)}
+            </button>
         </div>
     );
 
-    // View 2: Category Selection
-    const renderCategoryView = () => {
-        const availableCategories = getAvailableCategories();
+    // Step 1: Category Grid (The Menu)
+    const renderCategoryGrid = () => (
+        <div className="space-y-6 animate-fade-in">
+            <div className="text-center mb-8">
+                <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                    {t(translations.catalogMenu)}
+                </h2>
+                <p className="text-gray-600">
+                    {language === 'ar'
+                        ? 'اختر فئة المنتج لعرض الأنماط المتاحة'
+                        : 'Select a product category to view available styles'
+                    }
+                </p>
+            </div>
 
-        return (
-            <div className="space-y-6 animate-fade-in">
-                <div className="flex items-center justify-between">
-                    <button
-                        onClick={() => setStep(1)}
-                        className="flex items-center gap-2 text-primary hover:text-primary-700 font-semibold"
-                    >
-                        <svg className="w-5 h-5 rtl:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                        </svg>
-                        {t(translations.back)}
-                    </button>
-                    <h2 className="text-2xl font-bold text-gray-900">
-                        {t(translations.selectCategory)}
-                    </h2>
-                    <div className="w-20"></div>
-                </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6">
+                {productCategories.map((category) => {
+                    const productsInCategory = getProductsByCategory(category.id);
+                    const productCount = productsInCategory.length;
 
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {availableCategories.map((category) => (
+                    return (
                         <button
                             key={category.id}
                             onClick={() => handleCategorySelect(category.id)}
-                            className="p-6 rounded-xl border-2 border-gray-300 hover:border-primary hover:shadow-lg transition-all duration-300 bg-white"
+                            className="group p-6 rounded-xl border-2 border-gray-300 hover:border-primary hover:shadow-xl transition-all duration-300 bg-white"
                         >
-                            <div className="text-xl font-bold text-gray-900">
+                            <div className="text-5xl mb-3">{category.icon}</div>
+                            <div className="text-xl font-bold text-gray-900 mb-2">
                                 {language === 'ar' ? category.nameAr : category.name}
                             </div>
+                            <div className="text-sm text-gray-500">
+                                {productCount} {language === 'ar' ? 'منتج' : 'items'}
+                            </div>
                         </button>
-                    ))}
-                </div>
+                    );
+                })}
             </div>
-        );
-    };
+        </div>
+    );
 
-    // View 3: Style Selection
+    // Step 2: Style Selection
     const renderStyleView = () => {
-        const products = getFilteredProducts();
+        const products = getProductsByCategory(selection.category);
         const selectedCategory = productCategories.find(c => c.id === selection.category);
 
         return (
             <div className="space-y-6 animate-fade-in">
                 <div className="flex items-center justify-between">
                     <button
-                        onClick={() => setStep(2)}
+                        onClick={() => setStep(1)}
                         className="flex items-center gap-2 text-primary hover:text-primary-700 font-semibold"
                     >
                         <svg className="w-5 h-5 rtl:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -392,16 +397,16 @@ export default function SchoolWizard() {
         );
     };
 
-    // View 4: Details & Customization
+    // Step 3: Details & Customization
     const renderDetailsView = () => {
         const product = getProductById(selection.product);
-        const sizes = sizeCharts[config.stage] || [];
+        const sizes = sizeCharts[details.stage] || [];
 
         return (
             <div className="space-y-6 animate-fade-in">
                 <div className="flex items-center justify-between">
                     <button
-                        onClick={() => setStep(3)}
+                        onClick={() => setStep(2)}
                         className="flex items-center gap-2 text-primary hover:text-primary-700 font-semibold"
                     >
                         <svg className="w-5 h-5 rtl:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -428,6 +433,35 @@ export default function SchoolWizard() {
                     <div>
                         <div className="font-bold text-2xl text-primary">{product.code}</div>
                         <div className="text-gray-600">{product.name}</div>
+                    </div>
+                </div>
+
+                {/* School Stage Selection */}
+                <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        {t(translations.schoolStage)}
+                    </label>
+                    <div className="grid grid-cols-2 gap-4">
+                        <button
+                            onClick={() => setDetails({ ...details, stage: 'kg_primary' })}
+                            className={`p-4 rounded-lg border-2 transition-all ${details.stage === 'kg_primary'
+                                    ? 'border-primary bg-primary/10'
+                                    : 'border-gray-300 hover:border-primary'
+                                }`}
+                        >
+                            <div className="text-2xl mb-2">🎒</div>
+                            <div className="font-semibold">{t(translations.kgPrimary)}</div>
+                        </button>
+                        <button
+                            onClick={() => setDetails({ ...details, stage: 'prep_secondary' })}
+                            className={`p-4 rounded-lg border-2 transition-all ${details.stage === 'prep_secondary'
+                                    ? 'border-primary bg-primary/10'
+                                    : 'border-gray-300 hover:border-primary'
+                                }`}
+                        >
+                            <div className="text-2xl mb-2">🎓</div>
+                            <div className="font-semibold">{t(translations.prepSecondary)}</div>
+                        </button>
                     </div>
                 </div>
 
@@ -535,11 +569,11 @@ export default function SchoolWizard() {
                     {t(translations.addedToCart)}
                 </h3>
                 <p className="text-gray-600 mb-6">
-                    {t(translations.designAnother)}
+                    {t(translations.addAnother)}
                 </p>
                 <div className="flex gap-3">
                     <button
-                        onClick={handleDesignAnother}
+                        onClick={handleAddAnother}
                         className="flex-1 px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-primary-700 transition-all"
                     >
                         {t(translations.yes)}
@@ -561,24 +595,26 @@ export default function SchoolWizard() {
     return (
         <div className="max-w-6xl mx-auto px-4 py-8">
             {/* Progress Indicator */}
-            <div className="mb-8">
-                <div className="flex items-center justify-center gap-2">
-                    {[1, 2, 3, 4].map((s) => (
-                        <div
-                            key={s}
-                            className={`h-2 rounded-full transition-all duration-300 ${s === step ? 'w-12 bg-primary' : s < step ? 'w-8 bg-primary/50' : 'w-8 bg-gray-300'
-                                }`}
-                        />
-                    ))}
+            {step > 0 && (
+                <div className="mb-8">
+                    <div className="flex items-center justify-center gap-2">
+                        {[1, 2, 3].map((s) => (
+                            <div
+                                key={s}
+                                className={`h-2 rounded-full transition-all duration-300 ${s === step ? 'w-12 bg-primary' : s < step ? 'w-8 bg-primary/50' : 'w-8 bg-gray-300'
+                                    }`}
+                            />
+                        ))}
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* Views */}
             <div className="bg-white rounded-2xl shadow-xl p-6 md:p-10">
-                {step === 1 && renderConfigView()}
-                {step === 2 && renderCategoryView()}
-                {step === 3 && renderStyleView()}
-                {step === 4 && renderDetailsView()}
+                {step === 0 && renderContactInfoStep()}
+                {step === 1 && renderCategoryGrid()}
+                {step === 2 && renderStyleView()}
+                {step === 3 && renderDetailsView()}
             </div>
 
             {/* Success Modal */}
