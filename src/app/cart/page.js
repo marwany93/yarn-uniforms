@@ -8,7 +8,11 @@ import { useLanguage } from '@/hooks/useLanguage';
 
 export default function CartPage() {
     const router = useRouter();
-    const { cart, removeFromCart, clearCart } = useCart();
+
+    // Defensive coding: provide fallback values
+    const cartContext = useCart();
+    const { cart = [], removeFromCart = () => { }, clearCart = () => { } } = cartContext || {};
+
     const { t, language } = useLanguage();
     const [showSuccess, setShowSuccess] = useState(false);
 

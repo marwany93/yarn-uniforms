@@ -2,7 +2,17 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
-const CartContext = createContext();
+// Create context with default value to prevent undefined errors
+const CartContext = createContext({
+    cart: [],
+    cartItems: [],
+    addToCart: () => { },
+    removeFromCart: () => { },
+    updateQuantity: () => { },
+    clearCart: () => { },
+    getCartTotal: () => 0,
+    getCartItemCount: () => 0,
+});
 
 export const useCart = () => {
     const context = useContext(CartContext);
@@ -86,7 +96,8 @@ export const CartProvider = ({ children }) => {
     };
 
     const value = {
-        cartItems,
+        cart: cartItems,        // Alias for backward compatibility
+        cartItems,              // Keep original name
         addToCart,
         removeFromCart,
         updateQuantity,
@@ -97,3 +108,4 @@ export const CartProvider = ({ children }) => {
 
     return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 };
+
