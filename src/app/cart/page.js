@@ -72,8 +72,11 @@ export default function CartPage() {
         const newOrderId = 'YARN-' + Math.random().toString(36).substring(2, 9).toUpperCase();
         setOrderId(newOrderId);
 
+        // Clear cart immediately
+        clearCart();
+
         // In production, this would submit to backend/Firebase
-        // For now, just show success and clear
+        // For now, just show success
         setShowSuccess(true);
     };
 
