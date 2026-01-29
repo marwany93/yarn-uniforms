@@ -1,36 +1,25 @@
-import { notFound } from 'next/navigation';
-import { sectors, getSectorById } from '@/data/sectors';
 import SchoolWizard from '@/components/wizard/SchoolWizard';
 
-// Generate static params for school sector
-export function generateStaticParams() {
-    return [{ id: 'schools' }];
-}
+export const metadata = {
+    title: 'School Uniform Designer | Yarn Uniforms',
+    description: 'Design and customize your school uniforms with our interactive wizard.',
+};
 
-export default function SchoolsPage({ params }) {
-    const sector = getSectorById('schools');
-
-    // If sector not found, trigger 404
-    if (!sector || params.id !== 'schools') {
-        notFound();
-    }
-
+export default function SchoolsPage() {
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-            {/* Header Section */}
-            <div className="bg-primary text-white py-12">
-                <div className="container-custom text-center">
-                    <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm text-5xl mb-4">
-                        {sector.icon}
+        <div className="min-h-screen bg-gray-50">
+            {/* Hero Section */}
+            <section className="bg-primary text-white py-16">
+                <div className="container mx-auto px-4">
+                    <div className="flex items-center justify-center gap-4 mb-4">
+                        <span className="text-5xl">🎓</span>
+                        <h1 className="text-4xl md:text-5xl font-bold">School Uniform Designer</h1>
                     </div>
-                    <h1 className="text-4xl md:text-5xl font-display font-bold mb-3">
-                        School Uniform Designer
-                    </h1>
-                    <p className="text-xl text-white/90 max-w-2xl mx-auto">
-                        Create the perfect school uniform with our interactive design wizard
+                    <p className="text-xl opacity-90 text-center max-w-3xl mx-auto">
+                        Customize your school's uniform catalog with our easy-to-use design wizard
                     </p>
                 </div>
-            </div>
+            </section>
 
             {/* Wizard Component */}
             <SchoolWizard />
