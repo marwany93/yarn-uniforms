@@ -16,7 +16,7 @@ export default function SchoolsPage() {
                         <h1 className="text-4xl md:text-5xl font-bold">School Uniform Designer</h1>
                     </div>
                     <p className="text-xl opacity-90 text-center max-w-3xl mx-auto">
-                        Customize your school's uniform catalog with our easy-to-use design wizard
+                        Customize your school&apos;s uniform catalog with our easy-to-use design wizard
                     </p>
                 </div>
             </section>
