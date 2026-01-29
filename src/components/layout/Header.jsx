@@ -23,9 +23,9 @@ const Header = () => {
 
     const navigation = [
         { name: t(translations.schools), href: '/sectors/schools', sector: 'schools' },
-        { name: t(translations.factories), href: '/order/factories', sector: 'factories' },
-        { name: t(translations.companies), href: '/order/companies', sector: 'companies' },
-        { name: t(translations.hospitals), href: '/order/hospitals', sector: 'hospitals' },
+        { name: t(translations.factories), href: '/sectors/factories', sector: 'factories' },
+        { name: t(translations.companies), href: '/sectors/companies', sector: 'companies' },
+        { name: t(translations.hospitals), href: '/sectors/hospitals', sector: 'hospitals' },
     ];
 
     return (
