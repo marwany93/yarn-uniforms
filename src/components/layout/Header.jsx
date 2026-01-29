@@ -14,18 +14,19 @@ const Header = () => {
     const translations = {
         home: { en: 'Home', ar: 'الرئيسية' },
         schools: { en: 'Schools', ar: 'المدارس' },
-        factories: { en: 'Factories', ar: 'المصانع' },
-        companies: { en: 'Companies', ar: 'الشركات' },
-        hospitals: { en: 'Hospitals', ar: 'المستشفيات' },
+        medicalSector: { en: 'Medical Sector', ar: 'القطاع الطبي' },
+        corporateFactories: { en: 'Corporate & Factories', ar: 'الشركات والمصانع' },
+        hotelsRestaurant: { en: 'Hotels & Restaurant', ar: 'الفنادق والمطاعم' },
         trackOrder: { en: 'Track Order', ar: 'تتبع الطلب' },
         admin: { en: 'Admin', ar: 'الإدارة' }
     };
 
     const navigation = [
         { name: t(translations.schools), href: '/sectors/schools', sector: 'schools' },
-        { name: t(translations.factories), href: '/sectors/factories', sector: 'factories' },
-        { name: t(translations.companies), href: '/sectors/companies', sector: 'companies' },
-        { name: t(translations.hospitals), href: '/sectors/hospitals', sector: 'hospitals' },
+        { name: t(translations.medicalSector), href: '/sectors/medical', sector: 'medical' },
+        { name: t(translations.corporateFactories), href: '/sectors/corporate', sector: 'corporate' },
+        { name: t(translations.hotelsRestaurant), href: '/sectors/hospitality', sector: 'hospitality' },
+        { name: t(translations.trackOrder), href: '/track-order', sector: 'track' },
     ];
 
     return (
