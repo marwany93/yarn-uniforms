@@ -233,9 +233,9 @@ export default function OrderDetailsDrawer({ order, isOpen, onClose }) {
                                                     🏫 {item.details.stage}
                                                 </span>
                                             )}
-                                            {item.details?.logo && (
+                                            {item.details?.logoName && !item.details?.uploadedLogoUrl && (
                                                 <span className="text-xs bg-green-50 border border-green-300 text-green-700 px-2 py-1 rounded font-medium">
-                                                    🏷️ Logo: {item.details.logo}
+                                                    🏷️ Logo: {item.details.logoName}
                                                 </span>
                                             )}
                                         </div>
@@ -269,6 +269,42 @@ export default function OrderDetailsDrawer({ order, isOpen, onClose }) {
                                             <div className="mt-3 text-xs text-gray-600 bg-yellow-50 p-2 rounded border border-yellow-200">
                                                 <span className="font-semibold">📝 Notes: </span>
                                                 {item.details.notes}
+                                            </div>
+                                        )}
+
+                                        {/* Customer Uploaded Logo/Reference */}
+                                        {item.details?.uploadedLogoUrl && (
+                                            <div className="mt-3 p-3 bg-yellow-50 border-2 border-yellow-200 rounded-lg">
+                                                <p className="text-xs font-bold text-yellow-800 mb-2 uppercase tracking-wider">
+                                                    📎 Customer Uploaded Logo/Reference
+                                                </p>
+                                                <div className="flex items-start gap-3">
+                                                    <a
+                                                        href={item.details.uploadedLogoUrl}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="flex-shrink-0"
+                                                    >
+                                                        <img
+                                                            src={item.details.uploadedLogoUrl}
+                                                            alt="Customer Logo"
+                                                            className="w-20 h-20 object-contain bg-white border-2 border-yellow-300 rounded-lg hover:scale-110 transition-transform cursor-pointer shadow-md"
+                                                        />
+                                                    </a>
+                                                    <div className="flex-1">
+                                                        <p className="text-xs text-gray-600 mb-2">
+                                                            Click image or link to view full size in new tab
+                                                        </p>
+                                                        <a
+                                                            href={item.details.uploadedLogoUrl}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="text-xs text-blue-600 underline hover:text-blue-800 font-medium"
+                                                        >
+                                                            🔗 Open Full Size Image
+                                                        </a>
+                                                    </div>
+                                                </div>
                                             </div>
                                         )}
                                     </div>

@@ -1,4 +1,5 @@
 import SchoolWizard from '@/components/wizard/SchoolWizard';
+import CartSummary from '@/components/wizard/CartSummary';
 
 export const metadata = {
     title: 'School Uniform Designer | Yarn Uniforms',
@@ -21,8 +22,22 @@ export default function SchoolsPage() {
                 </div>
             </section>
 
-            {/* Wizard Component */}
-            <SchoolWizard />
+            {/* Wizard with Sidebar */}
+            <div className="container mx-auto px-4 py-8">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    {/* Main Wizard Column */}
+                    <div className="lg:col-span-2">
+                        <SchoolWizard />
+                    </div>
+
+                    {/* Sticky Sidebar */}
+                    <div className="lg:col-span-1">
+                        <div className="sticky top-4">
+                            <CartSummary />
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }

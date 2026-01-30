@@ -4,6 +4,8 @@ import { useState, useMemo } from 'react';
 import Image from 'next/image';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useCart } from '@/context/CartContext';
+import { storage } from '@/lib/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import {
     schoolProducts,
     productCategories,
@@ -36,12 +38,22 @@ export default function SchoolWizard() {
 
     // Product details for current item
     const [details, setDetails] = useState({
-        material: '100% Cotton',
-        logo: null,
+        color: null,                  // Selected color ID (1-7 or 'custom')
+        customColorName: '',          // For custom color option
+        customColorUrl: null,         // Custom color sample upload URL
+        customColorFileName: null,    // Custom color sample filename
+        fabric: '',                   // Selected fabric type
+        logoUrl: null,                // Logo download URL from Firebase Storage
+        logoName: null,               // Logo filename for display
+        referenceUrl: null,           // Additional reference upload URL
+        referenceFileName: null,      // Reference filename
         notes: '',
         stage: 'kg_primary'
     });
     const [sizeQuantities, setSizeQuantities] = useState({});
+    const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+    const [isUploadingCustomColor, setIsUploadingCustomColor] = useState(false);
+    const [isUploadingReference, setIsUploadingReference] = useState(false);
 
     // Success modal
     const [showCompleteModal, setShowCompleteModal] = useState(false);
@@ -104,6 +116,51 @@ export default function SchoolWizard() {
         'Polyester Blend',
         'Heavy Duty Gabardine'
     ];
+
+    // Color Options
+    const colorOptions = [
+        { id: 1, label: 'White', hex: '#FFFFFF', border: 'gray-300' },
+        { id: 2, label: 'Green', hex: '#166534', border: 'transparent' },
+        { id: 3, label: 'Orange', hex: '#F97316', border: 'transparent' },
+        { id: 4, label: 'Yellow', hex: '#EAB308', border: 'transparent' },
+        { id: 5, label: 'Blue', hex: '#2563EB', border: 'transparent' },
+        { id: 6, label: 'Navy', hex: '#1E3A8A', border: 'transparent' },
+        { id: 7, label: 'Red', hex: '#DC2626', border: 'transparent' },
+        { id: 'custom', label: 'Custom Color', hex: 'rainbow', isCustom: true }
+    ];
+
+    // Fabric Options by Product Type
+    const fabricOptions = {
+        shirts: ['Poplin', 'Oxford', 'Dacron', 'Sundus'],
+        blouses: ['Poplin', 'Oxford', 'Dacron', 'Sundus'],
+        dresses: ['Gabardine (Mixed 65/35)', 'Gabardine (Wool Blend)'],
+        skirts: ['Gabardine (Mixed 65/35)', 'Gabardine (Wool Blend)'],
+        pants: ['Gabardine (Mixed 65/35)', 'Gabardine (Wool Blend)'],
+        trousers: ['Gabardine (Mixed 65/35)', 'Gabardine (Wool Blend)'],
+        polo: ['Pika (Lacoste)', 'Summer Milton'],
+        sportswear: ['Scuba', 'Interlock', 'Summer Milton'],
+        default: ['Cotton', 'Polyester', 'Cotton Blend']
+    };
+
+    // Get fabric options based on product type
+    const getFabricOptions = () => {
+        if (!currentProduct) return fabricOptions.default;
+
+        const product = getProductById(currentProduct);
+        if (!product) return fabricOptions.default;
+
+        const productName = product.name.toLowerCase();
+
+        if (productName.includes('shirt')) return fabricOptions.shirts;
+        if (productName.includes('blouse')) return fabricOptions.blouses;
+        if (productName.includes('dress')) return fabricOptions.dresses;
+        if (productName.includes('skirt')) return fabricOptions.skirts;
+        if (productName.includes('pant') || productName.includes('trouser')) return fabricOptions.pants;
+        if (productName.includes('polo')) return fabricOptions.polo;
+        if (productName.includes('sport')) return fabricOptions.sportswear;
+
+        return fabricOptions.default;
+    };
 
     // Size charts based on stage
     const sizeCharts = {
@@ -174,10 +231,110 @@ export default function SchoolWizard() {
         }));
     };
 
-    const handleLogoUpload = (e) => {
+    const handleLogoUpload = async (e) => {
         const file = e.target.files[0];
-        if (file) {
-            setDetails({ ...details, logo: file });
+        if (!file) return;
+
+        // Validate file size (max 10MB)
+        if (file.size > 10 * 1024 * 1024) {
+            alert('File size must be less than 10MB');
+            return;
+        }
+
+        setIsUploadingLogo(true);
+
+        try {
+            // Upload to Firebase Storage immediately
+            const timestamp = Date.now();
+            const fileName = `${timestamp}_${file.name}`;
+            const storageRef = ref(storage, `temp_uploads/${fileName}`);
+
+            console.log('📤 Uploading logo to Firebase Storage...');
+            await uploadBytes(storageRef, file);
+
+            // Get download URL
+            const downloadUrl = await getDownloadURL(storageRef);
+            console.log('✅ Logo uploaded successfully:', downloadUrl);
+
+            // Store URL and name (NOT the File object)
+            setDetails({
+                ...details,
+                logoUrl: downloadUrl,
+                logoName: file.name
+            });
+        } catch (error) {
+            console.error('❌ Logo upload failed:', error);
+            alert('Failed to upload logo. Please try again.');
+        } finally {
+            setIsUploadingLogo(false);
+        }
+    };
+
+    const handleCustomColorUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        if (file.size > 10 * 1024 * 1024) {
+            alert('File size must be less than 10MB');
+            return;
+        }
+
+        setIsUploadingCustomColor(true);
+
+        try {
+            const timestamp = Date.now();
+            const fileName = `${timestamp}_${file.name}`;
+            const storageRef = ref(storage, `temp_uploads/${fileName}`);
+
+            console.log('📤 Uploading custom color sample...');
+            await uploadBytes(storageRef, file);
+            const downloadUrl = await getDownloadURL(storageRef);
+            console.log('✅ Custom color uploaded:', downloadUrl);
+
+            setDetails({
+                ...details,
+                customColorUrl: downloadUrl,
+                customColorFileName: file.name
+            });
+        } catch (error) {
+            console.error('❌ Custom color upload failed:', error);
+            alert('Failed to upload color sample. Please try again.');
+        } finally {
+            setIsUploadingCustomColor(false);
+        }
+    };
+
+    const handleReferenceUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        if (file.size > 10 * 1024 * 1024) {
+            alert('File size must be less than 10MB');
+            return;
+        }
+
+        setIsUploadingReference(true);
+
+        try {
+            const timestamp = Date.now();
+            const fileName = `${timestamp}_${file.name}`;
+            const storageRef = ref(storage, `temp_uploads/${fileName}`);
+
+            console.log('📤 Uploading reference file...');
+            await uploadBytes(storageRef, file);
+            const downloadUrl = await getDownloadURL(storageRef);
+            console.log('✅ Reference uploaded:', downloadUrl);
+
+            setDetails({
+                ...details,
+                referenceUrl: downloadUrl,
+                referenceFileName: file.name
+            });
+        } catch (error) {
+            console.error('❌ Reference upload failed:', error);
+            alert('Failed to upload reference. Please try again.');
+        } finally {
+            setIsUploadingReference(false);
         }
     };
 
@@ -193,6 +350,25 @@ export default function SchoolWizard() {
             alert(t(translations.selectProduct));
             return;
         }
+
+        // Color validation
+        if (!details.color) {
+            alert('Please select a color');
+            return;
+        }
+
+        // Custom color validation
+        if (details.color === 'custom' && !details.customColorName.trim()) {
+            alert('Please specify the custom color name');
+            return;
+        }
+
+        // Fabric validation
+        if (!details.fabric) {
+            alert('Please select a fabric type');
+            return;
+        }
+
         if (totalItems === 0) {
             console.log('❌ Validation failed: No items in size matrix');
             alert(t(translations.atLeastOne));
@@ -212,12 +388,19 @@ export default function SchoolWizard() {
             code: product.code,
             image: product.image,
             details: {
-                material: details.material,
+                color: details.color,
+                customColorName: details.customColorName || null,
+                customColorUrl: details.customColorUrl || null,
+                customColorFileName: details.customColorFileName || null,
+                fabric: details.fabric,
                 stage: details.stage,
                 sizes: Object.fromEntries(
                     Object.entries(sizeQuantities).filter(([_, qty]) => qty > 0)
                 ),
-                logo: details.logo?.name || null,
+                uploadedLogoUrl: details.logoUrl || null,
+                logoName: details.logoName || null,
+                referenceUrl: details.referenceUrl || null,
+                referenceFileName: details.referenceFileName || null,
                 notes: details.notes,
                 contactInfo: contactInfo
             },
@@ -243,8 +426,15 @@ export default function SchoolWizard() {
             setCurrentCategoryIndex(prev => prev + 1);
             setCurrentProduct(null);
             setDetails({
-                material: '100% Cotton',
-                logo: null,
+                color: null,
+                customColorName: '',
+                customColorUrl: null,
+                customColorFileName: null,
+                fabric: '',
+                logoUrl: null,
+                logoName: null,
+                referenceUrl: null,
+                referenceFileName: null,
                 notes: '',
                 stage: 'kg_primary'
             });
@@ -563,18 +753,111 @@ export default function SchoolWizard() {
                             </div>
                         </div>
 
-                        {/* Material */}
+                        {/* Color Selection */}
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-3">
+                                Select Color <span className="text-red-500">*</span>
+                            </label>
+                            <div className="grid grid-cols-4 gap-3">
+                                {colorOptions.map((color) => (
+                                    <button
+                                        key={color.id}
+                                        type="button"
+                                        onClick={() => setDetails({
+                                            ...details,
+                                            color: color.id,
+                                            // Reset custom fields if switching away from custom
+                                            customColorName: color.id !== 'custom' ? '' : details.customColorName,
+                                            customColorUrl: color.id !== 'custom' ? null : details.customColorUrl,
+                                            customColorFileName: color.id !== 'custom' ? null : details.customColorFileName
+                                        })}
+                                        className={`relative p-4 rounded-lg border-2 transition-all ${details.color === color.id
+                                            ? 'border-primary ring-2 ring-primary ring-offset-2'
+                                            : 'border-gray-300 hover:border-primary'
+                                            }`}
+                                    >
+                                        {color.isCustom ? (
+                                            <div className="flex flex-col items-center">
+                                                <div className="w-12 h-12 rounded-full bg-gradient-to-r from-red-500 via-yellow-500 via-green-500 via-blue-500 to-purple-500 mb-2"></div>
+                                                <span className="text-xs font-medium">Custom</span>
+                                            </div>
+                                        ) : (
+                                            <div className="flex flex-col items-center">
+                                                <div
+                                                    className={`w-12 h-12 rounded-full border-2 border-${color.border} shadow-inner mb-2`}
+                                                    style={{ backgroundColor: color.hex }}
+                                                ></div>
+                                                <span className="text-xs font-medium">{color.label}</span>
+                                            </div>
+                                        )}
+                                        {details.color === color.id && (
+                                            <div className="absolute top-2 right-2 text-primary">
+                                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                                </svg>
+                                            </div>
+                                        )}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Custom Color Inputs - Conditional */}
+                        {details.color === 'custom' && (
+                            <div className="p-4 bg-yellow-50 border-2 border-yellow-200 rounded-lg space-y-4">
+                                <p className="text-sm font-semibold text-yellow-900">
+                                    📝 Custom Color Details
+                                </p>
+
+                                {/* Color Name Input */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Color Name/Code <span className="text-red-500">*</span>
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={details.customColorName}
+                                        onChange={(e) => setDetails({ ...details, customColorName: e.target.value })}
+                                        placeholder="e.g., Burgundy, Pantone 19-1764, #8B0000"
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary"
+                                    />
+                                </div>
+
+                                {/* Color Sample Upload */}
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                        Upload Color Sample/Image (Optional)
+                                    </label>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        onChange={handleCustomColorUpload}
+                                        disabled={isUploadingCustomColor}
+                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg disabled:bg-gray-100 disabled:cursor-not-allowed"
+                                    />
+                                    {isUploadingCustomColor && (
+                                        <p className="mt-2 text-sm text-blue-600">⏳ Uploading color sample...</p>
+                                    )}
+                                    {details.customColorFileName && !isUploadingCustomColor && (
+                                        <p className="mt-2 text-sm text-green-600">✓ {details.customColorFileName}</p>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Fabric Selection */}
                         <div>
                             <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                {t(translations.material)}
+                                Fabric Type <span className="text-red-500">*</span>
                             </label>
                             <select
-                                value={details.material}
-                                onChange={(e) => setDetails({ ...details, material: e.target.value })}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                                value={details.fabric}
+                                onChange={(e) => setDetails({ ...details, fabric: e.target.value })}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary"
                             >
-                                {materialOptions.map(option => (
-                                    <option key={option} value={option}>{option}</option>
+                                <option value="">Select fabric...</option>
+                                {getFabricOptions().map(fabric => (
+                                    <option key={fabric} value={fabric}>{fabric}</option>
                                 ))}
                             </select>
                         </div>
@@ -588,10 +871,37 @@ export default function SchoolWizard() {
                                 type="file"
                                 accept="image/*"
                                 onChange={handleLogoUpload}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                                disabled={isUploadingLogo}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary disabled:bg-gray-100 disabled:cursor-not-allowed"
                             />
-                            {details.logo && (
-                                <p className="mt-2 text-sm text-green-600">✓ {details.logo.name}</p>
+                            {isUploadingLogo && (
+                                <p className="mt-2 text-sm text-blue-600">⏳ Uploading logo...</p>
+                            )}
+                            {details.logoName && !isUploadingLogo && (
+                                <p className="mt-2 text-sm text-green-600">✓ {details.logoName}</p>
+                            )}
+                        </div>
+
+                        {/* Additional Reference Upload */}
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                                Additional Reference <span className="text-gray-400 font-normal">(Optional)</span>
+                            </label>
+                            <p className="text-xs text-gray-600 mb-2">
+                                Upload any extra design ideas, specifications, or reference images
+                            </p>
+                            <input
+                                type="file"
+                                accept="image/*,.pdf,.doc,.docx"
+                                onChange={handleReferenceUpload}
+                                disabled={isUploadingReference}
+                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary disabled:bg-gray-100 disabled:cursor-not-allowed"
+                            />
+                            {isUploadingReference && (
+                                <p className="mt-2 text-sm text-blue-600">⏳ Uploading reference...</p>
+                            )}
+                            {details.referenceFileName && !isUploadingReference && (
+                                <p className="mt-2 text-sm text-green-600">✓ {details.referenceFileName}</p>
                             )}
                         </div>
 
