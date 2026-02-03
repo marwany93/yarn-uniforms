@@ -47,7 +47,7 @@ export default function RootLayout({ children }) {
     console.log('🏗️ RootLayout: Mounting with CartProvider...');
 
     return (
-        <html lang="en" dir="ltr" suppressHydrationWarning>
+        <html lang="ar" dir="rtl" suppressHydrationWarning>
             <body
                 className={`${roboto.variable} ${balooDa2.variable} ${cairo.variable} font-sans antialiased`}
                 suppressHydrationWarning={true}

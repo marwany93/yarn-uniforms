@@ -5,7 +5,6 @@ module.exports = {
         './src/components/**/*.{js,ts,jsx,tsx,mdx}',
         './src/app/**/*.{js,ts,jsx,tsx,mdx}',
     ],
-
     theme: {
         extend: {
             // Yarn 2025 Brand Colors
@@ -48,7 +47,7 @@ module.exports = {
                 arabic: ['var(--font-cairo)', 'system-ui', 'sans-serif'], // Arabic fallback
             },
 
-            // Custom spacing for better Arabic/English compatibility
+            // Custom spacing
             spacing: {
                 '18': '4.5rem',
                 '88': '22rem',
@@ -56,7 +55,7 @@ module.exports = {
                 '128': '32rem',
             },
 
-            // Custom animations
+            // --- CUSTOM ANIMATIONS (UPDATED FOR MARQUEE) ---
             animation: {
                 'fade-in': 'fadeIn 0.3s ease-in-out',
                 'slide-up': 'slideUp 0.4s ease-out',
@@ -80,11 +79,9 @@ module.exports = {
         },
     },
 
-    // RTL Support Plugin
     plugins: [
         require('@tailwindcss/forms'),
     ],
 
-    // Enable dark mode (optional)
     darkMode: 'class',
 }

@@ -213,3 +213,130 @@ button:disabled {
 .badge-cancelled {
   @apply bg-red-100 text-red-800 border border-red-200;
 }
+
+/* --- FRESH MARQUEE STYLES --- */
+.marquee-container {
+  display: flex;
+  overflow: hidden;
+  user-select: none;
+  gap: 2rem;
+  /* Gap between rows */
+  flex-direction: column;
+}
+
+.marquee-track {
+  display: flex;
+  gap: 3rem;
+  /* Gap between logos */
+  width: max-content;
+  /* Force track to be as wide as content */
+  will-change: transform;
+}
+
+/* Row 1: Left Animation */
+.animate-scroll-left {
+  animation: scrollLeft 30s linear infinite;
+}
+
+/* Row 2: Right Animation */
+.animate-scroll-right {
+  animation: scrollRight 30s linear infinite;
+}
+
+/* Responsive Speeds */
+@media (min-width: 768px) {
+  .animate-scroll-left {
+    animation-duration: 80s;
+  }
+
+  .animate-scroll-right {
+    animation-duration: 80s;
+  }
+}
+
+@keyframes scrollLeft {
+  0% {
+    transform: translateX(0);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
+
+  /* Move half width (since we duplicate x2) */
+}
+
+@keyframes scrollRight {
+  0% {
+    transform: translateX(-50%);
+  }
+
+  /* Start from half */
+  100% {
+    transform: translateX(0);
+  }
+
+  /* Move to start */
+}
+
+/* --- Infinite Scroll Animation --- */
+
+/* ده الكود المسؤول عن الحركة لليسار */
+@keyframes scrollLeft {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+/* ده الكود المسؤول عن الحركة لليمين (العكسية) */
+@keyframes scrollRight {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* التنسيق الأساسي لكل مجموعة لوجوهات */
+.marquee-group {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  gap: 2rem;
+  /* مسافة بين اللوجوهات */
+  min-width: 100%;
+  /* لازم تاخد عرض الشاشة بالكامل على الأقل */
+}
+
+/* كلاسات الحركة */
+.animate-scroll-left {
+  animation: scrollLeft 30s linear infinite;
+}
+
+.animate-scroll-right {
+  animation: scrollRight 30s linear infinite;
+}
+
+/* تبطئ السرعة على الشاشات الكبيرة */
+@media (min-width: 768px) {
+  .animate-scroll-left {
+    animation-duration: 80s;
+  }
+
+  .animate-scroll-right {
+    animation-duration: 80s;
+  }
+
+  .marquee-group {
+    gap: 4rem;
+  }
+
+  /* تزويد المسافات في الديسك توب */
+}

@@ -4,8 +4,8 @@ import { useState, useEffect, createContext, useContext } from 'react';
 const LanguageContext = createContext();
 
 export function LanguageProvider({ children }) {
-    // Default to English
-    const [language, setLanguage] = useState('en');
+    // Default to Arabic (target audience in Saudi Arabia)
+    const [language, setLanguage] = useState('ar');
 
     // Load saved language preference on mount (runs once)
     useEffect(() => {
@@ -15,8 +15,8 @@ export function LanguageProvider({ children }) {
         if (savedLang && (savedLang === 'en' || savedLang === 'ar')) {
             setLanguage(savedLang);
         } else {
-            // Check browser language
-            const browserLang = navigator.language.startsWith('ar') ? 'ar' : 'en';
+            // Check browser language, default to Arabic
+            const browserLang = navigator.language.startsWith('en') ? 'en' : 'ar';
             setLanguage(browserLang);
         }
     }, []); // Only run on mount

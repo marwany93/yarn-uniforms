@@ -9,6 +9,17 @@ export default function OrderDetailsDrawer({ order, isOpen, onClose }) {
     const [targetDate, setTargetDate] = useState('');
     const [updating, setUpdating] = useState(false);
 
+    // Color mapping for standard palette
+    const COLOR_MAP = {
+        1: { label: 'White', hex: '#FFFFFF', border: '#D1D5DB' },
+        2: { label: 'Green', hex: '#166534' },
+        3: { label: 'Orange', hex: '#F97316' },
+        4: { label: 'Yellow', hex: '#EAB308' },
+        5: { label: 'Blue', hex: '#2563EB' },
+        6: { label: 'Navy', hex: '#1E3A8A' },
+        7: { label: 'Red', hex: '#DC2626' }
+    };
+
     // Initialize status and date when drawer opens
     useEffect(() => {
         if (order && isOpen) {
@@ -239,6 +250,88 @@ export default function OrderDetailsDrawer({ order, isOpen, onClose }) {
                                                 </span>
                                             )}
                                         </div>
+
+                                        {/* --- NEW DETAILS SECTION (Compact Gray Box) --- */}
+                                        {(item.fabric || item.selectedColor || item.referenceFileUrl || item.details?.uploadedLogoUrl) && (
+                                            <div className="mt-3 space-y-2 text-sm text-gray-700 bg-gray-50 p-3 rounded border border-gray-200">
+
+                                                {/* 1. FABRIC */}
+                                                {item.fabric && (
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="font-semibold text-gray-500">Fabric:</span>
+                                                        <span className="px-2 py-0.5 bg-white border rounded text-gray-800">{item.fabric}</span>
+                                                    </div>
+                                                )}
+
+                                                {/* 2. COLOR */}
+                                                {item.selectedColor && (
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="font-semibold text-gray-500">Color:</span>
+                                                        {item.selectedColor === 'custom' ? (
+                                                            <div className="flex items-center gap-2">
+                                                                <span className="text-yellow-700 font-medium">Custom: {item.customColorName || 'Unspecified'}</span>
+                                                                {item.customColorUrl && (
+                                                                    <a
+                                                                        href={item.customColorUrl}
+                                                                        target="_blank"
+                                                                        rel="noopener noreferrer"
+                                                                        className="text-blue-600 hover:underline text-xs flex items-center"
+                                                                    >
+                                                                        (View Sample 📎)
+                                                                    </a>
+                                                                )}
+                                                            </div>
+                                                        ) : COLOR_MAP[item.selectedColor] ? (
+                                                            <div className="flex items-center gap-2">
+                                                                <div
+                                                                    className="w-4 h-4 rounded-full border"
+                                                                    style={{
+                                                                        backgroundColor: COLOR_MAP[item.selectedColor].hex,
+                                                                        borderColor: item.selectedColor === 1 ? '#D1D5DB' : 'transparent'
+                                                                    }}
+                                                                ></div>
+                                                                <span>{COLOR_MAP[item.selectedColor].label}</span>
+                                                            </div>
+                                                        ) : (
+                                                            <span className="text-gray-400 italic">Not selected</span>
+                                                        )}
+                                                    </div>
+                                                )}
+
+                                                {/* 3. EXTRA REFERENCE FILE */}
+                                                {item.referenceFileUrl && (
+                                                    <div className="mt-2 pt-2 border-t border-gray-200">
+                                                        <span className="font-semibold text-gray-500 block mb-1">Extra Reference:</span>
+                                                        <a
+                                                            href={item.referenceFileUrl}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700 rounded hover:bg-blue-100 transition-colors"
+                                                        >
+                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
+                                                            </svg>
+                                                            View Attachment
+                                                        </a>
+                                                    </div>
+                                                )}
+
+                                                {/* 4. LOGO (Existing logic) */}
+                                                {item.details?.uploadedLogoUrl && (
+                                                    <div className="mt-2">
+                                                        <span className="font-semibold text-gray-500">Logo:</span>
+                                                        <a
+                                                            href={item.details.uploadedLogoUrl}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="text-blue-600 text-xs ml-2 hover:underline"
+                                                        >
+                                                            View Logo
+                                                        </a>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
 
                                         {/* SIZE BREAKDOWN - THE CRITICAL PART */}
                                         {item.details?.sizes && Object.keys(item.details.sizes).length > 0 ? (

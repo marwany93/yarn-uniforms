@@ -6,6 +6,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useLanguage } from '@/hooks/useLanguage';
 import { sectors, getSectorTitle, getSectorDescription } from '@/data/sectors';
+import Partners from '@/components/Partners';
 
 export default function HomePage() {
     const router = useRouter();
@@ -44,7 +45,7 @@ export default function HomePage() {
     return (
         <div className="min-h-screen">
             {/* 1. Hero Section - Yarn 2025 Brand Design */}
-            <section className="relative bg-primary text-white py-20 lg:py-32 overflow-hidden">
+            <section className="relative bg-primary text-white py-24 md:py-32 lg:py-40 overflow-hidden">
                 {/* Background Pattern */}
                 <div className="absolute inset-0 opacity-10">
                     <Image
@@ -57,102 +58,48 @@ export default function HomePage() {
                 </div>
 
                 <div className="container-custom relative z-10">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-                        {/* Left Column - Text Content */}
-                        <div className="text-center lg:text-left">
-                            <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-6 leading-tight text-white">
+                    <div className="max-w-4xl mx-auto px-4">
+                        {/* Centered Text Content */}
+                        <div className="text-center">
+                            <h1 className="text-4xl md:text-6xl font-display font-bold mb-3 leading-tight text-white">
                                 {t(translations.heroTitle)}
                             </h1>
-                            <p className="text-xl md:text-2xl mb-8 text-white leading-relaxed">
+
+
+                            {/* Dynamic Slogan */}
+                            <p
+                                className="text-lg md:text-xl tracking-wide font-light text-gray-200 mb-6"
+                                dir={language === 'ar' ? 'rtl' : 'ltr'}
+                            >
+                                {language === 'ar' ? 'هوية تُنسَجُ' : 'IDENTITY WOVEN'}
+                            </p>
+
+                            <p className="text-base md:text-lg px-4 md:px-0 mb-10 text-white/90 leading-relaxed max-w-3xl mx-auto">
                                 {t(translations.heroSubtitle)}
                             </p>
 
-                            {/* CTA Buttons - Brand Compliant */}
-                            <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                            {/* CTA Buttons - Mobile Optimized */}
+                            <div className="flex flex-col sm:flex-row gap-4 justify-center px-4 md:px-0">
                                 <a
                                     href="#sectors"
-                                    className="px-8 py-4 bg-secondary text-primary rounded-lg font-semibold hover:bg-secondary/90 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                                    className="w-full sm:w-auto px-8 py-4 bg-secondary text-primary rounded-lg font-semibold hover:bg-secondary/90 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
                                 >
                                     {t(translations.orderNow)}
                                 </a>
                                 <a
                                     href="#track"
-                                    className="px-8 py-4 bg-transparent border-2 border-white text-white rounded-lg font-semibold hover:bg-white hover:text-primary shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                                    className="w-full sm:w-auto px-8 py-4 bg-transparent border-2 border-white text-white rounded-lg font-semibold hover:bg-white hover:text-primary shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
                                 >
                                     {t(translations.trackYourOrder)}
                                 </a>
                             </div>
                         </div>
-
-                        {/* Right Column - Hero Image */}
-                        <div className="hidden lg:flex items-center justify-center">
-                            <div className="relative w-full h-96">
-                                <Image
-                                    src="/assets/hero-main-group.png"
-                                    alt="Professional Uniforms"
-                                    fill
-                                    className="object-contain"
-                                    priority
-                                />
-                            </div>
-                        </div>
                     </div>
                 </div>
             </section>
 
-            {/* 2. Success Partners Strip - NEW */}
-            <section className="py-12 bg-gray-100 border-y border-gray-200">
-                <div className="container-custom">
-                    <p className="text-center text-sm font-medium text-gray-500 uppercase tracking-wider mb-8">
-                        {t(translations.trustedBy)}
-                    </p>
-
-                    {/* Partner Logos Grid */}
-                    <div className="flex flex-wrap items-center justify-center gap-8 md:gap-12">
-                        {/* Placeholder Logo 1 */}
-                        <div className="flex items-center justify-center opacity-50 grayscale hover:opacity-75 hover:grayscale-0 transition-all duration-300">
-                            <div className="w-24 h-24 md:w-32 md:h-32 bg-gray-300 rounded-lg flex items-center justify-center">
-                                <span className="text-3xl md:text-4xl">🏢</span>
-                            </div>
-                        </div>
-
-                        {/* Placeholder Logo 2 */}
-                        <div className="flex items-center justify-center opacity-50 grayscale hover:opacity-75 hover:grayscale-0 transition-all duration-300">
-                            <div className="w-24 h-24 md:w-32 md:h-32 bg-gray-300 rounded-lg flex items-center justify-center">
-                                <span className="text-3xl md:text-4xl">🏥</span>
-                            </div>
-                        </div>
-
-                        {/* Placeholder Logo 3 */}
-                        <div className="flex items-center justify-center opacity-50 grayscale hover:opacity-75 hover:grayscale-0 transition-all duration-300">
-                            <div className="w-24 h-24 md:w-32 md:h-32 bg-gray-300 rounded-lg flex items-center justify-center">
-                                <span className="text-3xl md:text-4xl">🎓</span>
-                            </div>
-                        </div>
-
-                        {/* Placeholder Logo 4 */}
-                        <div className="flex items-center justify-center opacity-50 grayscale hover:opacity-75 hover:grayscale-0 transition-all duration-300">
-                            <div className="w-24 h-24 md:w-32 md:h-32 bg-gray-300 rounded-lg flex items-center justify-center">
-                                <span className="text-3xl md:text-4xl">🏭</span>
-                            </div>
-                        </div>
-
-                        {/* Placeholder Logo 5 */}
-                        <div className="flex items-center justify-center opacity-50 grayscale hover:opacity-75 hover:grayscale-0 transition-all duration-300">
-                            <div className="w-24 h-24 md:w-32 md:h-32 bg-gray-300 rounded-lg flex items-center justify-center">
-                                <span className="text-3xl md:text-4xl">🍽️</span>
-                            </div>
-                        </div>
-
-                        {/* Placeholder Logo 6 */}
-                        <div className="flex items-center justify-center opacity-50 grayscale hover:opacity-75 hover:grayscale-0 transition-all duration-300">
-                            <div className="w-24 h-24 md:w-32 md:h-32 bg-gray-300 rounded-lg flex items-center justify-center">
-                                <span className="text-3xl md:text-4xl">💼</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
+            {/* 2. Partner Logos - Infinite Marquee */}
+            <Partners />
 
             {/* 3. Sector Selection Grid - THE CORE */}
             <section id="sectors" className="py-20 bg-background">

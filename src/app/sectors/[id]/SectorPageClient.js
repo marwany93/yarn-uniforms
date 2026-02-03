@@ -42,15 +42,12 @@ export default function SectorPageClient({ sector }) {
         return (
             <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
                 {/* Header Section */}
-                <div className="bg-primary text-white py-12">
+                <div className="bg-white border-b border-gray-200 py-12">
                     <div className="container-custom text-center">
-                        <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-white/20 backdrop-blur-sm text-5xl mb-4">
-                            {sector.icon}
-                        </div>
-                        <h1 className="text-4xl md:text-5xl font-display font-bold mb-3">
+                        <h1 className="text-4xl md:text-5xl font-display font-bold mb-3 text-primary">
                             {language === 'ar' ? 'مصمم الزي المدرسي' : 'School Uniform Designer'}
                         </h1>
-                        <p className="text-xl text-white/90 max-w-2xl mx-auto">
+                        <p className="text-xl text-gray-600 max-w-2xl mx-auto">
                             {language === 'ar'
                                 ? 'صمم الزي المدرسي المثالي باستخدام معالج التصميم التفاعلي الخاص بنا'
                                 : 'Create the perfect school uniform with our interactive design wizard'

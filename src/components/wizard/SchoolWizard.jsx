@@ -387,6 +387,15 @@ export default function SchoolWizard() {
             productName: product.name,
             code: product.code,
             image: product.image,
+
+            // --- ROOT-LEVEL FIELDS for Admin Dashboard Display ---
+            fabric: details.fabric,
+            selectedColor: details.color,
+            customColorName: details.customColorName || null,
+            customColorUrl: details.customColorUrl || null,
+            referenceFileUrl: details.referenceUrl || null,
+            // -----------------------------------------------------
+
             details: {
                 color: details.color,
                 customColorName: details.customColorName || null,
