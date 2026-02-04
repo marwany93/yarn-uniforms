@@ -40,6 +40,7 @@ export default function CartPage() {
         item: { en: 'Item', ar: 'المنتج' },
         specifications: { en: 'Specifications', ar: 'المواصفات' },
         sizeQuantity: { en: 'Size & Quantity', ar: 'المقاسات والكميات' },
+        fabric: { en: 'Fabric Type', ar: 'نوع القماش' },
         material: { en: 'Material', ar: 'الخامة' },
         stage: { en: 'Stage', ar: 'المرحلة' },
         logo: { en: 'Logo', ar: 'الشعار' },
@@ -331,12 +332,13 @@ export default function CartPage() {
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 p-4 bg-gray-50 rounded-lg">
                                             <div>
                                                 <div className="text-sm text-gray-500 font-semibold mb-1">
-                                                    {t(translations.material)}
+                                                    {t(translations.fabric)}
                                                 </div>
                                                 <div className="text-gray-900">
-                                                    {item.details.material}
+                                                    {language === 'ar' ? (item.details.fabricAr || item.details.fabric) : item.details.fabric}
                                                 </div>
                                             </div>
+
                                             <div>
                                                 <div className="text-sm text-gray-500 font-semibold mb-1">
                                                     {t(translations.stage)}
@@ -376,21 +378,19 @@ export default function CartPage() {
                                             <div className="text-sm font-semibold text-gray-700 mb-3">
                                                 {t(translations.sizeQuantity)}
                                             </div>
-                                            <div className="flex flex-wrap gap-3">
+                                            <div className="flex flex-wrap gap-2">
                                                 {Object.entries(item.details.sizes).map(([size, qty]) => (
-                                                    <div
-                                                        key={size}
-                                                        className="px-4 py-2 bg-primary/10 rounded-lg border border-primary/20"
-                                                    >
-                                                        <span className="font-semibold text-gray-700">
-                                                            {language === 'ar' ? 'مقاس' : 'Size'} {size}:
+                                                    <div key={size} className="inline-flex items-center px-3 py-1.5 bg-white border border-gray-200 rounded-md shadow-sm">
+                                                        <span className="text-gray-500 text-sm font-medium">
+                                                            {language === 'ar' ? 'مقاس' : 'Size'} {size}
                                                         </span>
-                                                        <span className="ml-2 font-bold text-primary">
+                                                        <span className="mx-2 h-4 w-px bg-gray-300"></span>
+                                                        <span className="text-primary font-bold text-sm">
                                                             {qty}
                                                         </span>
                                                     </div>
                                                 ))}
-                                                <div className="px-4 py-2 bg-primary text-white rounded-lg font-bold">
+                                                <div className="inline-flex items-center px-3 py-1.5 bg-primary text-white rounded-md shadow-sm font-bold text-sm">
                                                     {t(translations.total)}: {item.quantity}
                                                 </div>
                                             </div>
@@ -410,7 +410,7 @@ export default function CartPage() {
 
                             {/* Total Items */}
                             <div className="space-y-4 mb-6">
-                                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                <div className="flex items-center gap-6 p-4 bg-gray-50 rounded-lg">
                                     <span className="text-gray-700 font-semibold">
                                         {t(translations.totalItems)}
                                     </span>

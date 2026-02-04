@@ -62,18 +62,17 @@ export default function HomePage() {
                     <div className="max-w-4xl mx-auto px-4">
                         {/* Centered Text Content */}
                         <div className="text-center">
-                            <h1 className="text-4xl md:text-6xl font-display font-bold mb-3 leading-tight text-white">
-                                {t(translations.heroTitle)}
-                            </h1>
-
-
                             {/* Dynamic Slogan */}
                             <p
-                                className="text-lg md:text-xl tracking-wide font-light text-gray-200 mb-6"
+                                className="text-3xl md:text-5xl tracking-wider font-bold text-white mb-4"
                                 dir={language === 'ar' ? 'rtl' : 'ltr'}
                             >
                                 {language === 'ar' ? 'هوية تُنسَجُ' : 'IDENTITY WOVEN'}
                             </p>
+
+                            <h1 className="text-xl md:text-3xl font-display font-semibold mb-6 leading-snug text-gray-200">
+                                {t(translations.heroTitle)}
+                            </h1>
 
                             <p className="text-base md:text-lg px-4 md:px-0 mb-10 text-white/90 leading-relaxed max-w-3xl mx-auto">
                                 {t(translations.heroSubtitle)}

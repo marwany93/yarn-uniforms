@@ -44,8 +44,8 @@ export default function Partners() {
                         rows: 2,
                         fill: 'row'
                     }}
-                    slidesPerView={2}
-                    slidesPerGroup={2}      // Mobile: Flips entire page (2 columns)
+                    slidesPerView={3}
+                    slidesPerGroup={3}      // Mobile: Flips entire page (3 columns x 2 rows = 6 items)
                     spaceBetween={10}
                     breakpoints={{
                         1024: {
@@ -69,7 +69,7 @@ export default function Partners() {
                                     width={140}
                                     height={80}
                                     loading="lazy"
-                                    className="h-full w-auto object-contain grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-300"
+                                    className="h-full w-auto object-contain transition-all duration-300"
                                 />
                             </div>
                         </SwiperSlide>

@@ -883,18 +883,18 @@ export default function SchoolWizard() {
                     <div className="flex items-center justify-between mb-2">
                         <button
                             onClick={handleBackToSelection}
-                            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+                            className="flex items-center gap-2 hover:opacity-80 transition-opacity text-white"
                         >
                             <svg className="w-5 h-5 rtl:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                             </svg>
                             {t(translations.back)}
                         </button>
-                        <div className="text-sm opacity-90">
+                        <div className="text-sm opacity-90 text-white">
                             {t(translations.customizingItem)} {currentCategoryIndex + 1} {t(translations.of)} {selectedCategoryIds.length}
                         </div>
                     </div>
-                    <h2 className="text-2xl font-bold">
+                    <h2 className="text-2xl font-bold text-white">
                         {language === 'ar' ? currentCategory.nameAr : currentCategory.name}
                     </h2>
 
@@ -1092,7 +1092,7 @@ export default function SchoolWizard() {
                             <select
                                 value={details.fabric}
                                 onChange={(e) => setDetails({ ...details, fabric: e.target.value })}
-                                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary"
+                                className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary ${language === 'ar' ? 'pr-10 pl-4' : 'pl-4 pr-10'}`}
                             >
                                 <option value="">{t(translations.selectFabricPlaceholder)}</option>
                                 {getFabricOptions().map(fabric => (

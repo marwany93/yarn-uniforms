@@ -41,7 +41,7 @@ export default function CartSummary() {
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
             {/* Header */}
             <div className="bg-gradient-to-r from-primary to-primary-600 text-white p-4">
-                <h3 className="text-lg font-bold flex items-center justify-between">
+                <h3 className="text-lg font-bold flex items-center justify-between text-white">
                     <span>🛒 {t(translations.title)}</span>
                     <span className="text-sm bg-white/20 px-3 py-1 rounded-full">
                         {cart.length} {cart.length === 1 ? t(translations.item) : t(translations.items)}
@@ -105,21 +105,28 @@ export default function CartSummary() {
             </div>
 
             {/* Total */}
-            <div className="border-t border-gray-200 p-4 bg-gray-50">
-                <div className="flex justify-between items-center mb-4">
-                    <span className="text-sm font-semibold text-gray-700">{t(translations.totalItems)}</span>
-                    <span className="text-xl font-bold text-primary">{getCartItemCount()}</span>
+            {/* Modern Footer Section */}
+            <div className="bg-gray-50 p-6 border-t border-gray-100">
+                {/* Total Row - Compact & Unitless */}
+                <div className="flex items-center justify-center gap-3 mb-6 dir-rtl">
+                    <span className="text-gray-600 font-medium text-lg">
+                        {t(translations.totalItems)}
+                    </span>
+                    <span className="text-4xl font-bold text-primary tracking-tight">
+                        {getCartItemCount()}
+                    </span>
                 </div>
 
-                {/* View Cart Button */}
+                {/* Action Button */}
                 <button
                     onClick={() => router.push('/cart')}
-                    className="w-full py-3 bg-primary text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors shadow-md hover:shadow-lg"
+                    className="w-full py-4 bg-primary text-white rounded-xl font-bold text-lg shadow-lg hover:bg-primary-700 hover:shadow-xl transition-all transform hover:-translate-y-0.5 active:translate-y-0"
                 >
                     {t(translations.viewCart)}
                 </button>
 
-                <p className="text-xs text-center text-gray-500 mt-2">
+                {/* Hint Text */}
+                <p className="text-xs text-center text-gray-400 mt-4 font-medium">
                     {t(translations.continueHint)}
                 </p>
             </div>
