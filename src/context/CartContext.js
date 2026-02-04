@@ -9,6 +9,7 @@ const CartContext = createContext({
     alert("🚨 CRITICAL ERROR:\n\nThe CartProvider is NOT wrapping this component!\n\nThis means layout.js is not properly configured.\n\nData CANNOT be saved.");
   },
   removeFromCart: () => { },
+  updateCartItem: () => { },
   clearCart: () => { },
   getCartItemCount: () => 0,
   cartItems: []
@@ -74,6 +75,11 @@ export function CartProvider({ children }) {
     }
   };
 
+  const updateCartItem = (id, updatedFields) => {
+    console.log(`✏️ Updating cart item ${id}:`, updatedFields);
+    setCart((prev) => prev.map((item) => item.id === id ? { ...item, ...updatedFields } : item));
+  };
+
   const getCartItemCount = () => {
     return cart.reduce((total, item) => total + (item.quantity || 0), 0);
   };
@@ -84,6 +90,7 @@ export function CartProvider({ children }) {
       cartItems: cart,
       addToCart,
       removeFromCart,
+      updateCartItem,
       clearCart,
       getCartItemCount
     }}>

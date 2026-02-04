@@ -1,297 +1,65 @@
-/**
- * School Uniform Products Data
- * Product catalog for school uniforms with 9 standard categories
- */
+export const productCategories = [
+    { id: 'shirts', name: 'Shirts', nameAr: 'قميص', image: '/images/categories/shirt.png' },
+    { id: 'apron', name: 'Apron', nameAr: 'مريول', image: '/images/categories/apron.png' },
+    { id: 'skirts', name: 'Skirt', nameAr: 'تنورة', image: '/images/categories/skirt.png' },
+    { id: 'shorts', name: 'Pocket Short', nameAr: 'جيب شورت', image: '/images/categories/pocket-short.png' },
+    { id: 'girls_pants', name: 'Girls Pant', nameAr: 'بنطلون بناتي', image: '/images/categories/girls-pant.png' },
+    { id: 'boys_pants', name: 'Boys Pant', nameAr: 'بنطلون ولادي', image: '/images/categories/boys-pant.jpg' },
+    { id: 'polo', name: 'Polo Shirt', nameAr: 'تيشرت بولو', image: '/images/categories/polo-shirt.png' },
+    { id: 'tracksuit', name: 'Training Suit', nameAr: 'ترنج رياضي', image: '/images/categories/training-suit.png' },
+];
 
 export const schoolProducts = [
-    // Category: shirt (Classic Shirt)
-    {
-        id: 'shirt-bl1',
-        code: 'BL1',
-        name: 'Classic Shirt BL1',
-        category: 'shirt',
-        type: 'unisex',
-        image: '/assets/products/Shirt BL1.png'
-    },
-    {
-        id: 'shirt-bl2',
-        code: 'BL2',
-        name: 'Classic Shirt BL2',
-        category: 'shirt',
-        type: 'unisex',
-        image: '/assets/products/Shirt BL2.png'
-    },
-    {
-        id: 'shirt-bl3',
-        code: 'BL3',
-        name: 'Classic Shirt BL3',
-        category: 'shirt',
-        type: 'unisex',
-        image: '/assets/products/Shirt BL3.png'
-    },
-    {
-        id: 'shirt-bl4',
-        code: 'BL4',
-        name: 'Classic Shirt BL4',
-        category: 'shirt',
-        type: 'unisex',
-        image: '/assets/products/Shirt BL4.png'
-    },
+    // 1. Shirts (BL)
+    { id: 'bl1', category: 'shirts', code: 'BL 1', name: 'Classic Shirt BL 1', nameAr: 'قميص كلاسيك BL 1', image: '/images/products/shirts/bl1.png', price: 0 },
+    { id: 'bl2', category: 'shirts', code: 'BL 2', name: 'Classic Shirt BL 2', nameAr: 'قميص كلاسيك BL 2', image: '/images/products/shirts/bl2.png', price: 0 },
+    { id: 'bl3', category: 'shirts', code: 'BL 3', name: 'Classic Shirt BL 3', nameAr: 'قميص كلاسيك BL 3', image: '/images/products/shirts/bl3.png', price: 0 },
+    { id: 'bl4', category: 'shirts', code: 'BL 4', name: 'Classic Shirt BL 4', nameAr: 'قميص كلاسيك BL 4', image: '/images/products/shirts/bl4.png', price: 0 }, // Updated Path
 
-    // Category: tshirt (Basic T-Shirt) - Placeholder for now
-    {
-        id: 'tshirt-placeholder',
-        code: 'TS1',
-        name: 'Basic T-Shirt (Coming Soon)',
-        category: 'tshirt',
-        type: 'unisex',
-        image: '/assets/products/placeholder-tshirt.png'
-    },
+    // 2. Apron (DR)
+    { id: 'dr1', category: 'apron', code: 'DR 1', name: 'School Apron DR 1', nameAr: 'مريول مدرسي DR 1', image: '/images/products/aprons/dr1.png', price: 0 },
+    { id: 'dr2', category: 'apron', code: 'DR 2', name: 'School Apron DR 2', nameAr: 'مريول مدرسي DR 2', image: '/images/products/aprons/dr2.png', price: 0 },
+    { id: 'dr3', category: 'apron', code: 'DR 3', name: 'School Apron DR 3', nameAr: 'مريول مدرسي DR 3', image: '/images/products/aprons/dr3.png', price: 0 },
+    { id: 'dr4', category: 'apron', code: 'DR 4', name: 'School Apron DR 4', nameAr: 'مريول مدرسي DR 4', image: '/images/products/aprons/dr4.png', price: 0 }, // Updated Path
 
-    // Category: polo (Polo Shirt)
-    {
-        id: 'polo-ps1',
-        code: 'PS1',
-        name: 'Polo Shirt PS1',
-        category: 'polo',
-        type: 'unisex',
-        image: '/assets/products/Polo Shirt PS1.jpg'
-    },
-    {
-        id: 'polo-ps2',
-        code: 'PS2',
-        name: 'Polo Shirt PS2',
-        category: 'polo',
-        type: 'unisex',
-        image: '/assets/products/Polo Shirt PS2.jpg'
-    },
-    {
-        id: 'polo-ps3',
-        code: 'PS3',
-        name: 'Polo Shirt PS3',
-        category: 'polo',
-        type: 'unisex',
-        image: '/assets/products/Polo Shirt PS3.jpg'
-    },
+    // 3. Skirts (SK)
+    { id: 'sk3', category: 'skirts', code: 'SK 3', name: 'Pleated Skirt SK 3', nameAr: 'تنورة كسرات SK 3', image: '/images/products/skirts/sk3.png', price: 0 },
+    { id: 'sk5', category: 'skirts', code: 'SK 5', name: 'Pleated Skirt SK 5', nameAr: 'تنورة كسرات SK 5', image: '/images/products/skirts/sk5.png', price: 0 }, // Inferred Path based on pattern
+    { id: 'sk6', category: 'skirts', code: 'SK 6', name: 'Pleated Skirt SK 6', nameAr: 'تنورة كسرات SK 6', image: '/images/products/skirts/sk6.png', price: 0 }, // Updated Path
+    { id: 'sk7', category: 'skirts', code: 'SK 7', name: 'Pleated Skirt SK 7', nameAr: 'تنورة كسرات SK 7', image: '/images/products/skirts/sk7.png', price: 0 }, // Updated Path
 
-    // Category: apron (Apron/Dress)
-    {
-        id: 'apron-dr1',
-        code: 'DR1',
-        name: 'Apron DR1',
-        category: 'apron',
-        type: 'girls',
-        image: '/assets/products/Apron DR1.png'
-    },
-    {
-        id: 'apron-dr2',
-        code: 'DR2',
-        name: 'Apron DR2',
-        category: 'apron',
-        type: 'girls',
-        image: '/assets/products/Apron DR2.png'
-    },
-    {
-        id: 'apron-dr3',
-        code: 'DR3',
-        name: 'Apron DR3',
-        category: 'apron',
-        type: 'girls',
-        image: '/assets/products/Apron DR3.png'
-    },
-    {
-        id: 'apron-dr4',
-        code: 'DR4',
-        name: 'Apron DR4',
-        category: 'apron',
-        type: 'girls',
-        image: '/assets/products/Apron DR4.png'
-    },
+    // 4. Pocket Short (BS)
+    { id: 'bs1', category: 'shorts', code: 'BS 1', name: 'Pocket Short BS 1', nameAr: 'جيب شورت BS 1', image: '/images/products/shorts/bs1.jpg', price: 0 },
+    { id: 'bs2', category: 'shorts', code: 'BS 2', name: 'Pocket Short BS 2', nameAr: 'جيب شورت BS 2', image: '/images/products/shorts/bs2.jpg', price: 0 },
+    { id: 'bs3', category: 'shorts', code: 'BS 3', name: 'Pocket Short BS 3', nameAr: 'جيب شورت BS 3', image: '/images/products/shorts/bs3.jpg', price: 0 },
+    { id: 'bs4', category: 'shorts', code: 'BS 4', name: 'Pocket Short BS 4', nameAr: 'جيب شورت BS 4', image: '/images/products/shorts/bs4.jpg', price: 0 },
 
-    // Category: skirt (Skirt)
-    {
-        id: 'skirt-sk3',
-        code: 'SK3',
-        name: 'Skirt SK3',
-        category: 'skirt',
-        type: 'girls',
-        image: '/assets/products/Skirt SK3.png'
-    },
-    {
-        id: 'skirt-sk5',
-        code: 'SK5',
-        name: 'Skirt SK5',
-        category: 'skirt',
-        type: 'girls',
-        image: '/assets/products/Skirt SK5.png'
-    },
-    {
-        id: 'skirt-sk6',
-        code: 'SK6',
-        name: 'Skirt SK6',
-        category: 'skirt',
-        type: 'girls',
-        image: '/assets/products/Skirt SK6.png'
-    },
-    {
-        id: 'skirt-sk7',
-        code: 'SK7',
-        name: 'Skirt SK7',
-        category: 'skirt',
-        type: 'girls',
-        image: '/assets/products/Skirt SK7.png'
-    },
+    // 5. Girls Pant (GPA)
+    { id: 'gpa1', category: 'girls_pants', code: 'GPA 1', name: 'Girls Pant GPA 1', nameAr: 'بنطلون بناتي GPA 1', image: '/images/products/pants/gpa1.png', price: 0 },
+    { id: 'gpa2', category: 'girls_pants', code: 'GPA 2', name: 'Girls Pant GPA 2', nameAr: 'بنطلون بناتي GPA 2', image: '/images/products/pants/gpa2.png', price: 0 },
+    { id: 'gpa3', category: 'girls_pants', code: 'GPA 3', name: 'Girls Pant GPA 3', nameAr: 'بنطلون بناتي GPA 3', image: '/images/products/pants/gpa3.png', price: 0 }, // Updated Path
+    { id: 'gpa4', category: 'girls_pants', code: 'GPA 4', name: 'Girls Pant GPA 4', nameAr: 'بنطلون بناتي GPA 4', image: '/images/products/pants/gpa4.png', price: 0 }, // Updated Path
 
-    // Category: skort (Skort/Pocket Short)
-    {
-        id: 'skort-bs1',
-        code: 'BS1',
-        name: 'Pocket Short BS1',
-        category: 'skort',
-        type: 'unisex',
-        image: '/assets/products/Pocket Short BS1.jpg'
-    },
-    {
-        id: 'skort-bs2',
-        code: 'BS2',
-        name: 'Pocket Short BS2',
-        category: 'skort',
-        type: 'unisex',
-        image: '/assets/products/Pocket Short BS2.jpg'
-    },
-    {
-        id: 'skort-bs3',
-        code: 'BS3',
-        name: 'Pocket Short BS3',
-        category: 'skort',
-        type: 'unisex',
-        image: '/assets/products/Pocket Short BS3.jpg'
-    },
-    {
-        id: 'skort-bs4',
-        code: 'BS4',
-        name: 'Pocket Short BS4',
-        category: 'skort',
-        type: 'unisex',
-        image: '/assets/products/Pocket Short BS4.jpg'
-    },
+    // 6. Boys Pant (BP)
+    { id: 'bp1', category: 'boys_pants', code: 'BP 1', name: 'Boys Pant BP 1', nameAr: 'بنطلون ولادي BP 1', image: '/images/products/pants/bp1.png', price: 0 },
+    { id: 'bp2', category: 'boys_pants', code: 'BP 2', name: 'Boys Pant BP 2', nameAr: 'بنطلون ولادي BP 2', image: '/images/products/pants/bp2.png', price: 0 }, // Updated Path
 
-    // Category: girls_pants (Girls Trousers)
-    {
-        id: 'girls-pant-gpa1',
-        code: 'GPA1',
-        name: 'Girls Trouser GPA1',
-        category: 'girls_pants',
-        type: 'girls',
-        image: '/assets/products/Girls Pant GPA1.png'
-    },
-    {
-        id: 'girls-pant-gpa2',
-        code: 'GPA2',
-        name: 'Girls Trouser GPA2',
-        category: 'girls_pants',
-        type: 'girls',
-        image: '/assets/products/Girls Pant GPA2.png'
-    },
-    {
-        id: 'girls-pant-gpa3',
-        code: 'GPA3',
-        name: 'Girls Trouser GPA3',
-        category: 'girls_pants',
-        type: 'girls',
-        image: '/assets/products/Girls Pant GPA3.png'
-    },
-    {
-        id: 'girls-pant-gpa4',
-        code: 'GPA4',
-        name: 'Girls Trouser GPA4',
-        category: 'girls_pants',
-        type: 'girls',
-        image: '/assets/products/Girls Pant GPA4.png'
-    },
+    // 7. Polo Shirt (PS)
+    { id: 'ps1', category: 'polo', code: 'PS 1', name: 'Polo Shirt PS 1', nameAr: 'تيشرت بولو PS 1', image: '/images/products/polo/ps1.jpg', price: 0 },
+    { id: 'ps2', category: 'polo', code: 'PS 2', name: 'Polo Shirt PS 2', nameAr: 'تيشرت بولو PS 2', image: '/images/products/polo/ps2.jpg', price: 0 },
+    { id: 'ps3', category: 'polo', code: 'PS 3', name: 'Polo Shirt PS 3', nameAr: 'تيشرت بولو PS 3', image: '/images/products/polo/ps3.jpg', price: 0 },
 
-    // Category: boys_pants (Boys Trousers)
-    {
-        id: 'boys-pant-bp1',
-        code: 'BP1',
-        name: 'Boys Trouser BP1',
-        category: 'boys_pants',
-        type: 'boys',
-        image: '/assets/products/Boys Pant BP1.png'
-    },
-    {
-        id: 'boys-pant-bp2',
-        code: 'BP2',
-        name: 'Boys Trouser BP2',
-        category: 'boys_pants',
-        type: 'boys',
-        image: '/assets/products/Boys Pant BP2.png'
-    },
-
-    // Category: tracksuit (Sport Kit)
-    {
-        id: 'tracksuit-te1',
-        code: 'TE1',
-        name: 'Training Suit TE1',
-        category: 'tracksuit',
-        type: 'unisex',
-        image: '/assets/products/Training Suit TE1.png'
-    },
-    {
-        id: 'tracksuit-te2',
-        code: 'TE2',
-        name: 'Training Suit TE2',
-        category: 'tracksuit',
-        type: 'unisex',
-        image: '/assets/products/Training Suit TE2.png'
-    },
-    {
-        id: 'tracksuit-pe1',
-        code: 'PE1',
-        name: 'Training Suit PE1',
-        category: 'tracksuit',
-        type: 'unisex',
-        image: '/assets/products/Training Suit PE1.png'
-    },
-    {
-        id: 'tracksuit-pe2',
-        code: 'PE2',
-        name: 'Training Suit PE2',
-        category: 'tracksuit',
-        type: 'unisex',
-        image: '/assets/products/Training Suit PE2.png'
-    },
+    // 8. Training Suit (TE/PE)
+    { id: 'te1', category: 'tracksuit', code: 'TE 1', name: 'Training Suit TE 1', nameAr: 'ترنج رياضي TE 1', image: '/images/products/tracksuits/te1.png', price: 0 },
+    { id: 'te2', category: 'tracksuit', code: 'TE 2', name: 'Training Suit TE 2', nameAr: 'ترنج رياضي TE 2', image: '/images/products/tracksuits/te2.png', price: 0 },
+    { id: 'pe1', category: 'tracksuit', code: 'PE 1', name: 'Training Suit PE 1', nameAr: 'ترنج رياضي PE 1', image: '/images/products/tracksuits/pe1.png', price: 0 },
+    { id: 'pe2', category: 'tracksuit', code: 'PE 2', name: 'Training Suit PE 2', nameAr: 'ترنج رياضي PE 2', image: '/images/products/tracksuits/pe2.png', price: 0 },
 ];
 
-// Category metadata for UI purposes (9 categories)
-export const productCategories = [
-    { id: 'shirt', name: 'Classic Shirt', nameAr: 'قميص كلاسيكي', icon: '👔' },
-    { id: 'tshirt', name: 'Basic T-Shirt', nameAr: 'تي شيرت', icon: '👕' },
-    { id: 'polo', name: 'Polo Shirt', nameAr: 'قميص بولو', icon: '👕' },
-    { id: 'apron', name: 'Apron/Dress', nameAr: 'أفرول/فستان', icon: '👗' },
-    { id: 'skirt', name: 'Skirt', nameAr: 'تنورة', icon: '👗' },
-    { id: 'skort', name: 'Skort/Short', nameAr: 'شورت', icon: '🩳' },
-    { id: 'girls_pants', name: 'Girls Trousers', nameAr: 'بنطال بنات', icon: '👖' },
-    { id: 'boys_pants', name: 'Boys Trousers', nameAr: 'بنطال بنين', icon: '👖' },
-    { id: 'tracksuit', name: 'Sport Kit', nameAr: 'طقم رياضي', icon: '🏃' },
-];
-
-// Helper function to get products by category
 export const getProductsByCategory = (categoryId) => {
     return schoolProducts.filter(product => product.category === categoryId);
 };
 
-// Helper function to get product by ID
 export const getProductById = (productId) => {
     return schoolProducts.find(product => product.id === productId);
-};
-
-// Helper function to get products by gender type
-export const getProductsByGender = (genderType) => {
-    if (genderType === 'unisex') {
-        return schoolProducts;
-    }
-    return schoolProducts.filter(
-        product => product.type === genderType || product.type === 'unisex'
-    );
 };

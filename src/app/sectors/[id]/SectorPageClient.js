@@ -1,12 +1,52 @@
 'use client';
 
+import { Suspense } from 'react';
 import Image from 'next/image';
 import { useLanguage } from '@/hooks/useLanguage';
 import { getSectorTitle, getSectorDescription } from '@/data/sectors';
 import SchoolWizard from '@/components/wizard/SchoolWizard';
+import CartSummary from '@/components/wizard/CartSummary';
+
+// Bilingual content mapping for each sector
+const sectorContent = {
+    schools: {
+        heroTitle: { en: 'School Uniforms', ar: 'زي المدارس' },
+        heroDesc: {
+            en: 'Modern designs that reflect your school\'s identity, with durable fabrics for daily wear.',
+            ar: 'تصاميم عصرية تعكس هوية مدرستك، بخامات مريحة تتحمل الاستخدام اليومي.'
+        },
+        image: '/sectors/sector-schools.png'
+    },
+    medical: {
+        heroTitle: { en: 'Medical Uniforms', ar: 'الزي الطبي' },
+        heroDesc: {
+            en: 'Professional medical wear combining hygiene standards with comfort for healthcare professionals.',
+            ar: 'ملابس طبية احترافية تجمع بين معايير النظافة والراحة للعاملين في المجال الصحي.'
+        },
+        image: '/sectors/sector-medical.png'
+    },
+    corporate: {
+        heroTitle: { en: 'Corporate & Factory Uniforms', ar: 'زي الشركات والمصانع' },
+        heroDesc: {
+            en: 'Elegant corporate wear and durable industrial uniforms tailored to your business needs.',
+            ar: 'ملابس شركات أنيقة وزي صناعي متين مصمم خصيصاً لاحتياجات عملك.'
+        },
+        image: '/sectors/sector-corporate.png'
+    },
+    hospitality: {
+        heroTitle: { en: 'Hotels & Restaurants', ar: 'الفنادق والمطاعم' },
+        heroDesc: {
+            en: 'Sophisticated hospitality uniforms that enhance your brand image and guest experience.',
+            ar: 'زي ضيافة راقي يعزز صورة علامتك التجارية وتجربة ضيوفك.'
+        },
+        image: '/sectors/sector-hospitality.png'
+    }
+};
 
 export default function SectorPageClient({ sector }) {
     const { t, language } = useLanguage();
+
+    const content = sectorContent[sector.id] || sectorContent.schools;
 
     const translations = {
         startDesigning: { en: 'Start Designing Your Order', ar: 'ابدأ تصميم طلبك' },
@@ -37,36 +77,55 @@ export default function SectorPageClient({ sector }) {
         }
     };
 
-    // If this is the schools sector, render the School Wizard
+    // If this is the schools sector, render with hero + wizard + sidebar
     if (sector.id === 'schools') {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-                {/* Header Section */}
-                <div className="bg-white border-b border-gray-200 py-12">
-                    <div className="container-custom text-center">
-                        <h1 className="text-4xl md:text-5xl font-display font-bold mb-3 text-primary">
-                            {language === 'ar' ? 'مصمم الزي المدرسي' : 'School Uniform Designer'}
+            <div className="min-h-screen bg-gray-50">
+                {/* 1. New Hero Section */}
+                <section className="relative h-[50vh] md:h-[45vh] lg:h-[40vh] max-h-[480px] flex items-center justify-center overflow-hidden">
+                    <Image
+                        src={content.image}
+                        alt={language === 'ar' ? content.heroTitle.ar : content.heroTitle.en}
+                        fill
+                        className="object-cover object-[center_30%]"
+                        priority
+                    />
+                    <div className="absolute inset-0 bg-black/60" />
+                    <div className="container-custom relative z-10 text-center px-4">
+                        <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-6 leading-tight text-white drop-shadow-lg">
+                            {language === 'ar' ? content.heroTitle.ar : content.heroTitle.en}
                         </h1>
-                        <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-                            {language === 'ar'
-                                ? 'صمم الزي المدرسي المثالي باستخدام معالج التصميم التفاعلي الخاص بنا'
-                                : 'Create the perfect school uniform with our interactive design wizard'
-                            }
+                        <p className="text-xl md:text-2xl max-w-3xl mx-auto leading-relaxed text-white/95 drop-shadow-md">
+                            {language === 'ar' ? content.heroDesc.ar : content.heroDesc.en}
                         </p>
                     </div>
-                </div>
+                </section>
 
-                {/* Wizard Component */}
-                <SchoolWizard />
+                {/* 2. Wizard with Sidebar (Preserved Layout) */}
+                <div className="container mx-auto px-4 py-12">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        {/* Main Wizard Column */}
+                        <div className="lg:col-span-2">
+                            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+                                <Suspense fallback={<div className="p-12 text-center text-gray-500">Loading Wizard...</div>}>
+                                    <SchoolWizard />
+                                </Suspense>
+                            </div>
+                        </div>
+
+                        {/* Sticky Sidebar (Cart Summary) */}
+                        <div className="lg:col-span-1">
+                            <div className="sticky top-24">
+                                <CartSummary />
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         );
     }
 
-    // For other sectors, render the generic page with "Coming Soon"
-    const handleStartDesigning = () => {
-        console.log('Navigate to Wizard - Coming Soon');
-    };
-
+    // For other sectors, render the generic page with hero + "Coming Soon"
     const benefits = [
         {
             title: t(translations.customSolutions),
@@ -87,54 +146,32 @@ export default function SectorPageClient({ sector }) {
 
     return (
         <div className="min-h-screen">
-            {/* Hero Section */}
-            <section
-                className="relative bg-primary text-white py-24 lg:py-32 overflow-hidden"
-                style={{ backgroundColor: sector.color }}
-            >
-                {/* Background Image or Pattern */}
-                <div className="absolute inset-0 opacity-20">
-                    {sector.image ? (
-                        <Image
-                            src={sector.image}
-                            alt={getSectorTitle(sector, language)}
-                            fill
-                            className="object-cover"
-                            priority
-                        />
-                    ) : (
-                        <div className="absolute inset-0" style={{
-                            backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)',
-                            backgroundSize: '30px 30px'
-                        }}></div>
-                    )}
-                </div>
+            {/* Hero Section with Image Background */}
+            <section className="relative h-[50vh] md:h-[45vh] lg:h-[40vh] max-h-[480px] flex items-center justify-center overflow-hidden">
+                {/* Background Image */}
+                <Image
+                    src={content.image}
+                    alt={language === 'ar' ? content.heroTitle.ar : content.heroTitle.en}
+                    fill
+                    className="object-cover object-[center_30%]"
+                    priority
+                />
 
-                <div className="container-custom relative z-10">
-                    <div className="max-w-4xl mx-auto text-center">
-                        {/* Sector Icon */}
-                        <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-white/20 backdrop-blur-sm text-6xl mb-8">
-                            {sector.icon}
-                        </div>
+                {/* Dark Overlay */}
+                <div className="absolute inset-0 bg-black/60" />
 
-                        {/* Title */}
-                        <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-6 leading-tight">
-                            {getSectorTitle(sector, language)}
-                        </h1>
+                {/* Content */}
+                <div className="container-custom relative z-10 text-center px-4">
+                    <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-6 leading-tight text-white drop-shadow-lg">
+                        {language === 'ar' ? content.heroTitle.ar : content.heroTitle.en}
+                    </h1>
+                    <p className="text-xl md:text-2xl max-w-3xl mx-auto mb-8 leading-relaxed text-white/95 drop-shadow-md">
+                        {language === 'ar' ? content.heroDesc.ar : content.heroDesc.en}
+                    </p>
 
-                        {/* Description */}
-                        <p className="text-xl md:text-2xl mb-10 leading-relaxed text-white/90">
-                            {getSectorDescription(sector, language)}
-                        </p>
-
-                        {/* Coming Soon Badge */}
-                        <div className="inline-block px-8 py-4 bg-white/20 backdrop-blur-sm rounded-full mb-6">
-                            <span className="text-2xl font-bold">{t(translations.comingSoon)}</span>
-                        </div>
-
-                        <p className="text-lg text-white/80">
-                            {t(translations.wizardInDevelopment)}
-                        </p>
+                    {/* Coming Soon Badge */}
+                    <div className="inline-block px-8 py-4 bg-white/20 backdrop-blur-sm rounded-full">
+                        <span className="text-2xl font-bold">{t(translations.comingSoon)}</span>
                     </div>
                 </div>
             </section>

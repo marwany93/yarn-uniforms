@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { useLanguage } from '@/hooks/useLanguage';
 import { sectors, getSectorTitle, getSectorDescription } from '@/data/sectors';
 import Partners from '@/components/Partners';
+import Sectors from '@/components/Sectors';
 
 export default function HomePage() {
     const router = useRouter();
@@ -16,7 +17,7 @@ export default function HomePage() {
     const handleTrack = (e) => {
         e.preventDefault();
         if (orderId.trim()) {
-            router.push(`/track?id=${orderId.trim()}`);
+            router.push(`/track-order?id=${orderId.trim()}`);
         }
     };
 
@@ -101,72 +102,8 @@ export default function HomePage() {
             {/* 2. Partner Logos - Infinite Marquee */}
             <Partners />
 
-            {/* 3. Sector Selection Grid - THE CORE */}
-            <section id="sectors" className="py-20 bg-background">
-                <div className="container-custom">
-                    <div className="text-center mb-12">
-                        <h2 className="text-3xl md:text-4xl font-display font-bold text-dark mb-4">
-                            {t(translations.chooseSector)}
-                        </h2>
-                        <p className="text-lg text-gray-600">
-                            {t(translations.sectorSubtitle)}
-                        </p>
-                    </div>
-
-                    {/* Responsive Sector Cards Grid */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
-                        {sectors.map((sector) => (
-                            <Link
-                                key={sector.id}
-                                href={`/sectors/${sector.id}`}
-                                className="group bg-white rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 border-b-4 hover:-translate-y-2"
-                                style={{ borderBottomColor: sector.color }}
-                            >
-                                {/* Icon/Image Section */}
-                                <div
-                                    className="relative h-48 flex items-center justify-center text-white overflow-hidden"
-                                    style={{ backgroundColor: sector.color }}
-                                >
-                                    {/* Subtle Pattern Overlay */}
-                                    <div className="absolute inset-0 opacity-10">
-                                        <div className="absolute inset-0" style={{
-                                            backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)',
-                                            backgroundSize: '20px 20px'
-                                        }}></div>
-                                    </div>
-
-                                    <span className="relative z-10 text-7xl group-hover:scale-110 transition-transform duration-300">
-                                        {sector.icon}
-                                    </span>
-                                </div>
-
-                                {/* Content Section */}
-                                <div className="p-6 text-center">
-                                    <h3 className="text-xl font-display font-bold text-dark mb-3">
-                                        {getSectorTitle(sector, language)}
-                                    </h3>
-                                    <p className="text-gray-600 text-sm mb-4 leading-relaxed min-h-[3rem]">
-                                        {getSectorDescription(sector, language)}
-                                    </p>
-
-                                    {/* Hover Action */}
-                                    <div className="flex items-center justify-center gap-2 font-semibold group-hover:gap-3 transition-all" style={{ color: sector.color }}>
-                                        <span>{t(translations.exploreSector)}</span>
-                                        <svg
-                                            className="w-5 h-5 ltr:group-hover:translate-x-1 rtl:group-hover:-translate-x-1 rtl:rotate-180 transition-transform"
-                                            fill="none"
-                                            viewBox="0 0 24 24"
-                                            stroke="currentColor"
-                                        >
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                        </svg>
-                                    </div>
-                                </div>
-                            </Link>
-                        ))}
-                    </div>
-                </div>
-            </section>
+            {/* 3. Sectors Section - Image Cards */}
+            <Sectors />
 
             {/* 4. Track Order Section - Dark Blue Background */}
             <section id="track" className="py-20 bg-primary text-white">

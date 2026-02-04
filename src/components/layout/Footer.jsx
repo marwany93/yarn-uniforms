@@ -11,7 +11,12 @@ const Footer = () => {
         // Company
         company: { en: 'Company', ar: 'الشركة' },
         about: { en: 'About Us', ar: 'من نحن' },
+        about: { en: 'About Us', ar: 'من نحن' },
         contact: { en: 'Contact', ar: 'اتصل بنا' },
+        description: {
+            en: 'Professional uniform solutions for schools, factories, companies, and hospitals across Saudi Arabia.',
+            ar: 'حلول زي موحد احترافية للمدارس والمصانع والشركات والمستشفيات في جميع أنحاء المملكة العربية السعودية.'
+        },
 
         // Quick Links
         quickLinks: { en: 'Quick Links', ar: 'روابط سريعة' },
@@ -37,7 +42,7 @@ const Footer = () => {
         { name: t(translations.factories), href: '/order/factories' },
         { name: t(translations.companies), href: '/order/companies' },
         { name: t(translations.hospitals), href: '/order/hospitals' },
-        { name: t(translations.trackOrder), href: '/track' },
+        { name: t(translations.trackOrder), href: '/track-order' },
     ];
 
     return (
@@ -66,7 +71,7 @@ const Footer = () => {
                             />
                         </Link>
                         <p className="text-white/80 mb-4 max-w-md">
-                            Professional uniform solutions for schools, factories, companies, and hospitals across Saudi Arabia.
+                            {t(translations.description)}
                         </p>
                     </div>
 

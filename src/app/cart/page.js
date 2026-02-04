@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/context/CartContext';
@@ -18,6 +18,16 @@ export default function CartPage() {
     const { t, language } = useLanguage();
     const [showSuccess, setShowSuccess] = useState(false);
     const [orderId, setOrderId] = useState(null);
+
+    // Auto-scroll to top when Success View appears
+    useEffect(() => {
+        if (showSuccess) {
+            // Instant jump to top
+            window.scrollTo({ top: 0, behavior: 'auto' });
+            document.body.scrollTop = 0; // For Safari
+            document.documentElement.scrollTop = 0; // For Chrome/Firefox
+        }
+    }, [showSuccess]);
 
     const translations = {
         pageTitle: { en: 'Quotation Request Review', ar: 'مراجعة طلب عرض السعر' },
@@ -43,7 +53,7 @@ export default function CartPage() {
         remove: { en: 'Remove', ar: 'حذف' },
         orderSummary: { en: 'Order Summary', ar: 'ملخص الطلب' },
         totalItems: { en: 'Total Items', ar: 'إجمالي القطع' },
-        submitQuotation: { en: 'Submit Quotation Request', ar: 'إرسال طلب العرض' },
+        submitQuotation: { en: 'Submit Order', ar: 'إرسال الطلب' },
         emptyCart: { en: 'Your cart is empty', ar: 'سلتك فارغة' },
         startOrdering: { en: 'Start Ordering', ar: 'بدء الطلب' },
         thankYou: { en: 'Thank you!', ar: 'شكراً لك!' },
@@ -108,6 +118,18 @@ export default function CartPage() {
 
             // Clear cart after successful save
             clearCart();
+
+            // CLARITY FIX: Clear all wizard state from session storage
+            // This ensures the next order starts fresh without old contact info or category selections
+            try {
+                sessionStorage.removeItem('schoolContactInfo');
+                sessionStorage.removeItem('selectedCategoryIds');
+                sessionStorage.removeItem('schoolWizardState'); // Just in case
+                sessionStorage.clear(); // Safety wipe to ensure no stale data persists
+                console.log('🧹 Session storage cleared');
+            } catch (e) {
+                console.warn('Failed to clear session storage:', e);
+            }
 
             // Show success modal
             setShowSuccess(true);
@@ -293,6 +315,13 @@ export default function CartPage() {
                                                     >
                                                         <span>🗑️</span>
                                                         <span className="font-semibold">{t(translations.remove)}</span>
+                                                    </button>
+                                                    <button
+                                                        onClick={() => router.push('/sectors/schools?editId=' + item.id)}
+                                                        className="px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all flex items-center gap-2"
+                                                    >
+                                                        <span>✏️</span>
+                                                        <span className="font-semibold">{t({ en: 'Edit', ar: 'تعديل' })}</span>
                                                     </button>
                                                 </div>
                                             </div>

@@ -3,19 +3,35 @@
 import { useCart } from '@/context/CartContext';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
+import { useLanguage } from '@/hooks/useLanguage';
 
 export default function CartSummary() {
     const { cart, getCartItemCount } = useCart();
     const router = useRouter();
+    const { t, language } = useLanguage();
+
+    const translations = {
+        title: { en: 'Cart Summary', ar: 'ملخص الطلب' },
+        emptyTitle: { en: 'No items added yet', ar: 'لا توجد منتجات' },
+        emptyHint: { en: 'Configure products to see them here', ar: 'قم بإعداد المنتجات لتظهر هنا' },
+        item: { en: 'item', ar: 'منتج' },
+        items: { en: 'items', ar: 'منتجات' },
+        pcs: { en: 'pcs', ar: 'قطعة' },
+        color: { en: 'Color', ar: 'اللون' },
+        custom: { en: 'Custom', ar: 'مخصص' },
+        totalItems: { en: 'Total Items:', ar: 'إجمالي القطع:' },
+        viewCart: { en: 'View Cart & Submit', ar: 'عرض السلة وإتمام الطلب' },
+        continueHint: { en: 'Continue configuring or review your order', ar: 'أكمل اختيار المنتجات أو راجع طلبك الآن' }
+    };
 
     if (cart.length === 0) {
         return (
             <div className="bg-white rounded-xl shadow-lg p-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">🛒 Cart Summary</h3>
+                <h3 className="text-lg font-bold text-gray-900 mb-4">🛒 {t(translations.title)}</h3>
                 <div className="text-center py-8">
                     <div className="text-5xl mb-3">📦</div>
-                    <p className="text-gray-500 text-sm">No items added yet</p>
-                    <p className="text-gray-400 text-xs mt-2">Configure products to see them here</p>
+                    <p className="text-gray-500 text-sm">{t(translations.emptyTitle)}</p>
+                    <p className="text-gray-400 text-xs mt-2">{t(translations.emptyHint)}</p>
                 </div>
             </div>
         );
@@ -26,9 +42,9 @@ export default function CartSummary() {
             {/* Header */}
             <div className="bg-gradient-to-r from-primary to-primary-600 text-white p-4">
                 <h3 className="text-lg font-bold flex items-center justify-between">
-                    <span>🛒 Cart Summary</span>
+                    <span>🛒 {t(translations.title)}</span>
                     <span className="text-sm bg-white/20 px-3 py-1 rounded-full">
-                        {cart.length} {cart.length === 1 ? 'item' : 'items'}
+                        {cart.length} {cart.length === 1 ? t(translations.item) : t(translations.items)}
                     </span>
                 </h3>
             </div>
@@ -50,25 +66,25 @@ export default function CartSummary() {
                             )}
                             <div className="flex-1 min-w-0">
                                 <p className="text-sm font-semibold text-gray-900 truncate">
-                                    {item.productName}
+                                    {language === 'ar' ? (item.details?.nameAr || item.productNameAr || item.productName) : item.productName}
                                 </p>
                                 <p className="text-xs text-gray-500 font-mono">
                                     {item.code}
                                 </p>
                                 <div className="mt-1 flex items-center gap-2">
                                     <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary/10 text-primary">
-                                        {item.quantity} pcs
+                                        {item.quantity} {t(translations.pcs)}
                                     </span>
                                     {item.details?.fabric && (
                                         <span className="text-xs text-gray-600 truncate">
-                                            {item.details.fabric}
+                                            {language === 'ar' ? (item.details?.fabricAr || item.fabricAr || item.details.fabric) : item.details.fabric}
                                         </span>
                                     )}
                                 </div>
                                 {/* Color indicator */}
                                 {item.details?.color && item.details.color !== 'custom' && (
                                     <div className="mt-1 flex items-center gap-1">
-                                        <span className="text-xs text-gray-500">Color:</span>
+                                        <span className="text-xs text-gray-500">{t(translations.color)}:</span>
                                         <span className="text-xs font-medium text-gray-700">
                                             {item.details.color}
                                         </span>
@@ -76,7 +92,7 @@ export default function CartSummary() {
                                 )}
                                 {item.details?.customColorName && (
                                     <div className="mt-1 flex items-center gap-1">
-                                        <span className="text-xs text-gray-500">Custom:</span>
+                                        <span className="text-xs text-gray-500">{t(translations.custom)}:</span>
                                         <span className="text-xs font-medium text-gray-700 truncate">
                                             {item.details.customColorName}
                                         </span>
@@ -91,7 +107,7 @@ export default function CartSummary() {
             {/* Total */}
             <div className="border-t border-gray-200 p-4 bg-gray-50">
                 <div className="flex justify-between items-center mb-4">
-                    <span className="text-sm font-semibold text-gray-700">Total Items:</span>
+                    <span className="text-sm font-semibold text-gray-700">{t(translations.totalItems)}</span>
                     <span className="text-xl font-bold text-primary">{getCartItemCount()}</span>
                 </div>
 
@@ -100,13 +116,13 @@ export default function CartSummary() {
                     onClick={() => router.push('/cart')}
                     className="w-full py-3 bg-primary text-white rounded-lg font-semibold hover:bg-primary-700 transition-colors shadow-md hover:shadow-lg"
                 >
-                    View Cart & Submit
+                    {t(translations.viewCart)}
                 </button>
 
                 <p className="text-xs text-center text-gray-500 mt-2">
-                    Continue configuring or review your order
+                    {t(translations.continueHint)}
                 </p>
             </div>
-        </div>
+        </div >
     );
 }

@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import Image from 'next/image';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useCart } from '@/context/CartContext';
 import { storage } from '@/lib/firebase';
@@ -13,18 +14,36 @@ import {
     getProductById
 } from '@/data/schoolProducts';
 
+const countryCodes = [
+    { code: '+966', country: 'SA', flag: '🇸🇦' },
+    { code: '+20', country: 'EG', flag: '🇪🇬' },
+    { code: '+971', country: 'AE', flag: '🇦🇪' },
+    { code: '+965', country: 'KW', flag: '🇰🇼' },
+    { code: '+974', country: 'QA', flag: '🇶🇦' },
+    { code: '+973', country: 'BH', flag: '🇧🇭' },
+    { code: '+968', country: 'OM', flag: '🇴🇲' },
+    { code: '+962', country: 'JO', flag: '🇯🇴' },
+    { code: '+1', country: 'US', flag: '🇺🇸' },
+    { code: '+44', country: 'UK', flag: '🇬🇧' },
+];
+
 export default function SchoolWizard() {
     const { t, language } = useLanguage();
-    const { addToCart } = useCart();
+    const { addToCart, cart, updateCartItem } = useCart();
+    const searchParams = useSearchParams();
+    const router = useRouter();
+    const editId = searchParams.get('editId');
 
     // Contact information (collected once at start)
     const [contactInfo, setContactInfo] = useState({
         schoolName: '',
         contactPerson: '',
         email: '',
-        phone: ''
+        phone: '',
+        countryCode: '+966'
     });
     const [contactInfoSubmitted, setContactInfoSubmitted] = useState(false);
+    const [formErrors, setFormErrors] = useState({});
 
     // Wizard Phase: 'SELECTION' or 'CUSTOMIZATION'
     const [wizardPhase, setWizardPhase] = useState('SELECTION');
@@ -55,8 +74,30 @@ export default function SchoolWizard() {
     const [isUploadingCustomColor, setIsUploadingCustomColor] = useState(false);
     const [isUploadingReference, setIsUploadingReference] = useState(false);
 
-    // Success modal
-    const [showCompleteModal, setShowCompleteModal] = useState(false);
+    // Scroll to top ref for auto-scroll on step change
+    const wizardTopRef = useRef(null);
+
+    // Success modal heading ref for focus-shift scroll fix
+    const successHeadingRef = useRef(null);
+
+    const fabricTranslations = {
+        'Poplin': { en: 'Poplin', ar: 'بوبلين' },
+        'Oxford': { en: 'Oxford', ar: 'أكسفورد' },
+        'Dacron': { en: 'Dacron', ar: 'داكرون' },
+        'Sundus': { en: 'Sundus', ar: 'سندس' },
+        'Gabardine (Mixed 65/35)': { en: 'Gabardine (Mixed 65/35)', ar: 'جاباردين (مخلوط 65/35)' },
+        'Gabardine (Wool Blend)': { en: 'Gabardine (Wool Blend)', ar: 'جاباردين (صوف مخلوط)' },
+        'Pika (Lacoste)': { en: 'Pika (Lacoste)', ar: 'بيكا (لاكوست)' },
+        'Summer Milton': { en: 'Summer Milton', ar: 'ميلتون صيفي' },
+        'Scuba': { en: 'Scuba', ar: 'سكوبا' },
+        'Interlock': { en: 'Interlock', ar: 'انترلوك' },
+        'Cotton': { en: 'Cotton', ar: 'قطن' },
+        'Polyester': { en: 'Polyester', ar: 'بوليستر' },
+        'Cotton Blend': { en: 'Cotton Blend', ar: 'قطن مخلوط' },
+        'Heavy Duty Gabardine': { en: 'Heavy Duty Gabardine', ar: 'جاباردين خدمة شاقة' },
+        '100% Cotton': { en: '100% Cotton', ar: 'قطن 100%' },
+        'Polyester Blend': { en: 'Polyester Blend', ar: 'بوليستر مخلوط' }
+    };
 
     const translations = {
         // Contact Info
@@ -102,13 +143,101 @@ export default function SchoolWizard() {
         // Completion
         orderComplete: { en: 'Order Complete!', ar: 'اكتمل الطلب!' },
         allItemsAdded: { en: 'All items have been added to your cart', ar: 'تمت إضافة جميع العناصر إلى سلتك' },
-        viewCart: { en: 'View Cart & Checkout', ar: 'عرض السلة والدفع' },
+        viewCart: { en: 'View Cart', ar: 'عرض السلة' },
         startNewOrder: { en: 'Start New Order', ar: 'بدء طلب جديد' },
 
         // Navigation
         back: { en: 'Back', ar: 'رجوع' },
+        changeStyle: { en: 'Change Style', ar: 'تغيير التصميم' },
         next: { en: 'Next', ar: 'التالي' },
+        selectColor: { en: 'Select Color', ar: 'اختر اللون' },
+        fabricType: { en: 'Fabric Type', ar: 'نوع القماش' },
+        selectFabricPlaceholder: { en: 'Select fabric...', ar: 'اختر الخامة...' },
+        additionalRef: { en: 'Additional Reference', ar: 'مرجع إضافي' },
+        uploadRefDesc: { en: 'Upload any extra design ideas, specifications, or reference images', ar: 'ارفع أي أفكار تصميم إضافية أو مواصفات أو صور' },
+        custom: { en: 'Custom', ar: 'مخصص' },
     };
+
+    useEffect(() => {
+        // 1. Load Contact Info from Session Storage
+        const savedContact = sessionStorage.getItem('schoolContactInfo');
+        if (savedContact) {
+            try {
+                setContactInfo(JSON.parse(savedContact));
+
+                // CRITICAL FIX: Only skip the form if the user has items in the cart ("Add More" mode).
+                // If cart is empty (New Order), show the form so they can confirm/change details.
+                if (cart.length > 0) {
+                    setContactInfoSubmitted(true);
+                }
+            } catch (e) {
+                console.error('Error parsing session contact info', e);
+            }
+        }
+
+        // 2. Load Selected Categories
+        const savedCategories = sessionStorage.getItem('selectedCategoryIds');
+        if (savedCategories) {
+            try {
+                setSelectedCategoryIds(JSON.parse(savedCategories));
+            } catch (e) {
+                console.error('Error parsing session categories', e);
+            }
+        }
+
+        // 3. Load Item for Editing if editId exists
+        if (editId) {
+            const itemToEdit = cart.find(item => item.id === editId);
+            if (itemToEdit) {
+                console.log('✏️ Editing item:', itemToEdit);
+                setWizardPhase('CUSTOMIZATION');
+
+                // Set Categories (find category of product)
+                const product = getProductById(itemToEdit.productId);
+                if (product) {
+                    setSelectedCategoryIds([product.category]);
+                    setCurrentProduct(itemToEdit.productId);
+                }
+
+                // Restore Details
+                setDetails(itemToEdit.details);
+                setSizeQuantities(itemToEdit.details.sizes || {});
+            }
+        }
+    }, [editId, cart]);
+
+    // Persist Selected Categories whenever they change
+    useEffect(() => {
+        if (selectedCategoryIds.length > 0) {
+            sessionStorage.setItem('selectedCategoryIds', JSON.stringify(selectedCategoryIds));
+        }
+    }, [selectedCategoryIds]);
+
+    // Auto-scroll logic with "Scroller Hunter"
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (wizardPhase === 'COMPLETED') {
+                // Phase replacement unmounts the form, naturally scrolling to top
+                // Standard window reset as backup
+                window.scrollTo({ top: 0, behavior: 'auto' });
+                document.body.scrollTop = 0;
+                document.documentElement.scrollTop = 0;
+
+                // Focus shift for extra insurance
+                setTimeout(() => {
+                    if (successHeadingRef.current) {
+                        successHeadingRef.current.focus({ preventScroll: true });
+                    }
+                }, 100);
+
+            } else if (wizardTopRef.current && wizardPhase === 'CUSTOMIZATION') {
+                // Normal wizard navigation
+                wizardTopRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }, 100); // Delay for render
+
+        return () => clearTimeout(timer);
+    }, [currentCategoryIndex, wizardPhase]);
 
     // Material options
     const materialOptions = [
@@ -119,14 +248,14 @@ export default function SchoolWizard() {
 
     // Color Options
     const colorOptions = [
-        { id: 1, label: 'White', hex: '#FFFFFF', border: 'gray-300' },
-        { id: 2, label: 'Green', hex: '#166534', border: 'transparent' },
-        { id: 3, label: 'Orange', hex: '#F97316', border: 'transparent' },
-        { id: 4, label: 'Yellow', hex: '#EAB308', border: 'transparent' },
-        { id: 5, label: 'Blue', hex: '#2563EB', border: 'transparent' },
-        { id: 6, label: 'Navy', hex: '#1E3A8A', border: 'transparent' },
-        { id: 7, label: 'Red', hex: '#DC2626', border: 'transparent' },
-        { id: 'custom', label: 'Custom Color', hex: 'rainbow', isCustom: true }
+        { id: 1, label: { en: 'White', ar: 'أبيض' }, hex: '#FFFFFF', border: 'gray-300' },
+        { id: 2, label: { en: 'Green', ar: 'أخضر' }, hex: '#166534', border: 'transparent' },
+        { id: 3, label: { en: 'Orange', ar: 'برتقالي' }, hex: '#F97316', border: 'transparent' },
+        { id: 4, label: { en: 'Yellow', ar: 'أصفر' }, hex: '#EAB308', border: 'transparent' },
+        { id: 5, label: { en: 'Blue', ar: 'أزرق' }, hex: '#2563EB', border: 'transparent' },
+        { id: 6, label: { en: 'Navy', ar: 'كحلي' }, hex: '#1E3A8A', border: 'transparent' },
+        { id: 7, label: { en: 'Red', ar: 'أحمر' }, hex: '#DC2626', border: 'transparent' },
+        { id: 'custom', label: { en: 'Custom Color', ar: 'لون مخصص' }, hex: 'rainbow', isCustom: true }
     ];
 
     // Fabric Options by Product Type
@@ -180,18 +309,36 @@ export default function SchoolWizard() {
     };
 
     // Check if contact form is valid
-    const isContactFormValid = () => {
-        return contactInfo.schoolName.trim() !== '' &&
-            contactInfo.contactPerson.trim() !== '' &&
-            contactInfo.email.trim() !== '' &&
-            contactInfo.phone.trim() !== '';
+    // Validation Helper
+    const validateForm = () => {
+        const errors = {};
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        // Allow 7 to 15 digits (standard international lengths)
+        const phoneRegex = /^\d{7,15}$/;
+
+        if (!contactInfo.schoolName.trim()) errors.schoolName = t({ en: 'School Name is required', ar: 'اسم المدرسة مطلوب' });
+        if (!contactInfo.contactPerson.trim()) errors.contactPerson = t({ en: 'Contact Person is required', ar: 'اسم المسؤول مطلوب' });
+
+        if (!contactInfo.email) {
+            errors.email = t({ en: 'Email is required', ar: 'البريد الإلكتروني مطلوب' });
+        } else if (!emailRegex.test(contactInfo.email)) {
+            errors.email = t({ en: 'Invalid email format', ar: 'صيغة البريد الإلكتروني غير صحيحة' });
+        }
+
+        if (!contactInfo.phone) {
+            errors.phone = t({ en: 'Phone number is required', ar: 'رقم الهاتف مطلوب' });
+        } else if (!phoneRegex.test(contactInfo.phone)) {
+            errors.phone = t({ en: 'Invalid phone number (digits only)', ar: 'رقم الهاتف غير صحيح (أرقام فقط)' });
+        }
+
+        setFormErrors(errors);
+        return Object.keys(errors).length === 0;
     };
 
     const handleContinueToCatalog = () => {
-        if (isContactFormValid()) {
+        if (validateForm()) {
+            sessionStorage.setItem('schoolContactInfo', JSON.stringify(contactInfo));
             setContactInfoSubmitted(true);
-        } else {
-            alert(t(translations.fillAllFields));
         }
     };
 
@@ -223,11 +370,17 @@ export default function SchoolWizard() {
         setCurrentProduct(productId);
     };
 
-    const handleSizeQuantityChange = (size, value) => {
-        const numValue = parseInt(value) || 0;
+    const updateQuantity = (size, newValue) => {
+        // Ensure strictly non-negative integers
+        let val = parseInt(newValue);
+        if (isNaN(val) || val < 0) val = 0;
+
+        // Limit max quantity if needed (999 is a reasonable safe limit)
+        if (val > 999) val = 999;
+
         setSizeQuantities(prev => ({
             ...prev,
-            [size]: numValue > 0 ? numValue : 0
+            [size]: val
         }));
     };
 
@@ -385,11 +538,13 @@ export default function SchoolWizard() {
             id: `${currentProduct}-${Date.now()}`,
             productId: currentProduct,
             productName: product.name,
+            productNameAr: product.nameAr, // Store Arabic Name
             code: product.code,
             image: product.image,
 
             // --- ROOT-LEVEL FIELDS for Admin Dashboard Display ---
             fabric: details.fabric,
+            fabricAr: fabricTranslations[details.fabric]?.ar || details.fabric, // Store Arabic Fabric
             selectedColor: details.color,
             customColorName: details.customColorName || null,
             customColorUrl: details.customColorUrl || null,
@@ -398,10 +553,12 @@ export default function SchoolWizard() {
 
             details: {
                 color: details.color,
+                nameAr: product.nameAr, // Also keep here for consistency
                 customColorName: details.customColorName || null,
                 customColorUrl: details.customColorUrl || null,
                 customColorFileName: details.customColorFileName || null,
                 fabric: details.fabric,
+                fabricAr: fabricTranslations[details.fabric]?.ar || details.fabric,
                 stage: details.stage,
                 sizes: Object.fromEntries(
                     Object.entries(sizeQuantities).filter(([_, qty]) => qty > 0)
@@ -416,6 +573,13 @@ export default function SchoolWizard() {
             quantity: totalItems,
             price: 0
         };
+
+        if (editId) {
+            console.log('✏️ Updating existing item:', editId);
+            updateCartItem(editId, cartItem);
+            router.push('/cart');
+            return;
+        }
 
         console.log('🛒 Cart item constructed:', cartItem);
         console.log('🚀 Calling addToCart...');
@@ -449,10 +613,10 @@ export default function SchoolWizard() {
             });
             setSizeQuantities({});
         } else {
-            console.log('🎉 All categories complete - showing completion modal');
+            console.log('🎉 All categories complete - showing success view');
 
-            // All done - show completion modal
-            setShowCompleteModal(true);
+            // All done - transition to COMPLETED phase
+            setWizardPhase('COMPLETED');
         }
     };
 
@@ -466,14 +630,23 @@ export default function SchoolWizard() {
 
     // Start new order
     const handleStartNewOrder = () => {
-        setShowCompleteModal(false);
+        // Clear persisted categories so we start fresh
+        sessionStorage.removeItem('selectedCategoryIds');
+
         setWizardPhase('SELECTION');
         setSelectedCategoryIds([]);
         setCurrentCategoryIndex(0);
         setCurrentProduct(null);
         setDetails({
-            material: '100% Cotton',
-            logo: null,
+            color: null,
+            customColorName: '',
+            customColorUrl: null,
+            customColorFileName: null,
+            fabric: '',
+            logoUrl: null,
+            logoName: null,
+            referenceUrl: null,
+            referenceFileName: null,
             notes: '',
             stage: 'kg_primary'
         });
@@ -505,10 +678,17 @@ export default function SchoolWizard() {
                 <input
                     type="text"
                     value={contactInfo.schoolName}
-                    onChange={(e) => setContactInfo({ ...contactInfo, schoolName: e.target.value })}
+                    onChange={(e) => {
+                        setContactInfo({ ...contactInfo, schoolName: e.target.value });
+                        if (formErrors.schoolName) setFormErrors({ ...formErrors, schoolName: null });
+                    }}
                     placeholder={t(translations.schoolNamePlaceholder)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:border-transparent outline-none transition-all ${formErrors.schoolName
+                        ? 'border-red-500 focus:ring-red-200'
+                        : 'border-gray-300 focus:ring-primary'
+                        }`}
                 />
+                {formErrors.schoolName && <p className="text-red-500 text-sm mt-1">{formErrors.schoolName}</p>}
             </div>
 
             <div>
@@ -518,10 +698,17 @@ export default function SchoolWizard() {
                 <input
                     type="text"
                     value={contactInfo.contactPerson}
-                    onChange={(e) => setContactInfo({ ...contactInfo, contactPerson: e.target.value })}
+                    onChange={(e) => {
+                        setContactInfo({ ...contactInfo, contactPerson: e.target.value });
+                        if (formErrors.contactPerson) setFormErrors({ ...formErrors, contactPerson: null });
+                    }}
                     placeholder={t(translations.contactPersonPlaceholder)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:border-transparent outline-none transition-all ${formErrors.contactPerson
+                        ? 'border-red-500 focus:ring-red-200'
+                        : 'border-gray-300 focus:ring-primary'
+                        }`}
                 />
+                {formErrors.contactPerson && <p className="text-red-500 text-sm mt-1">{formErrors.contactPerson}</p>}
             </div>
 
             <div>
@@ -531,32 +718,63 @@ export default function SchoolWizard() {
                 <input
                     type="email"
                     value={contactInfo.email}
-                    onChange={(e) => setContactInfo({ ...contactInfo, email: e.target.value })}
+                    onChange={(e) => {
+                        setContactInfo({ ...contactInfo, email: e.target.value });
+                        if (formErrors.email) setFormErrors({ ...formErrors, email: null });
+                    }}
                     placeholder={t(translations.emailPlaceholder)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:border-transparent outline-none transition-all ${formErrors.email
+                        ? 'border-red-500 focus:ring-red-200'
+                        : 'border-gray-300 focus:ring-primary'
+                        }`}
                 />
+                {formErrors.email && <p className="text-red-500 text-sm mt-1">{formErrors.email}</p>}
             </div>
 
             <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">
                     {t(translations.phone)} <span className="text-red-500">*</span>
                 </label>
-                <input
-                    type="tel"
-                    value={contactInfo.phone}
-                    onChange={(e) => setContactInfo({ ...contactInfo, phone: e.target.value })}
-                    placeholder={t(translations.phonePlaceholder)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary"
-                />
+                <div className="flex direction-ltr" style={{ direction: 'ltr' }}>
+                    {/* Country Select */}
+                    <select
+                        value={contactInfo.countryCode || '+966'}
+                        onChange={(e) => setContactInfo({ ...contactInfo, countryCode: e.target.value })}
+                        className="w-28 px-2 py-3 border border-gray-300 rounded-l-lg bg-gray-50 focus:ring-2 focus:ring-primary focus:border-primary border-r-0 outline-none"
+                    >
+                        {countryCodes.map((c) => (
+                            <option key={c.country} value={c.code}>
+                                {c.flag} {c.code}
+                            </option>
+                        ))}
+                    </select>
+
+                    {/* Phone Number Input */}
+                    <input
+                        type="tel"
+                        value={contactInfo.phone}
+                        onChange={(e) => {
+                            // Only allow numbers
+                            const val = e.target.value.replace(/\D/g, '');
+                            setContactInfo({ ...contactInfo, phone: val });
+                            // Clear error on type
+                            if (formErrors.phone) setFormErrors({ ...formErrors, phone: null });
+                        }}
+                        placeholder="500000000"
+                        className={`flex-1 px-4 py-3 border rounded-r-lg focus:ring-2 focus:border-primary outline-none ${formErrors.phone ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-primary'
+                            }`}
+                    />
+                </div>
+                {formErrors.phone && (
+                    <p className="text-red-500 text-sm mt-1 text-right" style={{ direction: language === 'ar' ? 'rtl' : 'ltr' }}>
+                        {formErrors.phone}
+                    </p>
+                )}
             </div>
 
             <button
                 onClick={handleContinueToCatalog}
-                disabled={!isContactFormValid()}
-                className={`w-full py-4 rounded-lg font-bold text-lg shadow-lg transition-all duration-300 ${isContactFormValid()
-                    ? 'bg-primary text-white hover:bg-primary-700 hover:shadow-xl'
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                    }`}
+                className="w-full py-4 rounded-lg font-bold text-lg shadow-lg transition-all duration-300 bg-primary text-white hover:bg-primary-700 hover:shadow-xl"
             >
                 {t(translations.continue)}
             </button>
@@ -593,27 +811,39 @@ export default function SchoolWizard() {
                         <button
                             key={category.id}
                             onClick={() => handleCategoryToggle(category.id)}
-                            className={`group relative p-6 rounded-xl border-4 transition-all duration-300 ${isSelected
-                                ? 'border-green-500 bg-green-50 shadow-xl scale-105'
-                                : 'border-gray-300 hover:border-primary hover:shadow-lg bg-white'
+                            className={`group relative rounded-2xl overflow-hidden border-4 transition-all duration-300 h-96 ${isSelected
+                                ? 'border-green-500 shadow-xl scale-105'
+                                : 'border-gray-200 hover:border-primary hover:shadow-lg'
                                 }`}
                         >
-                            {/* Selected Badge */}
+                            {/* Full-Size Image Background */}
+                            <div className="absolute inset-0 w-full h-full">
+                                <Image
+                                    src={category.image}
+                                    alt={category.name}
+                                    fill
+                                    className="object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                                />
+                            </div>
+
+                            {/* Text Overlay with Gradient */}
+                            <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 pt-12 text-left">
+                                <div className="text-2xl font-bold text-white mb-1">
+                                    {language === 'ar' ? category.nameAr : category.name}
+                                </div>
+                                <div className="text-sm text-gray-200 font-medium">
+                                    {productCount} {language === 'ar' ? 'منتج' : 'items'}
+                                </div>
+                            </div>
+
+                            {/* Selected Badge (Top-Right) */}
                             {isSelected && (
-                                <div className="absolute top-2 right-2 bg-green-500 text-white rounded-full p-2 shadow-lg">
-                                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                <div className="absolute top-4 right-4 bg-green-500 text-white rounded-full p-2 shadow-lg z-10">
+                                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
                                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                     </svg>
                                 </div>
                             )}
-
-                            <div className="text-5xl mb-3">{category.icon}</div>
-                            <div className="text-xl font-bold text-gray-900 mb-2">
-                                {language === 'ar' ? category.nameAr : category.name}
-                            </div>
-                            <div className="text-sm text-gray-500">
-                                {productCount} {language === 'ar' ? 'منتج' : 'items'}
-                            </div>
                         </button>
                     );
                 })}
@@ -700,7 +930,7 @@ export default function SchoolWizard() {
                                     </div>
                                     <div className="p-3 bg-white">
                                         <div className="font-bold text-primary text-lg">{product.code}</div>
-                                        <div className="text-sm text-gray-600">{product.name}</div>
+                                        <div className="text-sm text-gray-600">{language === 'ar' ? (product.nameAr || product.name) : product.name}</div>
                                     </div>
                                 </button>
                             ))}
@@ -723,13 +953,13 @@ export default function SchoolWizard() {
                             </div>
                             <div>
                                 <div className="font-bold text-2xl text-primary">{getProductById(currentProduct).code}</div>
-                                <div className="text-gray-600">{getProductById(currentProduct).name}</div>
+                                <div className="text-gray-600">{language === 'ar' ? (getProductById(currentProduct).nameAr || getProductById(currentProduct).name) : getProductById(currentProduct).name}</div>
                             </div>
                             <button
                                 onClick={() => setCurrentProduct(null)}
                                 className="ml-auto text-sm text-primary hover:text-primary-700 font-semibold"
                             >
-                                Change Style
+                                {t(translations.changeStyle)}
                             </button>
                         </div>
 
@@ -765,7 +995,7 @@ export default function SchoolWizard() {
                         {/* Color Selection */}
                         <div>
                             <label className="block text-sm font-semibold text-gray-700 mb-3">
-                                Select Color <span className="text-red-500">*</span>
+                                {t(translations.selectColor)} <span className="text-red-500">*</span>
                             </label>
                             <div className="grid grid-cols-4 gap-3">
                                 {colorOptions.map((color) => (
@@ -788,7 +1018,7 @@ export default function SchoolWizard() {
                                         {color.isCustom ? (
                                             <div className="flex flex-col items-center">
                                                 <div className="w-12 h-12 rounded-full bg-gradient-to-r from-red-500 via-yellow-500 via-green-500 via-blue-500 to-purple-500 mb-2"></div>
-                                                <span className="text-xs font-medium">Custom</span>
+                                                <span className="text-xs font-medium">{language === 'ar' ? color.label.ar : color.label.en}</span>
                                             </div>
                                         ) : (
                                             <div className="flex flex-col items-center">
@@ -796,7 +1026,7 @@ export default function SchoolWizard() {
                                                     className={`w-12 h-12 rounded-full border-2 border-${color.border} shadow-inner mb-2`}
                                                     style={{ backgroundColor: color.hex }}
                                                 ></div>
-                                                <span className="text-xs font-medium">{color.label}</span>
+                                                <span className="text-xs font-medium">{language === 'ar' ? color.label.ar : color.label.en}</span>
                                             </div>
                                         )}
                                         {details.color === color.id && (
@@ -857,16 +1087,18 @@ export default function SchoolWizard() {
                         {/* Fabric Selection */}
                         <div>
                             <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                Fabric Type <span className="text-red-500">*</span>
+                                {t(translations.fabricType)} <span className="text-red-500">*</span>
                             </label>
                             <select
                                 value={details.fabric}
                                 onChange={(e) => setDetails({ ...details, fabric: e.target.value })}
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary"
                             >
-                                <option value="">Select fabric...</option>
+                                <option value="">{t(translations.selectFabricPlaceholder)}</option>
                                 {getFabricOptions().map(fabric => (
-                                    <option key={fabric} value={fabric}>{fabric}</option>
+                                    <option key={fabric} value={fabric}>
+                                        {fabricTranslations[fabric] ? (language === 'ar' ? fabricTranslations[fabric].ar : fabricTranslations[fabric].en) : fabric}
+                                    </option>
                                 ))}
                             </select>
                         </div>
@@ -894,10 +1126,10 @@ export default function SchoolWizard() {
                         {/* Additional Reference Upload */}
                         <div>
                             <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                Additional Reference <span className="text-gray-400 font-normal">(Optional)</span>
+                                {t(translations.additionalRef)} <span className="text-gray-400 font-normal">({t(translations.optionalLogo)})</span>
                             </label>
                             <p className="text-xs text-gray-600 mb-2">
-                                Upload any extra design ideas, specifications, or reference images
+                                {t(translations.uploadRefDesc)}
                             </p>
                             <input
                                 type="file"
@@ -933,20 +1165,49 @@ export default function SchoolWizard() {
                             <h3 className="text-lg font-bold text-gray-900 mb-4">
                                 {t(translations.sizeMatrix)}
                             </h3>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-3">
-                                {sizes.map(size => (
-                                    <div key={size} className="flex flex-col">
-                                        <label className="text-sm font-medium text-gray-700 mb-1 text-center">
-                                            {size}
-                                        </label>
-                                        <input
-                                            type="number"
-                                            min="0"
-                                            value={sizeQuantities[size] || ''}
-                                            onChange={(e) => handleSizeQuantityChange(size, e.target.value)}
-                                            placeholder="0"
-                                            className="px-3 py-2 border border-gray-300 rounded-lg text-center focus:ring-2 focus:ring-primary focus:border-primary"
-                                        />
+                            <div className="space-y-4">
+                                {sizes.map((size) => (
+                                    <div key={size} className="flex items-center justify-between p-4 border border-gray-200 rounded-xl bg-gray-50 hover:border-primary transition-colors">
+                                        {/* Size Label */}
+                                        <div className="flex flex-col">
+                                            <span className="font-bold text-gray-900 text-lg">
+                                                {language === 'ar' ? 'مقاس' : 'Size'} {size}
+                                            </span>
+                                        </div>
+
+                                        {/* Stepper Controls */}
+                                        <div className="flex items-center gap-3" dir="ltr">
+                                            {/* Minus Button */}
+                                            <button
+                                                onClick={() => updateQuantity(size, (sizeQuantities[size] || 0) - 1)}
+                                                className="w-10 h-10 flex items-center justify-center rounded-full bg-white border border-gray-300 text-gray-600 active:bg-gray-100 touch-manipulation transition-colors hover:border-red-300 hover:text-red-500"
+                                            >
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M20 12H4" />
+                                                </svg>
+                                            </button>
+
+                                            {/* Numeric Input */}
+                                            <input
+                                                type="tel"
+                                                value={sizeQuantities[size] || 0}
+                                                onChange={(e) => {
+                                                    const val = e.target.value.replace(/\D/g, '');
+                                                    updateQuantity(size, val);
+                                                }}
+                                                className="w-16 text-center font-bold text-xl bg-transparent border-b-2 border-gray-300 focus:border-primary focus:outline-none p-1"
+                                            />
+
+                                            {/* Plus Button */}
+                                            <button
+                                                onClick={() => updateQuantity(size, (sizeQuantities[size] || 0) + 1)}
+                                                className="w-10 h-10 flex items-center justify-center rounded-full bg-primary text-white shadow-md active:bg-primary-700 touch-manipulation transition-transform active:scale-95 hover:bg-primary-600"
+                                            >
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
+                                                </svg>
+                                            </button>
+                                        </div>
                                     </div>
                                 ))}
                             </div>
@@ -979,12 +1240,12 @@ export default function SchoolWizard() {
         );
     };
 
-    // Order Complete Modal
-    const renderCompleteModal = () => (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 animate-fade-in">
-            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-8 text-center animate-slide-up">
+    // Success View (replaces the wizard when complete)
+    const renderSuccessView = () => (
+        <div className="text-center animate-fade-in py-12">
+            <div className="bg-white rounded-2xl shadow-xl max-w-md mx-auto p-8">
                 <div className="text-6xl mb-4">🎉</div>
-                <h3 className="text-3xl font-bold text-gray-900 mb-2">
+                <h3 ref={successHeadingRef} tabIndex="-1" className="text-3xl font-bold text-gray-900 mb-2 outline-none">
                     {t(translations.orderComplete)}
                 </h3>
                 <p className="text-gray-600 mb-6">
@@ -993,7 +1254,6 @@ export default function SchoolWizard() {
                 <div className="flex flex-col gap-3">
                     <button
                         onClick={() => {
-                            setShowCompleteModal(false);
                             window.location.href = '/cart';
                         }}
                         className="w-full px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-primary-700 transition-all"
@@ -1012,7 +1272,7 @@ export default function SchoolWizard() {
     );
 
     return (
-        <div className="max-w-6xl mx-auto px-4 py-8">
+        <div ref={wizardTopRef} className="max-w-6xl mx-auto px-4 py-8">
             <div className="bg-white rounded-2xl shadow-xl p-6 md:p-10">
                 {/* Contact Info Step */}
                 {!contactInfoSubmitted && renderContactInfoStep()}
@@ -1022,10 +1282,10 @@ export default function SchoolWizard() {
 
                 {/* Customization Phase */}
                 {contactInfoSubmitted && wizardPhase === 'CUSTOMIZATION' && renderCustomizationPhase()}
-            </div>
 
-            {/* Complete Modal */}
-            {showCompleteModal && renderCompleteModal()}
+                {/* Success View (replaces form when complete) */}
+                {contactInfoSubmitted && wizardPhase === 'COMPLETED' && renderSuccessView()}
+            </div>
         </div>
     );
 }
