@@ -50,8 +50,32 @@ export default function AdminDashboard() {
 
     if (loading || !user) return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600"></div></div>;
 
-    const translations = { dashboard: { en: 'Admin Dashboard', ar: 'لوحة تحكم المسؤول' }, manageOrders: { en: 'Manage all uniform orders', ar: 'إدارة جميع طلبات الزي الموحد' }, logout: { en: 'Logout', ar: 'تسجيل خروج' }, totalOrders: { en: 'Total Orders', ar: 'إجمالي الطلبات' }, pending: { en: 'Pending', ar: 'قيد المراجعة' }, inProduction: { en: 'In Production', ar: 'قيد الإنتاج' }, delivered: { en: 'Delivered', ar: 'تم التسليم' }, recentOrders: { en: 'Recent Orders', ar: 'أحدث الطلبات' }, orderId: { en: 'Order ID', ar: 'رقم الطلب' }, customer: { en: 'Customer', ar: 'العميل' }, sector: { en: 'Sector', ar: 'القطاع' }, status: { en: 'Status', ar: 'الحالة' }, created: { en: 'Created', ar: 'تاريخ الإنشاء' }, actions: { en: 'Actions', ar: 'إجراءات' }, viewDetails: { en: 'View Details', ar: 'عرض التفاصيل' }, noOrders: { en: 'No orders found.', ar: 'لا توجد طلبات.' }, schools: { en: 'Schools', ar: 'المدارس' }, factories: { en: 'Factories', ar: 'المصانع' }, companies: { en: 'Companies', ar: 'الشركات' }, hospitals: { en: 'Hospitals', ar: 'المستشفيات' }, pending_status: { en: 'Pending', ar: 'قيد المراجعة' }, processing: { en: 'Processing', ar: 'قيد المعالجة' }, in_production: { en: 'In Production', ar: 'قيد الإنتاج' }, ready_for_delivery: { en: 'Ready for Delivery', ar: 'جاهز للتسليم' }, delivered_status: { en: 'Delivered', ar: 'تم التسليم' }, cancelled: { en: 'Cancelled', ar: 'ملغي' }, order_received: { en: 'Order Received', ar: 'تم استلام الطلب' } };
-    const statusColors = { 'Order Received': 'bg-yellow-100 text-yellow-800', pending: 'bg-yellow-100 text-yellow-800', processing: 'bg-blue-100 text-blue-800', in_production: 'bg-purple-100 text-purple-800', ready_for_delivery: 'bg-green-100 text-green-800', delivered: 'bg-gray-100 text-gray-800', cancelled: 'bg-red-100 text-red-800' };
+    const translations = { dashboard: { en: 'Admin Dashboard', ar: 'لوحة تحكم المسؤول' }, manageOrders: { en: 'Manage all uniform orders', ar: 'إدارة جميع طلبات الزي الموحد' }, logout: { en: 'Logout', ar: 'تسجيل خروج' }, totalOrders: { en: 'Total Orders', ar: 'إجمالي الطلبات' }, pending: { en: 'Pending', ar: 'قيد المراجعة' }, inProduction: { en: 'In Production', ar: 'قيد الإنتاج' }, delivered: { en: 'Delivered', ar: 'تم التسليم' }, recentOrders: { en: 'Recent Orders', ar: 'أحدث الطلبات' }, orderId: { en: 'Order ID', ar: 'رقم الطلب' }, customer: { en: 'Customer', ar: 'العميل' }, sector: { en: 'Sector', ar: 'القطاع' }, status: { en: 'Status', ar: 'الحالة' }, created: { en: 'Created', ar: 'تاريخ الإنشاء' }, actions: { en: 'Actions', ar: 'إجراءات' }, viewDetails: { en: 'View Details', ar: 'عرض التفاصيل' }, noOrders: { en: 'No orders found.', ar: 'لا توجد طلبات.' } };
+
+    const statusMap = {
+        'new': { en: 'Order Received', ar: 'تم استلام الطلب' },
+        'order received': { en: 'Order Received', ar: 'تم استلام الطلب' },
+        'contacting': { en: 'Contacting', ar: 'جاري التواصل' },
+        'quotation sent': { en: 'Quotation Sent', ar: 'تم إرسال عرض السعر' },
+        'sample production': { en: 'Sample Production', ar: 'تنفيذ العينة' },
+        'manufacturing': { en: 'Manufacturing', ar: 'مرحلة التصنيع' },
+        'delivered': { en: 'Delivered', ar: 'تم التوصيل' },
+        'cancelled': { en: 'Cancelled', ar: 'ملغي' },
+        'processing': { en: 'Processing', ar: 'قيد المعالجة' },
+        'in production': { en: 'In Production', ar: 'قيد الإنتاج' },
+        'ready for delivery': { en: 'Ready for Delivery', ar: 'جاهز للتسليم' }
+    };
+
+    const sectorMap = {
+        'schools': { en: 'Schools', ar: 'مدارس' },
+        'school': { en: 'Schools', ar: 'مدارس' },
+        'factories': { en: 'Factories', ar: 'مصانع' },
+        'corporate': { en: 'Corporate', ar: 'شركات' },
+        'medical': { en: 'Medical', ar: 'طبي' },
+        'hospitality': { en: 'Hospitality', ar: 'ضيافة' }
+    };
+
+    const statusColors = { 'Order Received': 'bg-yellow-100 text-yellow-800', pending: 'bg-yellow-100 text-yellow-800', processing: 'bg-blue-100 text-blue-800', in_production: 'bg-purple-100 text-purple-800', ready_for_delivery: 'bg-green-100 text-green-800', delivered: 'bg-gray-100 text-gray-800', cancelled: 'bg-red-100 text-red-800', 'Contacting': 'bg-blue-100 text-blue-800', 'Quotation Sent': 'bg-indigo-100 text-indigo-800', 'Sample Production': 'bg-purple-100 text-purple-800', 'Manufacturing': 'bg-orange-100 text-orange-800', 'Delivered': 'bg-green-100 text-green-800', 'Cancelled': 'bg-red-100 text-red-800' };
 
     return (
         <div className="min-h-screen bg-gray-50" dir={language === 'ar' ? 'rtl' : 'ltr'}>
@@ -107,9 +131,9 @@ export default function AdminDashboard() {
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{order.customer?.schoolName || order.customer?.name || 'N/A'}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{order.sector || 'N/A'}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap"><span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColors[order.status] || 'bg-gray-100 text-gray-800'}`}>{t(translations[order.status?.toLowerCase()?.replace(/ /g, '_') + '_status']) || order.status || 'N/A'}</span></td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{order.createdAt?.toDate ? order.createdAt.toDate().toLocaleDateString() : (order.createdAt?.seconds ? new Date(order.createdAt.seconds * 1000).toLocaleDateString() : 'N/A')}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{sectorMap[order.sector?.toLowerCase()]?.[language] || order.sector || 'N/A'}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap"><span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColors[order.status] || 'bg-gray-100 text-gray-800'}`}>{statusMap[order.status?.toLowerCase()]?.[language] || order.status || 'N/A'}</span></td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500" dir="ltr">{order.createdAt?.toDate ? order.createdAt.toDate().toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US') : (order.createdAt?.seconds ? new Date(order.createdAt.seconds * 1000).toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US') : 'N/A')}</td>
                                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium ltr:text-right rtl:text-left"><button onClick={(e) => { e.stopPropagation(); console.log('Order Details:', order); setSelectedOrder(order); setIsModalOpen(true); }} className="text-primary-600 hover:text-primary-900 transition-colors font-semibold">{t(translations.viewDetails)}</button></td>
                                         </tr>
                                     ))

@@ -1,46 +1,55 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { db } from '@/lib/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import { useLanguage } from '@/hooks/useLanguage';
 
-export default function OrderDetailsDrawer({ order, isOpen, onClose }) {
-    const [newStatus, setNewStatus] = useState('');
-    const [targetDate, setTargetDate] = useState('');
+export default function OrderDetailsDrawer({ isOpen, onClose, order }) {
+    const { language, t } = useLanguage();
     const [updating, setUpdating] = useState(false);
+    const [newStatus, setNewStatus] = useState('');
+    const [expectedDate, setExpectedDate] = useState('');
+    const [copiedId, setCopiedId] = useState(null);
 
-    // Color mapping for standard palette
-    const COLOR_MAP = {
-        1: { label: 'White', hex: '#FFFFFF', border: '#D1D5DB' },
-        2: { label: 'Green', hex: '#166534' },
-        3: { label: 'Orange', hex: '#F97316' },
-        4: { label: 'Yellow', hex: '#EAB308' },
-        5: { label: 'Blue', hex: '#2563EB' },
-        6: { label: 'Navy', hex: '#1E3A8A' },
-        7: { label: 'Red', hex: '#DC2626' }
+    // --- Localization Maps ---
+
+    const adminTrans = {
+        title: { en: 'Order Details', ar: 'تفاصيل الطلب' },
+        customerInfo: { en: 'CUSTOMER INFORMATION', ar: 'بيانات العميل' },
+        timeline: { en: 'ORDER STATUS & TIMELINE', ar: 'حالة الطلب والجدول الزمني' },
+        currentStatus: { en: 'Current Status', ar: 'الحالة الحالية' },
+        updateStatus: { en: 'Update Status', ar: 'تحديث الحالة' },
+        expectedDate: { en: 'Expected Completion Date (Optional)', ar: 'تاريخ الانتهاء المتوقع (اختياري)' },
+        dateHint: { en: 'Leave empty if unknown', ar: 'اتركه فارغاً إذا كان غير محدد' },
+        updateBtn: { en: 'Update Order', ar: 'تحديث الطلب' },
+        updating: { en: 'Updating...', ar: 'جاري التحديث...' },
+        totalTitle: { en: 'Order Items (Total)', ar: 'المنتجات (Total)' },
+        totalQty: { en: 'Items', ar: 'قطع' },
+        code: { en: 'Code', ar: 'الكود' },
+        fabric: { en: 'Fabric', ar: 'الخامة' },
+        color: { en: 'Color', ar: 'اللون' },
+        custom: { en: 'Custom:', ar: 'مخصص:' },
+        viewSample: { en: 'View Sample', ar: 'عرض العينة' },
+        unspecified: { en: 'Unspecified', ar: 'غير محدد' },
+        notSelected: { en: 'Not selected', ar: 'لم يتم التحديد' },
+        sizeBreakdown: { en: 'Size Breakdown', ar: 'تفاصيل المقاسات' },
+        size: { en: 'Size', ar: 'مقاس' },
+        pcs: { en: 'pcs', ar: 'قطعة' },
+        notes: { en: 'Notes:', ar: 'ملاحظات:' },
+        customerUpload: { en: 'Customer Uploaded Reference/Logo', ar: 'مرفق / شعار من العميل' },
+        clickToView: { en: 'Click image to preview', ar: 'اضغط على الصورة للمعانية' },
+        openFull: { en: 'Open Full Size', ar: 'عرض بالحجم الكامل' },
+        viewAttachment: { en: 'View Attachment', ar: 'عرض المرفق' },
+        viewLogo: { en: 'View Logo', ar: 'عرض الشعار' },
+        logo: { en: 'Logo:', ar: 'الشعار:' },
+        metadata: { en: 'Order Metadata', ar: 'بيانات الطلب' },
+        sector: { en: 'Sector', ar: 'القطاع' },
+        created: { en: 'Created', ar: 'تاريخ الإنشاء' },
+        totalItems: { en: 'Total Items', ar: 'إجمالي القطع' },
+        close: { en: 'Close', ar: 'إغلاق' },
+        statusUpdated: { en: 'Status Updated Successfully', ar: 'تم تحديث الحالة بنجاح' }
     };
-
-    // Initialize status and date when drawer opens
-    useEffect(() => {
-        if (order && isOpen) {
-            setNewStatus(order.status || 'Order Received');
-            // Format date if exists
-            if (order.expectedCompletionDate) {
-                // Handle both date string and Firestore timestamp
-                const dateStr = typeof order.expectedCompletionDate === 'string'
-                    ? order.expectedCompletionDate
-                    : order.expectedCompletionDate?.toDate?.()?.toISOString()?.split('T')[0] || '';
-                setTargetDate(dateStr);
-            } else {
-                setTargetDate('');
-            }
-        }
-    }, [order, isOpen]);
-
-    if (!isOpen || !order) return null;
-
-    // Calculate today's date for min date restriction
-    const today = new Date().toISOString().split('T')[0];
 
     const STATUS_STAGES = [
         'Order Received',
@@ -52,6 +61,55 @@ export default function OrderDetailsDrawer({ order, isOpen, onClose }) {
         'Cancelled'
     ];
 
+    const statusTranslations = {
+        'Order Received': { en: 'Order Received', ar: 'تم استلام الطلب' },
+        'Contacting': { en: 'Contacting', ar: 'جاري التواصل' },
+        'Quotation Sent': { en: 'Quotation Sent', ar: 'تم إرسال عرض السعر' },
+        'Sample Production': { en: 'Sample Production', ar: 'تنفيذ العينة' },
+        'Manufacturing': { en: 'Manufacturing', ar: 'مرحلة التصنيع' },
+        'Delivered': { en: 'Delivered', ar: 'تم التسليم' },
+        'Cancelled': { en: 'Cancelled', ar: 'ملغي' }
+    };
+
+    const sectorMap = {
+        'schools': { en: 'Schools', ar: 'مدارس' },
+        'school': { en: 'Schools', ar: 'مدارس' },
+        'factories': { en: 'Factories', ar: 'مصانع' },
+        'corporate': { en: 'Corporate', ar: 'شركات' },
+        'medical': { en: 'Medical', ar: 'طبي' },
+        'hospitality': { en: 'Hospitality', ar: 'ضيافة' }
+    };
+
+    const stageMap = {
+        'kg_primary': { en: 'KG & Primary', ar: 'رياض أطفال / ابتدائي' },
+        'middle_high': { en: 'Middle & High', ar: 'إعدادي / ثانوي' }
+    };
+
+    const colorNames = {
+        'White': { en: 'White', ar: 'أبيض' },
+        'Green': { en: 'Green', ar: 'أخضر' },
+        'Navy': { en: 'Navy', ar: 'كحلي' },
+        'Blue': { en: 'Blue', ar: 'أزرق' },
+        'Black': { en: 'Black', ar: 'أسود' },
+        'Grey': { en: 'Grey', ar: 'رمادي' },
+        'Beige': { en: 'Beige', ar: 'بيج' },
+        'Light Blue': { en: 'Light Blue', ar: 'لبني' },
+        'Red': { en: 'Red', ar: 'أحمر' }
+    };
+
+    // Color mapping for standard palette logic (keeping hex values)
+    const COLOR_MAP = {
+        1: { label: 'White', hex: '#FFFFFF', border: '#D1D5DB' },
+        2: { label: 'Green', hex: '#166534' },
+        3: { label: 'Navy', hex: '#1e3a8a' },
+        4: { label: 'Blue', hex: '#2563eb' },
+        5: { label: 'Black', hex: '#000000' },
+        6: { label: 'Grey', hex: '#4b5563' },
+        7: { label: 'Red', hex: '#DC2626' },
+        8: { label: 'Beige', hex: '#F5F5DC', border: '#D1D5DB' },
+        9: { label: 'Light Blue', hex: '#ADD8E6' }
+    };
+
     const statusColors = {
         'Order Received': 'bg-yellow-100 text-yellow-800',
         'Contacting': 'bg-blue-100 text-blue-800',
@@ -59,39 +117,67 @@ export default function OrderDetailsDrawer({ order, isOpen, onClose }) {
         'Sample Production': 'bg-purple-100 text-purple-800',
         'Manufacturing': 'bg-orange-100 text-orange-800',
         'Delivered': 'bg-green-100 text-green-800',
-        'Cancelled': 'bg-red-100 text-red-800',
-        // Legacy statuses
-        'Processing': 'bg-blue-100 text-blue-800',
-        'In Production': 'bg-purple-100 text-purple-800',
-        'Ready for Delivery': 'bg-green-100 text-green-800'
+        'Cancelled': 'bg-red-100 text-red-800'
+    };
+
+    // --- Effects & Logic ---
+
+    useEffect(() => {
+        if (order && isOpen) {
+            setNewStatus(order.status || 'Order Received');
+            if (order.expectedCompletionDate) {
+                const dateStr = typeof order.expectedCompletionDate === 'string'
+                    ? order.expectedCompletionDate
+                    : order.expectedCompletionDate?.toDate?.()?.toISOString()?.split('T')[0] || '';
+                setExpectedDate(dateStr);
+            } else {
+                setExpectedDate('');
+            }
+        }
+    }, [order, isOpen]);
+
+    if (!isOpen || !order) return null;
+
+    const today = new Date().toISOString().split('T')[0];
+
+    const getStatusLabel = (status) => {
+        if (!status) return status;
+        const normalized = statusTranslations[status];
+        if (normalized) return language === 'ar' ? normalized.ar : normalized.en;
+        return status;
     };
 
     const handleUpdateOrder = async () => {
-        if (!order?.id) {
-            alert('Error: Order ID not found');
-            return;
-        }
-
+        if (!order?.id) return;
         setUpdating(true);
         try {
             const orderRef = doc(db, 'orders', order.id);
+            const targetDate = expectedDate ? new Date(expectedDate) : null;
+
             await updateDoc(orderRef, {
                 status: newStatus,
                 expectedCompletionDate: targetDate || null,
                 lastUpdated: new Date()
             });
-            alert('✅ Order updated successfully!');
-            // Optionally close drawer or refresh
+            alert('✅ ' + t(adminTrans.statusUpdated));
             setTimeout(() => {
                 window.location.reload();
             }, 1000);
         } catch (error) {
-            console.error('Update failed:', error);
-            alert('❌ Failed to update order: ' + error.message);
+            console.error('Error updating order:', error);
+            alert('❌ Failed to update order');
         } finally {
             setUpdating(false);
         }
     };
+
+    const copyToClipboard = (text) => {
+        navigator.clipboard.writeText(text);
+        setCopiedId(text);
+        setTimeout(() => setCopiedId(null), 2000);
+    };
+
+    // --- Render ---
 
     return (
         <>
@@ -99,140 +185,174 @@ export default function OrderDetailsDrawer({ order, isOpen, onClose }) {
             <div
                 className="fixed inset-0 bg-black bg-opacity-50 z-40 transition-opacity"
                 onClick={onClose}
-            />
+            ></div>
 
             {/* Drawer */}
-            <div className="fixed inset-y-0 right-0 w-full sm:w-2/3 lg:w-1/2 xl:w-1/3 bg-white shadow-2xl z-50 overflow-y-auto">
+            <div className="fixed inset-y-0 right-0 w-full sm:w-2/3 lg:w-1/2 xl:w-1/3 bg-white shadow-2xl z-50 overflow-y-auto" dir={language === 'ar' ? 'rtl' : 'ltr'}>
                 {/* Header */}
-                <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
+                <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between z-10">
                     <div>
-                        <h2 className="text-xl font-bold text-gray-900">Order Details</h2>
+                        <h2 className="text-xl font-bold text-gray-900">{t(adminTrans.title)}</h2>
                         <p className="text-sm text-primary-600 font-semibold mt-1">{order.orderId}</p>
                     </div>
-                    <button
-                        onClick={onClose}
-                        className="text-gray-400 hover:text-gray-600 transition-colors p-2 rounded-lg hover:bg-gray-100"
-                    >
-                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => copyToClipboard(order.orderId)}
+                            className="p-2 text-gray-400 hover:text-primary-600 transition-colors bg-gray-50 rounded-full hover:bg-gray-100"
+                            title="Copy Order ID"
+                        >
+                            {copiedId === order.orderId ? (
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                </svg>
+                            ) : (
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                                </svg>
+                            )}
+                        </button>
+                        <button
+                            onClick={onClose}
+                            className="p-2 text-gray-400 hover:text-gray-600 transition-colors bg-gray-50 rounded-full hover:bg-gray-100"
+                        >
+                            <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
                 </div>
 
                 {/* Content */}
                 <div className="p-6 space-y-6">
-                    {/* Customer Info Card */}
-                    <div className="bg-gray-50 rounded-lg p-4">
-                        <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">Customer Information</h3>
-                        <div className="space-y-2">
-                            <div className="flex justify-between">
-                                <span className="text-sm text-gray-600">Name:</span>
-                                <span className="text-sm font-medium text-gray-900">{order.customer?.name || 'N/A'}</span>
+
+                    {/* --- Customer Information Section --- */}
+                    <div className="bg-gray-50 p-5 rounded-xl border border-gray-100 mb-6">
+                        <h4 className={`text-xs font-bold text-gray-400 uppercase mb-4 tracking-wider border-b border-gray-200 pb-2 ${language === 'ar' ? 'text-right' : 'text-left'}`}>
+                            {t(adminTrans.customerInfo)}
+                        </h4>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                            {/* Name */}
+                            <div className={language === 'ar' ? 'text-right' : 'text-left'}>
+                                <span className="block text-xs text-gray-500 mb-1">{language === 'ar' ? 'الاسم' : 'Name'}</span>
+                                <p className="text-sm font-bold text-gray-900">{order.customer?.name || 'N/A'}</p>
                             </div>
-                            <div className="flex justify-between">
-                                <span className="text-sm text-gray-600">School:</span>
-                                <span className="text-sm font-medium text-gray-900">{order.customer?.schoolName || 'N/A'}</span>
+
+                            {/* School */}
+                            <div className={language === 'ar' ? 'text-right' : 'text-left'}>
+                                <span className="block text-xs text-gray-500 mb-1">{language === 'ar' ? 'المدرسة' : 'School'}</span>
+                                <p className="text-sm font-bold text-gray-900">{order.customer?.schoolName || 'N/A'}</p>
                             </div>
-                            <div className="flex justify-between">
-                                <span className="text-sm text-gray-600">Email:</span>
-                                <span className="text-sm font-medium text-gray-900">{order.customer?.email || 'N/A'}</span>
+
+                            {/* Email */}
+                            <div className={language === 'ar' ? 'text-right' : 'text-left'}>
+                                <span className="block text-xs text-gray-500 mb-1">{language === 'ar' ? 'البريد الإلكتروني' : 'Email'}</span>
+                                <p className="text-sm font-bold text-gray-900 break-all font-mono text-xs sm:text-sm">
+                                    {order.customer?.email || 'N/A'}
+                                </p>
                             </div>
-                            <div className="flex justify-between">
-                                <span className="text-sm text-gray-600">Phone:</span>
-                                <span className="text-sm font-medium text-gray-900">{order.customer?.phone || 'N/A'}</span>
+
+                            {/* Phone - Force LTR for numbers, but align Right for Arabic context */}
+                            <div className={language === 'ar' ? 'text-right' : 'text-left'}>
+                                <span className="block text-xs text-gray-500 mb-1">{language === 'ar' ? 'رقم الجوال' : 'Phone'}</span>
+                                <div
+                                    className={`flex items-center gap-2 ${language === 'ar' ? 'justify-end' : 'justify-start'}`}
+                                    dir="ltr"
+                                >
+                                    <span className="text-gray-500 font-medium text-sm">
+                                        {order.customer?.countryCode || order.countryCode || '+966'}
+                                    </span>
+                                    <span className="text-sm font-bold text-gray-900 tracking-wider">
+                                        {order.customer?.phone || 'N/A'}
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Status Control - FUNCTIONAL */}
+                    {/* --- Status & Timeline --- */}
                     <div className="bg-white border border-gray-200 rounded-lg p-4">
-                        <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">Order Status & Timeline</h3>
+                        <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">{t(adminTrans.timeline)}</h3>
                         <div className="space-y-4">
-                            {/* Current Status Display */}
+                            {/* Current Status */}
                             <div>
-                                <label className="block text-sm text-gray-600 mb-2">Current Status</label>
+                                <label className="block text-sm text-gray-600 mb-2">{t(adminTrans.currentStatus)}</label>
                                 <span className={`px-3 py-1 inline-flex text-sm font-semibold rounded-full ${statusColors[order.status] || 'bg-gray-100 text-gray-800'}`}>
-                                    {order.status || 'Order Received'}
+                                    {getStatusLabel(order.status)}
                                 </span>
                             </div>
 
-                            {/* Status Update Dropdown */}
+                            {/* Status Update Dropdown (Fixed RTL Arrow) */}
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">Update Status</label>
-                                <select
-                                    value={newStatus}
-                                    onChange={(e) => setNewStatus(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 bg-white"
-                                >
-                                    {STATUS_STAGES.map(status => (
-                                        <option key={status} value={status}>{status}</option>
-                                    ))}
-                                </select>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">{t(adminTrans.updateStatus)}</label>
+                                <div className="relative">
+                                    <select
+                                        value={newStatus}
+                                        onChange={(e) => setNewStatus(e.target.value)}
+                                        className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm h-10 ${language === 'ar' ? 'pl-10 text-right' : 'pr-10 text-left'}`}
+                                    >
+                                        {Object.keys(statusTranslations).map((statusKey) => (
+                                            <option key={statusKey} value={statusKey}>
+                                                {getStatusLabel(statusKey)}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
                             </div>
 
-                            {/* Expected Completion Date */}
+                            {/* Expected Date */}
                             <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">Expected Completion Date</label>
+                                <label className="block text-sm font-semibold text-gray-700 mb-2">{t(adminTrans.expectedDate)}</label>
                                 <input
                                     type="date"
                                     min={today}
-                                    value={targetDate}
-                                    onChange={(e) => setTargetDate(e.target.value)}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                                    value={expectedDate}
+                                    onChange={(e) => setExpectedDate(e.target.value)}
+                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
                                 />
-                                <p className="text-xs text-gray-500 mt-1">Set an estimated delivery/completion date</p>
+                                <p className="text-xs text-gray-500 mt-1">{t(adminTrans.dateHint)}</p>
                             </div>
 
                             {/* Save Button */}
                             <button
                                 onClick={handleUpdateOrder}
                                 disabled={updating}
-                                className={`w-full py-2 px-4 rounded-lg font-semibold transition-colors ${updating
-                                    ? 'bg-gray-400 cursor-not-allowed'
-                                    : 'bg-primary-600 hover:bg-primary-700 text-white'
-                                    }`}
+                                className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${updating ? 'bg-gray-400 cursor-not-allowed' : 'bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500'}`}
                             >
-                                {updating ? '⏳ Updating...' : '💾 Save Changes'}
+                                {updating ? t(adminTrans.updating) : t(adminTrans.updateBtn)}
                             </button>
                         </div>
                     </div>
 
-                    {/* Order Items */}
+                    {/* --- Order Items --- */}
                     <div className="bg-white border border-gray-200 rounded-lg p-4">
                         <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">
-                            Order Items ({order.totalItems || order.items?.length || 0} total)
+                            {t(adminTrans.totalTitle).replace('(Total)', `(${order.totalItems || order.items?.length || 0} ${t(adminTrans.totalQty)})`)}
                         </h3>
                         <div className="space-y-4">
                             {order.items && order.items.length > 0 ? (
                                 order.items.map((item, index) => (
                                     <div key={index} className="bg-gray-50 p-3 rounded-lg border border-gray-200">
                                         <div className="flex gap-3 mb-3">
-                                            {/* Product Image */}
                                             {item.image && (
                                                 <img
                                                     src={item.image}
-                                                    alt={item.productName || item.name || 'Product'}
+                                                    alt={item.productName || 'Product'}
                                                     className="w-20 h-20 object-cover rounded-lg border-2 border-gray-300 flex-shrink-0"
                                                 />
                                             )}
 
-                                            {/* Product Name & Code */}
                                             <div className="flex-1">
                                                 <h4 className="font-bold text-gray-900 text-base">
-                                                    {item.productName || item.name || item.title || 'Product'}
+                                                    {language === 'ar' ? (item.productNameAr || item.productName) : item.productName}
                                                 </h4>
                                                 {item.code && (
-                                                    <p className="text-xs text-gray-500 mt-1">Code: {item.code}</p>
+                                                    <p className="text-xs text-gray-500 mt-1">{t(adminTrans.code)}: {item.code}</p>
                                                 )}
-                                                <div className="mt-2">
-                                                    <span className="text-xs font-semibold text-primary-600 bg-primary-50 px-2 py-1 rounded">
-                                                        Total Qty: {item.quantity || 0}
-                                                    </span>
-                                                </div>
                                             </div>
                                         </div>
 
-                                        {/* Specifications */}
+                                        {/* Badges / Specifications */}
                                         <div className="mb-3 flex flex-wrap gap-2">
                                             {item.details?.material && (
                                                 <span className="text-xs bg-white border border-gray-300 px-2 py-1 rounded">
@@ -241,35 +361,43 @@ export default function OrderDetailsDrawer({ order, isOpen, onClose }) {
                                             )}
                                             {item.details?.stage && (
                                                 <span className="text-xs bg-white border border-gray-300 px-2 py-1 rounded">
-                                                    🏫 {item.details.stage}
+                                                    {(() => {
+                                                        const stageVal = item.details.stage;
+                                                        const mappedStage = stageMap[stageVal]
+                                                            ? (language === 'ar' ? stageMap[stageVal].ar : stageMap[stageVal].en)
+                                                            : stageVal;
+                                                        return <>🏫 {mappedStage}</>;
+                                                    })()}
                                                 </span>
                                             )}
                                             {item.details?.logoName && !item.details?.uploadedLogoUrl && (
                                                 <span className="text-xs bg-green-50 border border-green-300 text-green-700 px-2 py-1 rounded font-medium">
-                                                    🏷️ Logo: {item.details.logoName}
+                                                    🏷️ {t(adminTrans.logo)} {item.details.logoName}
                                                 </span>
                                             )}
                                         </div>
 
-                                        {/* --- NEW DETAILS SECTION (Compact Gray Box) --- */}
+                                        {/* Details Box: Fabric, Color, Ref */}
                                         {(item.fabric || item.selectedColor || item.referenceFileUrl || item.details?.uploadedLogoUrl) && (
                                             <div className="mt-3 space-y-2 text-sm text-gray-700 bg-gray-50 p-3 rounded border border-gray-200">
 
-                                                {/* 1. FABRIC */}
-                                                {item.fabric && (
+                                                {/* Fabric */}
+                                                {(item.fabric || item.fabricAr) && (
                                                     <div className="flex items-center gap-2">
-                                                        <span className="font-semibold text-gray-500">Fabric:</span>
-                                                        <span className="px-2 py-0.5 bg-white border rounded text-gray-800">{item.fabric}</span>
+                                                        <span className="font-semibold text-gray-500">{t(adminTrans.fabric)}:</span>
+                                                        <span className="px-2 py-0.5 bg-white border rounded text-gray-800">
+                                                            {language === 'ar' ? (item.fabricAr || item.fabric) : item.fabric}
+                                                        </span>
                                                     </div>
                                                 )}
 
-                                                {/* 2. COLOR */}
+                                                {/* Color */}
                                                 {item.selectedColor && (
                                                     <div className="flex items-center gap-2">
-                                                        <span className="font-semibold text-gray-500">Color:</span>
+                                                        <span className="font-semibold text-gray-500">{t(adminTrans.color)}:</span>
                                                         {item.selectedColor === 'custom' ? (
                                                             <div className="flex items-center gap-2">
-                                                                <span className="text-yellow-700 font-medium">Custom: {item.customColorName || 'Unspecified'}</span>
+                                                                <span className="text-yellow-700 font-medium">{t(adminTrans.custom)} {item.customColorName || t(adminTrans.unspecified)}</span>
                                                                 {item.customColorUrl && (
                                                                     <a
                                                                         href={item.customColorUrl}
@@ -277,7 +405,7 @@ export default function OrderDetailsDrawer({ order, isOpen, onClose }) {
                                                                         rel="noopener noreferrer"
                                                                         className="text-blue-600 hover:underline text-xs flex items-center"
                                                                     >
-                                                                        (View Sample 📎)
+                                                                        ({t(adminTrans.viewSample)} 📎)
                                                                     </a>
                                                                 )}
                                                             </div>
@@ -290,15 +418,23 @@ export default function OrderDetailsDrawer({ order, isOpen, onClose }) {
                                                                         borderColor: item.selectedColor === 1 ? '#D1D5DB' : 'transparent'
                                                                     }}
                                                                 ></div>
-                                                                <span>{COLOR_MAP[item.selectedColor].label}</span>
+                                                                <span>
+                                                                    {(() => {
+                                                                        const enLabel = COLOR_MAP[item.selectedColor].label;
+                                                                        const localizedLabel = colorNames[enLabel]
+                                                                            ? (language === 'ar' ? colorNames[enLabel].ar : colorNames[enLabel].en)
+                                                                            : enLabel;
+                                                                        return localizedLabel;
+                                                                    })()}
+                                                                </span>
                                                             </div>
                                                         ) : (
-                                                            <span className="text-gray-400 italic">Not selected</span>
+                                                            <span className="text-gray-400 italic">{t(adminTrans.notSelected)}</span>
                                                         )}
                                                     </div>
                                                 )}
 
-                                                {/* 3. EXTRA REFERENCE FILE */}
+                                                {/* Extra Reference File */}
                                                 {item.referenceFileUrl && (
                                                     <div className="mt-2 pt-2 border-t border-gray-200">
                                                         <span className="font-semibold text-gray-500 block mb-1">Extra Reference:</span>
@@ -308,51 +444,48 @@ export default function OrderDetailsDrawer({ order, isOpen, onClose }) {
                                                             rel="noopener noreferrer"
                                                             className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700 rounded hover:bg-blue-100 transition-colors"
                                                         >
-                                                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
-                                                            </svg>
-                                                            View Attachment
+                                                            {t(adminTrans.viewAttachment)}
                                                         </a>
                                                     </div>
                                                 )}
 
-                                                {/* 4. LOGO (Existing logic) */}
+                                                {/* Standard Logo */}
                                                 {item.details?.uploadedLogoUrl && (
                                                     <div className="mt-2">
-                                                        <span className="font-semibold text-gray-500">Logo:</span>
+                                                        <span className="font-semibold text-gray-500">{t(adminTrans.logo)}</span>
                                                         <a
                                                             href={item.details.uploadedLogoUrl}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
-                                                            className="text-blue-600 text-xs ml-2 hover:underline"
+                                                            className="text-blue-600 text-xs text-start mx-2 hover:underline"
                                                         >
-                                                            View Logo
+                                                            {t(adminTrans.viewLogo)}
                                                         </a>
                                                     </div>
                                                 )}
                                             </div>
                                         )}
 
-                                        {/* SIZE BREAKDOWN - THE CRITICAL PART */}
+                                        {/* Size Breakdown */}
                                         {item.details?.sizes && Object.keys(item.details.sizes).length > 0 ? (
-                                            <div className="bg-white p-3 rounded border-2 border-blue-100">
-                                                <p className="text-xs text-gray-500 mb-2 uppercase font-bold tracking-wider">📏 Size Breakdown</p>
+                                            <div className="bg-white p-3 rounded border-2 border-blue-100 mt-2">
+                                                <p className="text-xs text-gray-500 mb-2 uppercase font-bold tracking-wider">📏 {t(adminTrans.sizeBreakdown)}</p>
                                                 <div className="flex flex-wrap gap-2">
                                                     {Object.entries(item.details.sizes).map(([size, qty]) => (
                                                         qty > 0 && (
                                                             <div key={size} className="text-xs bg-blue-50 text-blue-700 px-3 py-1.5 rounded border border-blue-200 font-medium">
-                                                                <span className="text-gray-600">Size </span>
+                                                                <span className="text-gray-600">{t(adminTrans.size)} </span>
                                                                 <span className="font-bold text-blue-900">{size}</span>
                                                                 <span className="text-gray-600">: </span>
                                                                 <span className="font-bold text-blue-900">{qty}</span>
-                                                                <span className="text-xs text-gray-500"> pcs</span>
+                                                                <span className="text-xs text-gray-500"> {t(adminTrans.pcs)}</span>
                                                             </div>
                                                         )
                                                     ))}
                                                 </div>
                                             </div>
                                         ) : (
-                                            <div className="bg-red-50 p-2 rounded border border-red-200">
+                                            <div className="bg-red-50 p-2 rounded border border-red-200 mt-2">
                                                 <p className="text-xs text-red-600">⚠️ No size data found for this item</p>
                                             </div>
                                         )}
@@ -360,16 +493,16 @@ export default function OrderDetailsDrawer({ order, isOpen, onClose }) {
                                         {/* Notes */}
                                         {item.details?.notes && (
                                             <div className="mt-3 text-xs text-gray-600 bg-yellow-50 p-2 rounded border border-yellow-200">
-                                                <span className="font-semibold">📝 Notes: </span>
+                                                <span className="font-semibold">📝 {t(adminTrans.notes)} </span>
                                                 {item.details.notes}
                                             </div>
                                         )}
 
-                                        {/* Customer Uploaded Logo/Reference */}
+                                        {/* Customer Uploaded Interactive Preview */}
                                         {item.details?.uploadedLogoUrl && (
                                             <div className="mt-3 p-3 bg-yellow-50 border-2 border-yellow-200 rounded-lg">
                                                 <p className="text-xs font-bold text-yellow-800 mb-2 uppercase tracking-wider">
-                                                    📎 Customer Uploaded Logo/Reference
+                                                    📎 {t(adminTrans.customerUpload)}
                                                 </p>
                                                 <div className="flex items-start gap-3">
                                                     <a
@@ -386,7 +519,7 @@ export default function OrderDetailsDrawer({ order, isOpen, onClose }) {
                                                     </a>
                                                     <div className="flex-1">
                                                         <p className="text-xs text-gray-600 mb-2">
-                                                            Click image or link to view full size in new tab
+                                                            {t(adminTrans.clickToView)}
                                                         </p>
                                                         <a
                                                             href={item.details.uploadedLogoUrl}
@@ -394,7 +527,7 @@ export default function OrderDetailsDrawer({ order, isOpen, onClose }) {
                                                             rel="noopener noreferrer"
                                                             className="text-xs text-blue-600 underline hover:text-blue-800 font-medium"
                                                         >
-                                                            🔗 Open Full Size Image
+                                                            🔗 {t(adminTrans.openFull)}
                                                         </a>
                                                     </div>
                                                 </div>
@@ -403,31 +536,38 @@ export default function OrderDetailsDrawer({ order, isOpen, onClose }) {
                                     </div>
                                 ))
                             ) : (
-                                <p className="text-sm text-gray-500">No items found in this order.</p>
+                                <p className="text-gray-500 italic text-center p-4">{t(adminTrans.noItems)}</p>
                             )}
                         </div>
                     </div>
 
-                    {/* Order Metadata */}
+                    {/* --- Order Metadata --- */}
                     <div className="bg-gray-50 rounded-lg p-4">
-                        <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">Order Metadata</h3>
+                        <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">{t(adminTrans.metadata)}</h3>
                         <div className="space-y-2 text-sm">
                             <div className="flex justify-between">
-                                <span className="text-gray-600">Sector:</span>
-                                <span className="text-gray-900 font-medium">{order.sector || 'N/A'}</span>
+                                <span className="text-gray-600">{t(adminTrans.sector)}:</span>
+                                <span className="text-gray-900 font-medium">
+                                    {(() => {
+                                        const sec = order.sector?.toLowerCase()?.trim();
+                                        return sectorMap[sec]
+                                            ? (language === 'ar' ? sectorMap[sec].ar : sectorMap[sec].en)
+                                            : (order.sector || 'N/A');
+                                    })()}
+                                </span>
                             </div>
                             <div className="flex justify-between">
-                                <span className="text-gray-600">Created:</span>
-                                <span className="text-gray-900 font-medium">
+                                <span className="text-gray-600">{t(adminTrans.created)}:</span>
+                                <span className="text-gray-900 font-medium" dir="ltr">
                                     {order.createdAt?.toDate?.()
-                                        ? order.createdAt.toDate().toLocaleString()
+                                        ? order.createdAt.toDate().toLocaleString(language === 'ar' ? 'ar-EG' : 'en-US')
                                         : (order.createdAt?.seconds
-                                            ? new Date(order.createdAt.seconds * 1000).toLocaleString()
+                                            ? new Date(order.createdAt.seconds * 1000).toLocaleString(language === 'ar' ? 'ar-EG' : 'en-US')
                                             : 'N/A')}
                                 </span>
                             </div>
                             <div className="flex justify-between">
-                                <span className="text-gray-600">Total Items:</span>
+                                <span className="text-gray-600">{t(adminTrans.totalItems)}:</span>
                                 <span className="text-gray-900 font-medium">{order.totalItems || 0}</span>
                             </div>
                         </div>
@@ -438,9 +578,9 @@ export default function OrderDetailsDrawer({ order, isOpen, onClose }) {
                 <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4">
                     <button
                         onClick={onClose}
-                        className="w-full py-2 bg-gray-800 text-white rounded-lg font-semibold hover:bg-gray-900 transition-colors"
+                        className="w-full bg-white border border-gray-300 rounded-md shadow-sm px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                     >
-                        Close
+                        {t(adminTrans.close)}
                     </button>
                 </div>
             </div>
