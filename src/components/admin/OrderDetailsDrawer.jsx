@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { doc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useLanguage } from '@/hooks/useLanguage';
@@ -335,11 +336,14 @@ export default function OrderDetailsDrawer({ isOpen, onClose, order }) {
                                     <div key={index} className="bg-gray-50 p-3 rounded-lg border border-gray-200">
                                         <div className="flex gap-3 mb-3">
                                             {item.image && (
-                                                <img
-                                                    src={item.image}
-                                                    alt={item.productName || 'Product'}
-                                                    className="w-20 h-20 object-cover rounded-lg border-2 border-gray-300 flex-shrink-0"
-                                                />
+                                                <div className="relative w-20 h-20 flex-shrink-0">
+                                                    <Image
+                                                        src={item.image}
+                                                        alt={item.productName || 'Product'}
+                                                        fill
+                                                        className="object-cover rounded-lg border-2 border-gray-300"
+                                                    />
+                                                </div>
                                             )}
 
                                             <div className="flex-1">
@@ -511,11 +515,14 @@ export default function OrderDetailsDrawer({ isOpen, onClose, order }) {
                                                         rel="noopener noreferrer"
                                                         className="flex-shrink-0"
                                                     >
-                                                        <img
-                                                            src={item.details.uploadedLogoUrl}
-                                                            alt="Customer Logo"
-                                                            className="w-20 h-20 object-contain bg-white border-2 border-yellow-300 rounded-lg hover:scale-110 transition-transform cursor-pointer shadow-md"
-                                                        />
+                                                        <div className="relative w-20 h-20 bg-white border-2 border-yellow-300 rounded-lg hover:scale-110 transition-transform cursor-pointer shadow-md">
+                                                            <Image
+                                                                src={item.details.uploadedLogoUrl}
+                                                                alt="Customer Logo"
+                                                                fill
+                                                                className="object-contain rounded-lg"
+                                                            />
+                                                        </div>
                                                     </a>
                                                     <div className="flex-1">
                                                         <p className="text-xs text-gray-600 mb-2">

@@ -1,10 +1,38 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, Suspense, useCallback } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useLanguage } from '@/hooks/useLanguage';
+
+// Enhanced Map
+const STATUS_MAP = {
+    'new': 0, 'received': 0, 'order received': 0, 'pending': 0,
+    'contacting': 1, 'contact': 1, 'in contact': 1, 'contacted': 1,
+    'quotation': 2, 'quotation sent': 2, 'quote': 2, 'offer': 2,
+    'sample': 3, 'sample production': 3, 'sampling': 3, 'samples': 3,
+    'manufacturing': 4, 'production': 4, 'in progress': 4, 'processing': 4,
+    'delivered': 5, 'shipping': 5, 'shipped': 5, 'completed': 5, 'done': 5
+};
+
+const translations = {
+    title: { en: 'Track Your Order', ar: 'تتبع طلبك' },
+    subtitle: { en: 'Enter your order ID to see the current status', ar: 'أدخل رقم الطلب لمعرفة الحالة الحالية' },
+    placeholder: { en: 'Order ID', ar: 'رقم الطلب' },
+    button: { en: 'Track', ar: 'تتبع' },
+    currentStatus: { en: 'Current Status', ar: 'الحالة الحالية' },
+    expectedDateTitle: { en: 'Expected Completion Date', ar: 'تاريخ الانتهاء المتوقع' },
+    errorNotFound: { en: 'Order ID not found', ar: 'رقم الطلب غير موجود' },
+    steps: [
+        { en: 'Order Received', ar: 'تم استلام الطلب' },
+        { en: 'Contacting', ar: 'جاري التواصل' },
+        { en: 'Quotation Sent', ar: 'تم إرسال عرض السعر' },
+        { en: 'Sample Production', ar: 'تنفيذ العينة' },
+        { en: 'Manufacturing', ar: 'مرحلة التصنيع' },
+        { en: 'Delivered', ar: 'تم التوصيل' }
+    ]
+};
 
 function TrackOrderContent() {
     const { t, language } = useLanguage();
@@ -17,43 +45,15 @@ function TrackOrderContent() {
     const [error, setError] = useState('');
     const [orderFound, setOrderFound] = useState(false);
 
-    // Enhanced Map
-    const STATUS_MAP = {
-        'new': 0, 'received': 0, 'order received': 0, 'pending': 0,
-        'contacting': 1, 'contact': 1, 'in contact': 1, 'contacted': 1,
-        'quotation': 2, 'quotation sent': 2, 'quote': 2, 'offer': 2,
-        'sample': 3, 'sample production': 3, 'sampling': 3, 'samples': 3,
-        'manufacturing': 4, 'production': 4, 'in progress': 4, 'processing': 4,
-        'delivered': 5, 'shipping': 5, 'shipped': 5, 'completed': 5, 'done': 5
-    };
-
-    const translations = {
-        title: { en: 'Track Your Order', ar: 'تتبع طلبك' },
-        subtitle: { en: 'Enter your order ID to see the current status', ar: 'أدخل رقم الطلب لمعرفة الحالة الحالية' },
-        placeholder: { en: 'Order ID', ar: 'رقم الطلب' },
-        button: { en: 'Track', ar: 'تتبع' },
-        currentStatus: { en: 'Current Status', ar: 'الحالة الحالية' },
-        expectedDateTitle: { en: 'Expected Completion Date', ar: 'تاريخ الانتهاء المتوقع' },
-        errorNotFound: { en: 'Order ID not found', ar: 'رقم الطلب غير موجود' },
-        steps: [
-            { en: 'Order Received', ar: 'تم استلام الطلب' },
-            { en: 'Contacting', ar: 'جاري التواصل' },
-            { en: 'Quotation Sent', ar: 'تم إرسال عرض السعر' },
-            { en: 'Sample Production', ar: 'تنفيذ العينة' },
-            { en: 'Manufacturing', ar: 'مرحلة التصنيع' },
-            { en: 'Delivered', ar: 'تم التوصيل' }
-        ]
-    };
-
     useEffect(() => {
         const idFromUrl = searchParams.get('id');
         if (idFromUrl) {
             setOrderId(idFromUrl);
             fetchOrder(idFromUrl);
         }
-    }, [searchParams]);
+    }, [searchParams, fetchOrder]);
 
-    const fetchOrder = async (id) => {
+    const fetchOrder = useCallback(async (id) => {
         if (!id) return;
         setLoading(true);
         setError('');
@@ -115,7 +115,7 @@ function TrackOrderContent() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [t]); // translations and STATUS_MAP are now static constants
 
     const handleTrack = (e) => {
         e.preventDefault();
