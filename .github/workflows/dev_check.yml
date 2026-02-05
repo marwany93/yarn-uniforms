@@ -1,6 +1,9 @@
 name: Project Quality & Security Check
 
-on: [push, pull_request] # يشتغل تلقائياً عند كل رفع للكود
+on: [push, pull_request]
+
+permissions:
+  contents: read
 
 jobs:
   build:
@@ -9,18 +12,14 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      # 1. فحص الملفات غير المستخدمة (Python كمثال)
-      - name: Check for Dead Code (Vulture)
-        run: |
-          pip install vulture
-          vulture . --min-confidence 80
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
 
-      # 2. فحص الأمان (Bandit)
-      - name: Security Scan (Bandit)
-        run: |
-          pip install bandit
-          bandit -r . -x ./tests
+      - name: Install dependencies
+        run: npm ci
 
-      # 3. فحص الأداء وتنسيق الكود (Ruff)
-      - name: Performance & Linting (Ruff)
-        uses: astral-sh/ruff-action@v1
+      - name: Build Project
+        run: npm run build
