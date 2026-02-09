@@ -8,6 +8,7 @@ import { useLanguage } from '@/hooks/useLanguage';
 import { sectors, getSectorTitle, getSectorDescription } from '@/data/sectors';
 import Partners from '@/components/Partners';
 import Sectors from '@/components/Sectors';
+import About from '@/components/About';
 
 export default function HomePage() {
     const router = useRouter();
@@ -98,13 +99,17 @@ export default function HomePage() {
                 </div>
             </section>
 
-            {/* 2. Partner Logos - Infinite Marquee */}
-            <Partners />
+
+            {/* 2. About Us Section - NEW */}
+            <About />
 
             {/* 3. Sectors Section - Image Cards */}
             <Sectors />
 
-            {/* 4. Track Order Section - Dark Blue Background */}
+            {/* 4. Partner Logos - Infinite Marquee */}
+            <Partners />
+
+            {/* 5. Track Order Section - Dark Blue Background */}
             <section id="track" className="py-20 bg-primary text-white">
                 <div className="container-custom">
                     <div className="max-w-2xl mx-auto text-center">

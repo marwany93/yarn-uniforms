@@ -66,12 +66,7 @@ const Header = () => {
                             </Link>
                         ))}
 
-                        <Link
-                            href="/admin"
-                            className="text-gray-500 hover:text-[#192E4F] transition-colors duration-200 text-sm"
-                        >
-                            {t(translations.admin)}
-                        </Link>
+
 
                         {/* Shopping Cart Icon */}
                         <Link
@@ -179,21 +174,9 @@ const Header = () => {
                                 </Link>
                             ))}
 
-                            <Link
-                                href="/track-order"
-                                className="block px-3 py-2 rounded-md text-[#192E4F] font-medium hover:bg-gray-50"
-                                onClick={() => setMobileMenuOpen(false)}
-                            >
-                                {t(translations.trackOrder)}
-                            </Link>
 
-                            <Link
-                                href="/admin"
-                                className="block px-3 py-2 rounded-md text-gray-500 hover:bg-gray-50 text-sm"
-                                onClick={() => setMobileMenuOpen(false)}
-                            >
-                                {t(translations.admin)}
-                            </Link>
+
+
                         </div>
                     </div>
                 )}
