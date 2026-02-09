@@ -33,8 +33,8 @@ const Header = () => {
         <header className="bg-white shadow-md sticky top-0 z-50">
             <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8" aria-label="Top">
                 <div className="flex w-full items-center justify-between py-4">
-                    {/* Logo - Larger Navy Logo */}
-                    <div className="flex items-center">
+                    {/* SECTION 1: Logo + Nav Links */}
+                    <div className="flex items-center gap-8">
                         <Link href="/" className="flex items-center">
                             <Image
                                 src="/assets/logo-navy-bilingual.png"
@@ -45,30 +45,31 @@ const Header = () => {
                                 priority
                             />
                         </Link>
-                    </div>
 
-                    {/* Desktop Navigation */}
-                    <div className="hidden lg:flex lg:items-center lg:space-x-6 rtl:space-x-reverse">
-                        <Link
-                            href="/"
-                            className="text-[#192E4F] font-medium hover:text-[#e5d7ca] transition-colors duration-200"
-                        >
-                            {t(translations.home)}
-                        </Link>
-
-                        {navigation.map((item) => (
+                        {/* Desktop Navigation */}
+                        <div className="hidden lg:flex lg:items-center lg:space-x-6 rtl:space-x-reverse">
                             <Link
-                                key={item.sector}
-                                href={item.href}
+                                href="/"
                                 className="text-[#192E4F] font-medium hover:text-[#e5d7ca] transition-colors duration-200"
                             >
-                                {item.name}
+                                {t(translations.home)}
                             </Link>
-                        ))}
 
+                            {navigation.map((item) => (
+                                <Link
+                                    key={item.sector}
+                                    href={item.href}
+                                    className="text-[#192E4F] font-medium hover:text-[#e5d7ca] transition-colors duration-200"
+                                >
+                                    {item.name}
+                                </Link>
+                            ))}
+                        </div>
+                    </div>
 
-
-                        {/* Shopping Cart Icon */}
+                    {/* SECTION 2: Utilities (Cart, Lang, Mobile Btn) */}
+                    <div className="flex items-center gap-4">
+                        {/* Shopping Cart Icon (Visible on all screens) */}
                         <Link
                             href="/cart"
                             className="relative p-2 text-[#192E4F] hover:text-[#e5d7ca] transition-colors duration-200"
@@ -85,8 +86,8 @@ const Header = () => {
                             )}
                         </Link>
 
-                        {/* Language Switcher - White Background Theme */}
-                        <div className="flex items-center gap-2 border-l border-gray-200 pl-4 ml-4 rtl:border-r rtl:pr-4 rtl:pl-0 rtl:ml-0 rtl:mr-4 rtl:border-l-0">
+                        {/* Desktop Language Switcher */}
+                        <div className="hidden lg:flex items-center gap-2 border-l border-gray-200 pl-4 ml-4 rtl:border-r rtl:pr-4 rtl:pl-0 rtl:ml-0 rtl:mr-4 rtl:border-l-0">
                             <button
                                 onClick={() => changeLanguage('en')}
                                 className={language === 'en'
@@ -104,50 +105,34 @@ const Header = () => {
                                 عربي
                             </button>
                         </div>
-                    </div>
-
-                    {/* Mobile menu button */}
-                    <div className="flex items-center space-x-4 rtl:space-x-reverse lg:hidden">
-                        {/* Mobile Cart Icon */}
-                        <Link
-                            href="/cart"
-                            className="relative p-2 text-[#192E4F] hover:text-[#e5d7ca] transition-colors duration-200"
-                            aria-label="Shopping Cart"
-                        >
-                            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-                            </svg>
-                            {getCartItemCount() > 0 && (
-                                <span className="absolute -top-1 -right-1 flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
-                                    {getCartItemCount()}
-                                </span>
-                            )}
-                        </Link>
 
                         {/* Mobile Language Switcher */}
                         <button
                             onClick={() => changeLanguage(language === 'en' ? 'ar' : 'en')}
-                            className="px-3 py-1.5 rounded-md text-sm font-medium bg-gray-100 text-[#192E4F] hover:bg-gray-200 transition-colors"
+                            className="lg:hidden px-3 py-1.5 rounded-md text-sm font-medium bg-gray-100 text-[#192E4F] hover:bg-gray-200 transition-colors"
                         >
                             {language === 'en' ? 'عربي' : 'EN'}
                         </button>
 
-                        <button
-                            type="button"
-                            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                            className="inline-flex items-center justify-center rounded-md p-2 text-[#192E4F] hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#192E4F]"
-                        >
-                            <span className="sr-only">Open menu</span>
-                            {!mobileMenuOpen ? (
-                                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
-                                </svg>
-                            ) : (
-                                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            )}
-                        </button>
+                        {/* Mobile menu button */}
+                        <div className="lg:hidden flex items-center">
+                            <button
+                                type="button"
+                                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                                className="inline-flex items-center justify-center rounded-md p-2 text-[#192E4F] hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#192E4F]"
+                            >
+                                <span className="sr-only">Open menu</span>
+                                {!mobileMenuOpen ? (
+                                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                                    </svg>
+                                ) : (
+                                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                                    </svg>
+                                )}
+                            </button>
+                        </div>
                     </div>
                 </div>
 
