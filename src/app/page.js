@@ -2,17 +2,15 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import Image from 'next/image';
 import { useLanguage } from '@/hooks/useLanguage';
-import { sectors, getSectorTitle, getSectorDescription } from '@/data/sectors';
+import Hero from '@/components/Hero';
 import Partners from '@/components/Partners';
 import Sectors from '@/components/Sectors';
 import About from '@/components/About';
 
 export default function HomePage() {
     const router = useRouter();
-    const { t, language } = useLanguage();
+    const { t } = useLanguage();
     const [orderId, setOrderId] = useState('');
 
     const handleTrack = (e) => {
@@ -23,12 +21,6 @@ export default function HomePage() {
     };
 
     const translations = {
-        // Hero
-        heroTitle: { en: 'Professional Uniforms', ar: 'زي موحد احترافي' },
-        heroSubtitle: { en: 'Quality uniforms for schools, factories, companies & hospitals', ar: 'زي موحد عالي الجودة للمدارس والمصانع والشركات والمستشفيات' },
-        orderNow: { en: 'Order Now', ar: 'اطلب الآن' },
-        trackYourOrder: { en: 'Track Order', ar: 'تتبع طلبك' },
-
         // Partners
         trustedBy: { en: 'Trusted by Industry Leaders', ar: 'موثوق به من قادة الصناعة' },
 
@@ -46,61 +38,10 @@ export default function HomePage() {
 
     return (
         <div className="min-h-screen">
-            {/* 1. Hero Section - Yarn 2025 Brand Design */}
-            <section className="relative bg-primary text-white py-24 md:py-32 lg:py-40 overflow-hidden">
-                {/* Background Pattern */}
-                <div className="absolute inset-0 opacity-10">
-                    <Image
-                        src="/assets/pattern-wavy-lines.png"
-                        alt=""
-                        fill
-                        className="object-cover"
-                        priority
-                    />
-                </div>
+            {/* 1. Hero Section - Cinematic with Animation */}
+            <Hero />
 
-                <div className="container-custom relative z-10">
-                    <div className="max-w-4xl mx-auto px-4">
-                        {/* Centered Text Content */}
-                        <div className="text-center">
-                            {/* Dynamic Slogan */}
-                            <p
-                                className="text-3xl md:text-5xl tracking-wider font-bold text-white mb-4"
-                                dir={language === 'ar' ? 'rtl' : 'ltr'}
-                            >
-                                {language === 'ar' ? 'هوية تُنسَجُ' : 'IDENTITY WOVEN'}
-                            </p>
-
-                            <h1 className="text-xl md:text-3xl font-display font-semibold mb-6 leading-snug text-gray-200">
-                                {t(translations.heroTitle)}
-                            </h1>
-
-                            <p className="text-base md:text-lg px-4 md:px-0 mb-10 text-white/90 leading-relaxed max-w-3xl mx-auto">
-                                {t(translations.heroSubtitle)}
-                            </p>
-
-                            {/* CTA Buttons - Mobile Optimized */}
-                            <div className="flex flex-col sm:flex-row gap-4 justify-center px-4 md:px-0">
-                                <a
-                                    href="#sectors"
-                                    className="w-full sm:w-auto px-8 py-4 bg-secondary text-primary rounded-lg font-semibold hover:bg-secondary/90 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-                                >
-                                    {t(translations.orderNow)}
-                                </a>
-                                <a
-                                    href="#track"
-                                    className="w-full sm:w-auto px-8 py-4 bg-transparent border-2 border-white text-white rounded-lg font-semibold hover:bg-white hover:text-primary shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-                                >
-                                    {t(translations.trackYourOrder)}
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-
-            {/* 2. About Us Section - NEW */}
+            {/* 2. About Us Section */}
             <About />
 
             {/* 3. Sectors Section - Image Cards */}

@@ -11,7 +11,9 @@
     "export": "next build && next export"
   },
   "dependencies": {
+    "clsx": "^2.1.1",
     "firebase": "^12.8.0",
+    "framer-motion": "^12.34.0",
     "i18next": "^23.11.0",
     "lucide-react": "^0.563.0",
     "next": "^14.2.0",
@@ -19,6 +21,7 @@
     "react-dom": "^18.3.0",
     "react-i18next": "^14.1.0",
     "swiper": "^12.1.0",
+    "tailwind-merge": "^3.4.0",
     "uuid": "^9.0.1"
   },
   "devDependencies": {

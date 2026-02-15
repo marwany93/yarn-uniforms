@@ -39,9 +39,9 @@ const Header = () => {
                             <Image
                                 src="/assets/logo-navy-bilingual.png"
                                 alt="Yarn Uniforms"
-                                width={200}
-                                height={70}
-                                className="h-16 w-auto object-contain"
+                                width={400}
+                                height={140}
+                                className="w-[110px] md:w-[150px] h-auto object-contain flex-shrink-0"
                                 priority
                             />
                         </Link>
