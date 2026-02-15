@@ -76,6 +76,7 @@ export default function Sectors() {
                                 src={sectors[0].img}
                                 alt={language === 'ar' ? sectors[0].title.ar : sectors[0].title.en}
                                 fill
+                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                 className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
@@ -101,6 +102,7 @@ export default function Sectors() {
                                 src={sectors[1].img}
                                 alt={language === 'ar' ? sectors[1].title.ar : sectors[1].title.en}
                                 fill
+                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                 className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
@@ -126,6 +128,7 @@ export default function Sectors() {
                                 src={sectors[2].img}
                                 alt={language === 'ar' ? sectors[2].title.ar : sectors[2].title.en}
                                 fill
+                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                 className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />
@@ -151,6 +154,7 @@ export default function Sectors() {
                                 src={sectors[3].img}
                                 alt={language === 'ar' ? sectors[3].title.ar : sectors[3].title.en}
                                 fill
+                                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                                 className="object-cover transition-transform duration-700 ease-out group-hover:scale-105"
                             />
                             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent opacity-80 group-hover:opacity-90 transition-opacity" />

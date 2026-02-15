@@ -99,8 +99,8 @@ export default function About() {
                     src="/images/about-mobile.png"
                     alt="Fabric Background Mobile"
                     fill
+                    sizes="(max-width: 768px) 100vw, 50vw"
                     className="object-cover block md:hidden opacity-30"
-                    priority
                 />
                 {/* Dark Overlay for Text Readability */}
                 <div className="absolute inset-0 bg-black/70" />
@@ -258,8 +258,8 @@ export default function About() {
                             src="/images/about-desktop.png"
                             alt="Fabric Texture Desktop"
                             fill
+                            sizes="(max-width: 768px) 100vw, 50vw"
                             className="object-cover hidden md:block"
-                            priority
                         />
                         {/* Gradient Overlay */}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-80" />

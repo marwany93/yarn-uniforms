@@ -25,6 +25,7 @@ export default function Hero() {
                     alt="Hero Background Mobile"
                     fill
                     priority
+                    sizes="100vw"
                     className="object-cover block md:hidden"
                 />
                 {/* Desktop Image */}
@@ -33,6 +34,7 @@ export default function Hero() {
                     alt="Hero Background Desktop"
                     fill
                     priority
+                    sizes="100vw"
                     className="object-cover hidden md:block"
                 />
                 {/* Dark Overlay */}
