@@ -1,7 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Static export for GitHub Pages deployment
-  output: 'export',
+  // Static export for GitHub Pages deployment
+  // output: 'export', (Disabled to enable API routes)
 
   // Disable image optimization for static export
   images: {
