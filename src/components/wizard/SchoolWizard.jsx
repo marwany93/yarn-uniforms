@@ -521,11 +521,16 @@ export default function SchoolWizard() {
             return;
         }
 
-        // Logo Validation (Optional but recommended to ensure data integrity if used)
-        // if (details.logoType && !details.logoPlacement) {
-        //    alert(t({en: 'Please select logo placement', ar: 'يرجى اختيار مكان الشعار'}));
-        //    return;
-        // }
+        // Logo Validation - MANDATORY
+        if (!details.logoType) {
+            alert(t({ en: 'Please select logo type', ar: 'يرجى اختيار نوع الشعار' }));
+            return;
+        }
+
+        if (!details.logoPlacement) {
+            alert(t({ en: 'Please select logo placement', ar: 'يرجى اختيار مكان الشعار' }));
+            return;
+        }
 
         // Fabric validation
         if (!details.fabric) {
@@ -1067,7 +1072,7 @@ export default function SchoolWizard() {
                         {/* Logo Type Selection */}
                         <div>
                             <label className="block text-sm font-semibold text-gray-700 mb-3">
-                                {t(translations.logoType)}
+                                {t(translations.logoType)} <span className="text-red-500">*</span>
                             </label>
                             <div className="grid grid-cols-3 gap-4">
                                 {['embroidery', 'printing', 'wovenPatch'].map((type) => {
@@ -1119,7 +1124,7 @@ export default function SchoolWizard() {
                         {/* Logo Placement Selection */}
                         <div>
                             <label className="block text-sm font-semibold text-gray-700 mb-3">
-                                {t(translations.logoPlacement)}
+                                {t(translations.logoPlacement)} <span className="text-red-500">*</span>
                             </label>
                             <div className="grid grid-cols-3 gap-4">
                                 {['chest', 'shoulder', 'back'].map((placement) => {

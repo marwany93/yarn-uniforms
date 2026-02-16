@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
+import { ChevronDown } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useCart } from '@/context/CartContext';
 import { useState } from 'react';
@@ -13,20 +14,25 @@ const Header = () => {
 
     const translations = {
         home: { en: 'Home', ar: 'الرئيسية' },
-        schools: { en: 'Schools', ar: 'المدارس' },
-        medicalSector: { en: 'Medical Sector', ar: 'القطاع الطبي' },
-        corporateFactories: { en: 'Corporate & Factories', ar: 'الشركات والمصانع' },
-        hotelsRestaurant: { en: 'Hotels & Restaurant', ar: 'الفنادق والمطاعم' },
-        trackOrder: { en: 'Track Order', ar: 'تتبع الطلب' },
+        sectors: { en: 'Sectors', ar: 'القطاعات' },
+        trackOrder: { en: 'Track Order', ar: 'تتبع طلبك' },
+        contactUs: { en: 'Contact Us', ar: 'اتصل بنا' },
+        educational: { en: 'Educational', ar: 'القطاع التعليمي' },
+        medical: { en: 'Medical', ar: 'القطاع الطبي' },
+        corporate: { en: 'Industrial & Corporate', ar: 'القطاع الصناعي والشركات' },
+        hospitality: { en: 'Restaurants & Cafes', ar: 'قطاع المطاعم والمقاهي' },
+        transport: { en: 'Transport & Aviation', ar: 'قطاع النقل والطيران' },
+        domestic: { en: 'Domestic Workers', ar: 'قطاع العمالة المنزلية' },
         admin: { en: 'Admin', ar: 'الإدارة' }
     };
 
-    const navigation = [
-        { name: t(translations.schools), href: '/sectors/schools', sector: 'schools' },
-        { name: t(translations.medicalSector), href: '/sectors/medical', sector: 'medical' },
-        { name: t(translations.corporateFactories), href: '/sectors/corporate', sector: 'corporate' },
-        { name: t(translations.hotelsRestaurant), href: '/sectors/hospitality', sector: 'hospitality' },
-        { name: t(translations.trackOrder), href: '/track-order', sector: 'track' },
+    const sectorLinks = [
+        { name: t(translations.educational), href: '/sectors/schools', sector: 'schools' },
+        { name: t(translations.medical), href: '/sectors/medical', sector: 'medical' },
+        { name: t(translations.corporate), href: '/sectors/corporate', sector: 'corporate' },
+        { name: t(translations.hospitality), href: '/sectors/hospitality', sector: 'hospitality' },
+        { name: t(translations.transport), href: '/sectors/transportation', sector: 'transportation' },
+        { name: t(translations.domestic), href: '/sectors/domestic', sector: 'domestic' },
     ];
 
     return (
@@ -47,23 +53,53 @@ const Header = () => {
                         </Link>
 
                         {/* Desktop Navigation */}
-                        <div className="hidden lg:flex lg:items-center lg:space-x-6 rtl:space-x-reverse">
+                        <div className="hidden lg:flex lg:items-center lg:space-x-8 rtl:space-x-reverse">
+                            {/* Home */}
                             <Link
                                 href="/"
-                                className="text-[#192E4F] font-medium hover:text-[#e5d7ca] transition-colors duration-200"
+                                className="text-[#192E4F] font-bold hover:text-[#e5d7ca] transition-colors duration-200"
                             >
                                 {t(translations.home)}
                             </Link>
 
-                            {navigation.map((item) => (
-                                <Link
-                                    key={item.sector}
-                                    href={item.href}
-                                    className="text-[#192E4F] font-medium hover:text-[#e5d7ca] transition-colors duration-200"
-                                >
-                                    {item.name}
-                                </Link>
-                            ))}
+                            {/* Sectors Dropdown */}
+                            <div className="relative group">
+                                <button className="flex items-center gap-1 text-[#192E4F] font-bold group-hover:text-[#e5d7ca] transition-colors duration-200 focus:outline-none">
+                                    <span>{t(translations.sectors)}</span>
+                                    <ChevronDown className="w-4 h-4 transition-transform duration-200 group-hover:rotate-180" />
+                                </button>
+
+                                {/* Dropdown Menu */}
+                                <div className="absolute top-full ltr:left-0 rtl:right-0 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                                    <div className="bg-white shadow-xl rounded-xl border border-gray-100 min-w-[260px] overflow-hidden py-1">
+                                        {sectorLinks.map((item) => (
+                                            <Link
+                                                key={item.sector}
+                                                href={item.href}
+                                                className="block px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-[#192E4F]/5 hover:text-[#192E4F] transition-colors border-b border-gray-50 last:border-0"
+                                            >
+                                                {item.name}
+                                            </Link>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Track Order */}
+                            <Link
+                                href="/track-order"
+                                className="text-[#192E4F] font-bold hover:text-[#e5d7ca] transition-colors duration-200"
+                            >
+                                {t(translations.trackOrder)}
+                            </Link>
+
+                            {/* Contact Us */}
+                            <Link
+                                href="/contact"
+                                className="text-[#192E4F] font-bold hover:text-[#e5d7ca] transition-colors duration-200"
+                            >
+                                {t(translations.contactUs)}
+                            </Link>
                         </div>
                     </div>
 
@@ -148,16 +184,40 @@ const Header = () => {
                                 {t(translations.home)}
                             </Link>
 
-                            {navigation.map((item) => (
-                                <Link
-                                    key={item.sector}
-                                    href={item.href}
-                                    className="block px-3 py-2 rounded-md text-[#192E4F] font-medium hover:bg-gray-50"
-                                    onClick={() => setMobileMenuOpen(false)}
-                                >
-                                    {item.name}
-                                </Link>
-                            ))}
+                            {/* Sectors Section */}
+                            <div className="pt-2 pb-1">
+                                <span className="block px-3 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider">
+                                    {t(translations.sectors)}
+                                </span>
+                                <div className="space-y-1 ltr:pl-4 rtl:pr-4">
+                                    {sectorLinks.map((item) => (
+                                        <Link
+                                            key={item.sector}
+                                            href={item.href}
+                                            className="block px-3 py-2 rounded-md text-[#192E4F] font-medium hover:bg-gray-50 text-sm"
+                                            onClick={() => setMobileMenuOpen(false)}
+                                        >
+                                            {item.name}
+                                        </Link>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <Link
+                                href="/track-order"
+                                className="block px-3 py-2 rounded-md text-[#192E4F] font-medium hover:bg-gray-50"
+                                onClick={() => setMobileMenuOpen(false)}
+                            >
+                                {t(translations.trackOrder)}
+                            </Link>
+
+                            <Link
+                                href="/contact"
+                                className="block px-3 py-2 rounded-md text-[#192E4F] font-medium hover:bg-gray-50"
+                                onClick={() => setMobileMenuOpen(false)}
+                            >
+                                {t(translations.contactUs)}
+                            </Link>
 
 
 

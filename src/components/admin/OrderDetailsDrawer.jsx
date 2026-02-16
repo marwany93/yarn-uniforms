@@ -82,20 +82,28 @@ export default function OrderDetailsDrawer({ isOpen, onClose, order }) {
     };
 
     const stageMap = {
-        'kg_primary': { en: 'KG & Primary', ar: 'رياض أطفال / ابتدائي' },
-        'middle_high': { en: 'Middle & High', ar: 'إعدادي / ثانوي' }
+        'kg_primary': { ar: 'رياض أطفال وابتدائي', en: 'KG & Primary' },
+        'prep_secondary': { ar: 'إعدادي وثانوي', en: 'Middle/High School' },
+        'high_school': { ar: 'ثانوي', en: 'High School' }
     };
 
-    const colorNames = {
-        'White': { en: 'White', ar: 'أبيض' },
-        'Green': { en: 'Green', ar: 'أخضر' },
-        'Navy': { en: 'Navy', ar: 'كحلي' },
-        'Blue': { en: 'Blue', ar: 'أزرق' },
-        'Black': { en: 'Black', ar: 'أسود' },
-        'Grey': { en: 'Grey', ar: 'رمادي' },
-        'Beige': { en: 'Beige', ar: 'بيج' },
-        'Light Blue': { en: 'Light Blue', ar: 'لبني' },
-        'Red': { en: 'Red', ar: 'أحمر' }
+    const colorMap = {
+        '1': { ar: 'أبيض', en: 'White' }, '2': { ar: 'أخضر', en: 'Green' },
+        '3': { ar: 'برتقالي', en: 'Orange' }, '4': { ar: 'أصفر', en: 'Yellow' },
+        '5': { ar: 'أزرق', en: 'Blue' }, '6': { ar: 'كحلي', en: 'Navy' },
+        '7': { ar: 'أحمر', en: 'Red' }, 'custom': { ar: 'لون مخصص', en: 'Custom Color' }
+    };
+
+    const logoTypeMap = {
+        'embroidery': { ar: 'تطريز', en: 'Embroidery' },
+        'printing': { ar: 'طباعة', en: 'Printing' },
+        'wovenPatch': { ar: 'حياكة', en: 'Woven Patch' }
+    };
+
+    const logoPlacementMap = {
+        'chest': { ar: 'الصدر', en: 'Chest' },
+        'shoulder': { ar: 'الكتف', en: 'Shoulder' },
+        'back': { ar: 'الظهر', en: 'Back' }
     };
 
     // Color mapping for standard palette logic (keeping hex values)
@@ -400,30 +408,30 @@ export default function OrderDetailsDrawer({ isOpen, onClose, order }) {
                                             )}
                                         </div>
 
-                                        {/* Details Box: Fabric, Color, Ref */}
-                                        {(item.fabric || item.selectedColor || item.referenceFileUrl || item.details?.uploadedLogoUrl) && (
+                                        {/* Details Box: Fabric, Color, Ref, Logo */}
+                                        {(item.details?.fabric || item.fabric || item.details?.color || item.selectedColor || item.referenceFileUrl || item.details?.uploadedLogoUrl || item.details?.logoType) && (
                                             <div className="mt-3 space-y-2 text-sm text-gray-700 bg-gray-50 p-3 rounded border border-gray-200">
 
                                                 {/* Fabric */}
-                                                {(item.fabric || item.fabricAr) && (
+                                                {(item.details?.fabric || item.fabric) && (
                                                     <div className="flex items-center gap-2">
                                                         <span className="font-semibold text-gray-500">{t(adminTrans.fabric)}:</span>
                                                         <span className="px-2 py-0.5 bg-white border rounded text-gray-800">
-                                                            {language === 'ar' ? (item.fabricAr || item.fabric) : item.fabric}
+                                                            {language === 'ar' ? (item.details?.fabricAr || item.fabricAr || item.details?.fabric || item.fabric) : (item.details?.fabric || item.fabric)}
                                                         </span>
                                                     </div>
                                                 )}
 
                                                 {/* Color */}
-                                                {item.selectedColor && (
+                                                {(item.details?.color || item.selectedColor) && (
                                                     <div className="flex items-center gap-2">
                                                         <span className="font-semibold text-gray-500">{t(adminTrans.color)}:</span>
-                                                        {item.selectedColor === 'custom' ? (
+                                                        {item.details?.color === 'custom' || item.selectedColor === 'custom' ? (
                                                             <div className="flex items-center gap-2">
-                                                                <span className="text-yellow-700 font-medium">{t(adminTrans.custom)} {item.customColorName || t(adminTrans.unspecified)}</span>
-                                                                {item.customColorUrl && (
+                                                                <span className="text-yellow-700 font-medium">{t(adminTrans.custom)} {item.details?.customColorName || item.customColorName || t(adminTrans.unspecified)}</span>
+                                                                {(item.details?.customColorUrl || item.customColorUrl) && (
                                                                     <a
-                                                                        href={item.customColorUrl}
+                                                                        href={item.details?.customColorUrl || item.customColorUrl}
                                                                         target="_blank"
                                                                         rel="noopener noreferrer"
                                                                         className="text-blue-600 hover:underline text-xs flex items-center"
@@ -432,57 +440,72 @@ export default function OrderDetailsDrawer({ isOpen, onClose, order }) {
                                                                     </a>
                                                                 )}
                                                             </div>
-                                                        ) : COLOR_MAP[item.selectedColor] ? (
+                                                        ) : (
                                                             <div className="flex items-center gap-2">
-                                                                <div
-                                                                    className="w-4 h-4 rounded-full border"
-                                                                    style={{
-                                                                        backgroundColor: COLOR_MAP[item.selectedColor].hex,
-                                                                        borderColor: item.selectedColor === 1 ? '#D1D5DB' : 'transparent'
-                                                                    }}
-                                                                ></div>
                                                                 <span>
                                                                     {(() => {
-                                                                        const enLabel = COLOR_MAP[item.selectedColor].label;
-                                                                        const localizedLabel = colorNames[enLabel]
-                                                                            ? (language === 'ar' ? colorNames[enLabel].ar : colorNames[enLabel].en)
-                                                                            : enLabel;
-                                                                        return localizedLabel;
+                                                                        const colorVal = item.details?.color || item.selectedColor;
+                                                                        // Handle string vs number IDs if mixed
+                                                                        const colorId = String(colorVal);
+                                                                        return colorMap[colorId]
+                                                                            ? (language === 'ar' ? colorMap[colorId].ar : colorMap[colorId].en)
+                                                                            : colorVal;
                                                                     })()}
                                                                 </span>
                                                             </div>
-                                                        ) : (
-                                                            <span className="text-gray-400 italic">{t(adminTrans.notSelected)}</span>
                                                         )}
                                                     </div>
                                                 )}
 
-                                                {/* Extra Reference File */}
+                                                {/* Logo Details */}
+                                                {item.details?.logoType && (
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="font-semibold text-gray-500">{t(adminTrans.logo)}:</span>
+                                                        <span className="px-2 py-0.5 bg-white border rounded text-gray-800">
+                                                            {(() => {
+                                                                const type = item.details.logoType;
+                                                                const placement = item.details.logoPlacement;
+
+                                                                const typeText = logoTypeMap[type]
+                                                                    ? (language === 'ar' ? logoTypeMap[type].ar : logoTypeMap[type].en)
+                                                                    : type;
+
+                                                                const placementText = logoPlacementMap[placement]
+                                                                    ? (language === 'ar' ? logoPlacementMap[placement].ar : logoPlacementMap[placement].en)
+                                                                    : placement;
+
+                                                                return `${typeText} ${placementText ? `(${placementText})` : ''}`;
+                                                            })()}
+                                                        </span>
+                                                    </div>
+                                                )}
+
+                                                {/* Reference File */}
                                                 {item.referenceFileUrl && (
-                                                    <div className="mt-2 pt-2 border-t border-gray-200">
-                                                        <span className="font-semibold text-gray-500 block mb-1">Extra Reference:</span>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="font-semibold text-gray-500">{t(adminTrans.reference)}:</span>
                                                         <a
                                                             href={item.referenceFileUrl}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
-                                                            className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 text-blue-700 rounded hover:bg-blue-100 transition-colors"
+                                                            className="text-blue-600 hover:underline text-xs"
                                                         >
-                                                            {t(adminTrans.viewAttachment)}
+                                                            {t(adminTrans.viewFile)} 📎
                                                         </a>
                                                     </div>
                                                 )}
 
-                                                {/* Standard Logo */}
+                                                {/* Uploaded Logo Check */}
                                                 {item.details?.uploadedLogoUrl && (
-                                                    <div className="mt-2">
-                                                        <span className="font-semibold text-gray-500">{t(adminTrans.logo)}</span>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="font-semibold text-gray-500">{t(adminTrans.logo)}:</span>
                                                         <a
                                                             href={item.details.uploadedLogoUrl}
                                                             target="_blank"
                                                             rel="noopener noreferrer"
-                                                            className="text-blue-600 text-xs text-start mx-2 hover:underline"
+                                                            className="text-blue-600 hover:underline text-xs"
                                                         >
-                                                            {t(adminTrans.viewLogo)}
+                                                            {t(adminTrans.viewLogo)} 📎
                                                         </a>
                                                     </div>
                                                 )}
@@ -598,7 +621,7 @@ export default function OrderDetailsDrawer({ isOpen, onClose, order }) {
                             </div>
                         </div>
                     </div>
-                </div>
+                </div >
 
                 {/* Footer */}
                 <div className="sticky bottom-0 bg-gray-50 border-t border-gray-200 px-6 py-4">
@@ -609,7 +632,7 @@ export default function OrderDetailsDrawer({ isOpen, onClose, order }) {
                         {t(adminTrans.close)}
                     </button>
                 </div>
-            </div>
+            </div >
         </>
     );
 }

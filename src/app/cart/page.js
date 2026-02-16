@@ -82,15 +82,15 @@ export default function CartPage() {
     // --- Translation Maps ---
     const stageMap = {
         'kg_primary': { ar: 'رياض أطفال وابتدائي', en: 'KG & Primary' },
-        'prep_secondary': { ar: 'متوسط', en: 'Middle School' },
+        'prep_secondary': { ar: 'إعدادي وثانوي', en: 'Middle/High School' },
         'high_school': { ar: 'ثانوي', en: 'High School' }
     };
 
     const colorMap = {
-        1: { ar: 'أبيض', en: 'White' }, 2: { ar: 'أخضر', en: 'Green' },
-        3: { ar: 'برتقالي', en: 'Orange' }, 4: { ar: 'أصفر', en: 'Yellow' },
-        5: { ar: 'أزرق', en: 'Blue' }, 6: { ar: 'كحلي', en: 'Navy' },
-        7: { ar: 'أحمر', en: 'Red' }, 'custom': { ar: 'لون مخصص', en: 'Custom Color' }
+        '1': { ar: 'أبيض', en: 'White' }, '2': { ar: 'أخضر', en: 'Green' },
+        '3': { ar: 'برتقالي', en: 'Orange' }, '4': { ar: 'أصفر', en: 'Yellow' },
+        '5': { ar: 'أزرق', en: 'Blue' }, '6': { ar: 'كحلي', en: 'Navy' },
+        '7': { ar: 'أحمر', en: 'Red' }, 'custom': { ar: 'لون مخصص', en: 'Custom Color' }
     };
 
     const logoTypeMap = {

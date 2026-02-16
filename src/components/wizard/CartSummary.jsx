@@ -35,6 +35,25 @@ export default function CartSummary() {
         continueHint: { en: 'Continue configuring or review your order', ar: 'أكمل اختيار المنتجات أو راجع طلبك الآن' }
     };
 
+    const colorMap = {
+        '1': { ar: 'أبيض', en: 'White' }, '2': { ar: 'أخضر', en: 'Green' },
+        '3': { ar: 'برتقالي', en: 'Orange' }, '4': { ar: 'أصفر', en: 'Yellow' },
+        '5': { ar: 'أزرق', en: 'Blue' }, '6': { ar: 'كحلي', en: 'Navy' },
+        '7': { ar: 'أحمر', en: 'Red' }, 'custom': { ar: 'لون مخصص', en: 'Custom Color' }
+    };
+
+    const logoTypeMap = {
+        'embroidery': { ar: 'تطريز', en: 'Embroidery' },
+        'printing': { ar: 'طباعة', en: 'Printing' },
+        'wovenPatch': { ar: 'حياكة', en: 'Woven Patch' }
+    };
+
+    const logoPlacementMap = {
+        'chest': { ar: 'الصدر', en: 'Chest' },
+        'shoulder': { ar: 'الكتف', en: 'Shoulder' },
+        'back': { ar: 'الظهر', en: 'Back' }
+    };
+
     if (cart.length === 0) {
         return (
             <div className="bg-white rounded-xl shadow-lg p-6">
@@ -63,49 +82,65 @@ export default function CartSummary() {
             {/* Item List */}
             <div className="p-4 space-y-3 max-h-96 overflow-y-auto">
                 {cart.map((item, index) => (
-                    <div key={index} className="p-3 bg-gray-50 rounded-lg border border-gray-200 hover:border-primary transition-colors">
-                        <div className="flex items-start gap-3">
-                            {item.image && (
-                                <div className="relative w-16 h-16 flex-shrink-0">
-                                    <Image
-                                        src={item.image}
-                                        alt={item.productName}
-                                        fill
-                                        className="object-cover rounded"
-                                    />
+                    <div key={index} className="flex gap-3 mb-4 p-2 bg-white rounded-lg border border-gray-100">
+                        {/* Image */}
+                        <div className="w-16 h-16 shrink-0 relative bg-gray-50 rounded-md border border-gray-200">
+                            {item.image ? (
+                                <Image
+                                    src={item.image}
+                                    alt={item.productName}
+                                    fill
+                                    className="object-contain p-1"
+                                />
+                            ) : (
+                                <div className="w-full h-full flex items-center justify-center text-gray-300">
+                                    📷
                                 </div>
                             )}
-                            <div className="flex-1 min-w-0">
-                                <p className="text-sm font-semibold text-gray-900 truncate">
+                        </div>
+
+                        {/* Details Column */}
+                        <div className="flex-1 min-w-0">
+                            {/* Header: Name & Qty */}
+                            <div className="flex justify-between items-start mb-1">
+                                <h4 className="font-bold text-sm text-gray-900 truncate ml-1">
                                     {language === 'ar' ? (item.details?.nameAr || item.productNameAr || item.productName) : item.productName}
-                                </p>
-                                <p className="text-xs text-gray-500 font-mono">
-                                    {item.code}
-                                </p>
-                                <div className="mt-1 flex items-center gap-2">
-                                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary/10 text-primary">
-                                        {item.quantity} {t(translations.pcs)}
-                                    </span>
-                                    {item.details?.fabric && (
-                                        <span className="text-xs text-gray-600 truncate">
-                                            {language === 'ar' ? (item.details?.fabricAr || item.fabricAr || item.details.fabric) : item.details.fabric}
-                                        </span>
-                                    )}
-                                </div>
-                                {/* Color indicator */}
-                                {item.details?.color && item.details.color !== 'custom' && (
-                                    <div className="mt-1 flex items-center gap-1">
-                                        <span className="text-xs text-gray-500">{t(translations.color)}:</span>
-                                        <span className="text-xs font-medium text-gray-700">
-                                            {item.details.color}
+                                </h4>
+                                <span className="shrink-0 bg-primary/10 text-primary text-[10px] font-bold px-1.5 py-0.5 rounded">
+                                    {item.quantity} {t(translations.pcs)}
+                                </span>
+                            </div>
+
+                            {/* Specs List (Compact) */}
+                            <div className="text-xs text-gray-500 space-y-0.5">
+                                {/* Fabric */}
+                                {(item.details?.fabric || item.fabric) && (
+                                    <div className="flex items-center gap-1">
+                                        <span className="opacity-70">{language === 'ar' ? 'القماش:' : 'Fabric:'}</span>
+                                        <span className="font-medium text-gray-700">
+                                            {language === 'ar' ? (item.details?.fabricAr || item.fabricAr || item.details?.fabric) : (item.details?.fabric || item.fabric)}
                                         </span>
                                     </div>
                                 )}
-                                {item.details?.customColorName && (
-                                    <div className="mt-1 flex items-center gap-1">
-                                        <span className="text-xs text-gray-500">{t(translations.custom)}:</span>
-                                        <span className="text-xs font-medium text-gray-700 truncate">
-                                            {item.details.customColorName}
+
+                                {/* Color */}
+                                {(item.details?.color || item.details?.customColorName) && (
+                                    <div className="flex items-center gap-1">
+                                        <span className="opacity-70">{language === 'ar' ? 'اللون:' : 'Color:'}</span>
+                                        <span className="font-medium text-gray-700">
+                                            {item.details.color === 'custom'
+                                                ? (item.details.customColorName || (language === 'ar' ? 'مخصص' : 'Custom'))
+                                                : (colorMap[item.details.color]?.[language] || item.details.color)}
+                                        </span>
+                                    </div>
+                                )}
+
+                                {/* Logo (Conditionally Rendered) */}
+                                {item.details?.logoType && (
+                                    <div className="flex items-center gap-1 text-blue-600 bg-blue-50 px-1 rounded w-fit mt-1">
+                                        <span className="font-medium">
+                                            {logoTypeMap[item.details.logoType]?.[language]}
+                                            {item.details.logoPlacement && ` (${logoPlacementMap[item.details.logoPlacement]?.[language]})`}
                                         </span>
                                     </div>
                                 )}
