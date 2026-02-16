@@ -10,36 +10,46 @@ import CartSummary from '@/components/wizard/CartSummary';
 // Bilingual content mapping for each sector
 const sectorContent = {
     schools: {
-        heroTitle: { en: 'School Uniforms', ar: 'زي المدارس' },
+        heroTitle: { en: 'Educational Sector Uniforms', ar: 'الزي الموحد للقطاع التعليمي' },
         heroDesc: {
-            en: 'Modern designs that reflect your school\'s identity, with durable fabrics for daily wear.',
-            ar: 'تصاميم عصرية تعكس هوية مدرستك، بخامات مريحة تتحمل الاستخدام اليومي.'
-        },
-        image: '/sectors/sector-schools.png'
+            en: 'From the morning assembly to the last class. We design comfortable, practical uniforms built to last through movement and activity. Because the school day deserves a uniform that keeps up, step by step.',
+            ar: 'من أول طابور الصباح إلى آخر حصة. نصمم زيًا مريحًا، عمليًا، ويعيش طويلًا مع الحركة والنشاط. لأن يوم الدراسة يستحق زيًا يواكبه خطوة بخطوة.'
+        }
     },
     medical: {
         heroTitle: { en: 'Medical Uniforms', ar: 'الزي الطبي' },
         heroDesc: {
-            en: 'Professional medical wear combining hygiene standards with comfort for healthcare professionals.',
-            ar: 'ملابس طبية احترافية تجمع بين معايير النظافة والراحة للعاملين في المجال الصحي.'
-        },
-        image: '/sectors/sector-medical.png'
+            en: 'We design uniforms that match the precision of the profession and the pace of the day. Comfortable, easy-care fabrics offering freedom of movement. Because those who care for others... deserve to be cared for.',
+            ar: 'نصمم زيًا يواكب دقة المهنة وسرعة اليوم. خامات مريحة، سهلة العناية، وتصاميم تمنح حرية الحركة. لأن من يعتني بالآخرين… يستحق من يعتني به.'
+        }
     },
     corporate: {
-        heroTitle: { en: 'Corporate & Factory Uniforms', ar: 'زي الشركات والمصانع' },
+        heroTitle: { en: 'Industrial & Corporate Uniforms', ar: 'زي القطاع الصناعي والشركات' },
         heroDesc: {
-            en: 'Elegant corporate wear and durable industrial uniforms tailored to your business needs.',
-            ar: 'ملابس شركات أنيقة وزي صناعي متين مصمم خصيصاً لاحتياجات عملك.'
-        },
-        image: '/sectors/sector-corporate.png'
+            en: 'From the factory floor to the executive offices. We unify appearance while elevating comfort and quality. Practical, elegant uniforms designed to work as hard as you do.',
+            ar: 'من أرض المصنع إلى مكاتب الإدارة. نوحّد المظهر، ونرفع مستوى الراحة والجودة. زي عملي، أنيق، ومصمم ليعمل بجد مثلك.'
+        }
     },
     hospitality: {
-        heroTitle: { en: 'Hotels & Restaurants', ar: 'الفنادق والمطاعم' },
+        heroTitle: { en: 'Restaurants & Cafes Uniforms', ar: 'زي المطاعم والمقاهي' },
         heroDesc: {
-            en: 'Sophisticated hospitality uniforms that enhance your brand image and guest experience.',
-            ar: 'زي ضيافة راقي يعزز صورة علامتك التجارية وتجربة ضيوفك.'
-        },
-        image: '/sectors/sector-hospitality.png'
+            en: 'Uniforms that reflect the venue\'s identity before the first order. We design practical, comfortable attire that withstands long shifts, maintaining an elegant appearance worthy of your hospitality.',
+            ar: 'زي يعكس هوية المكان قبل أول طلب. نصمم أزياء عملية ومريحة تتحمل ساعات العمل الطويلة، يحافظ على مظهر أنيق يليق بتجربة الضيافة وجودة الخدمة.'
+        }
+    },
+    transportation: {
+        heroTitle: { en: 'Transportation & Aviation Uniforms', ar: 'زي قطاع النقل والطيران' },
+        heroDesc: {
+            en: 'Uniforms reflecting discipline and reliability, designed for work environments that demand a consistent presence and high performance.',
+            ar: 'زي موحد يعكس الانضباط والموثوقية، ومصمم لبيئات عمل تتطلب حضورًا ثابتًا وأداءً عاليًا.'
+        }
+    },
+    domestic: {
+        heroTitle: { en: 'Domestic Labor Uniforms', ar: 'زي العمالة المنزلية' },
+        heroDesc: {
+            en: 'Practical and comfortable uniforms for daily use. We prioritize lightness, ease of movement, and endurance for long working hours. Yarn offers uniforms that respect the wearer above all else.',
+            ar: 'زي عملي ومريح للاستخدام اليومي. نراعي الخفة، سهولة الحركة، وتحمل ساعات العمل الطويلة. يارن تقدّم زيًا يحترم من يرتديه قبل كل شيء.'
+        }
     }
 };
 
@@ -84,7 +94,7 @@ export default function SectorPageClient({ sector }) {
                 {/* 1. New Hero Section */}
                 <section className="relative h-[50vh] md:h-[45vh] lg:h-[40vh] max-h-[480px] flex items-center justify-center overflow-hidden">
                     <Image
-                        src={content.image}
+                        src={sector.image}
                         alt={language === 'ar' ? content.heroTitle.ar : content.heroTitle.en}
                         fill
                         className="object-cover object-[center_30%]"
@@ -150,7 +160,7 @@ export default function SectorPageClient({ sector }) {
             <section className="relative h-[50vh] md:h-[45vh] lg:h-[40vh] max-h-[480px] flex items-center justify-center overflow-hidden">
                 {/* Background Image */}
                 <Image
-                    src={content.image}
+                    src={sector.image}
                     alt={language === 'ar' ? content.heroTitle.ar : content.heroTitle.en}
                     fill
                     className="object-cover object-[center_30%]"

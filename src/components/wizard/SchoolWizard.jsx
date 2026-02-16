@@ -13,19 +13,12 @@ import {
     getProductsByCategory,
     getProductById
 } from '@/data/schoolProducts';
+import PhoneInput from 'react-phone-number-input';
+import 'react-phone-number-input/style.css';
+import { Ruler } from 'lucide-react';
+import SizingWizard from './SizingWizard';
 
-const countryCodes = [
-    { code: '+966', country: 'SA', flag: '🇸🇦' },
-    { code: '+20', country: 'EG', flag: '🇪🇬' },
-    { code: '+971', country: 'AE', flag: '🇦🇪' },
-    { code: '+965', country: 'KW', flag: '🇰🇼' },
-    { code: '+974', country: 'QA', flag: '🇶🇦' },
-    { code: '+973', country: 'BH', flag: '🇧🇭' },
-    { code: '+968', country: 'OM', flag: '🇴🇲' },
-    { code: '+962', country: 'JO', flag: '🇯🇴' },
-    { code: '+1', country: 'US', flag: '🇺🇸' },
-    { code: '+44', country: 'UK', flag: '🇬🇧' },
-];
+
 
 export default function SchoolWizard() {
     const { t, language } = useLanguage();
@@ -39,8 +32,7 @@ export default function SchoolWizard() {
         schoolName: '',
         contactPerson: '',
         email: '',
-        phone: '',
-        countryCode: '+966'
+        phone: ''
     });
     const [contactInfoSubmitted, setContactInfoSubmitted] = useState(false);
     const [formErrors, setFormErrors] = useState({});
@@ -54,6 +46,7 @@ export default function SchoolWizard() {
 
     // Current item being customized
     const [currentProduct, setCurrentProduct] = useState(null);
+    const [showSizingWizard, setShowSizingWizard] = useState(false);
 
     // Product details for current item
     const [details, setDetails] = useState({
@@ -67,7 +60,9 @@ export default function SchoolWizard() {
         referenceUrl: null,           // Additional reference upload URL
         referenceFileName: null,      // Reference filename
         notes: '',
-        stage: 'kg_primary'
+        stage: 'kg_primary',
+        logoType: null,
+        logoPlacement: null
     });
     const [sizeQuantities, setSizeQuantities] = useState({});
     const [isUploadingLogo, setIsUploadingLogo] = useState(false);
@@ -132,8 +127,8 @@ export default function SchoolWizard() {
         specialInstructions: { en: 'Special Instructions', ar: 'تعليمات خاصة' },
         notesPlaceholder: { en: 'e.g., embroidery placement, special requirements...', ar: 'مثال: موضع التطريز، متطلبات خاصة...' },
         schoolStage: { en: 'School Stage', ar: 'المرحلة الدراسية' },
-        kgPrimary: { en: 'KG & Primary', ar: 'روضة وابتدائي' },
-        prepSecondary: { en: 'Prep & Secondary', ar: 'إعدادي وثانوي' },
+        middleSchool: { en: 'Middle School', ar: 'متوسط' },
+        highSchool: { en: 'High School', ar: 'ثانوي' },
         sizeMatrix: { en: 'Size & Quantity', ar: 'المقاسات والكميات' },
         totalItems: { en: 'Total Items', ar: 'إجمالي القطع' },
         saveAndNext: { en: 'Save & Next Item ➡️', ar: '➡️ حفظ والتالي' },
@@ -156,6 +151,14 @@ export default function SchoolWizard() {
         additionalRef: { en: 'Additional Reference', ar: 'مرجع إضافي' },
         uploadRefDesc: { en: 'Upload any extra design ideas, specifications, or reference images', ar: 'ارفع أي أفكار تصميم إضافية أو مواصفات أو صور' },
         custom: { en: 'Custom', ar: 'مخصص' },
+        logoType: { en: 'Logo Type', ar: 'نوع الشعار' },
+        logoPlacement: { en: 'Logo Placement', ar: 'مكان الشعار' },
+        embroidery: { en: 'Embroidery', ar: 'تطريز' },
+        printing: { en: 'Printing', ar: 'طباعة' },
+        wovenPatch: { en: 'Woven Patch', ar: 'حياكة' },
+        chest: { en: 'Chest', ar: 'الصدر' },
+        shoulder: { en: 'Shoulder', ar: 'الكتف' },
+        logoBack: { en: 'Back', ar: 'الظهر' },
     };
 
     useEffect(() => {
@@ -294,7 +297,8 @@ export default function SchoolWizard() {
     // Size charts based on stage
     const sizeCharts = {
         kg_primary: ['4', '6', '8', '10', '12', '14'],
-        prep_secondary: ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL']
+        prep_secondary: ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'],
+        high_school: ['XS', 'S', 'M', 'L', 'XL', '2XL', '3XL']
     };
 
     // Calculate total items
@@ -327,8 +331,9 @@ export default function SchoolWizard() {
 
         if (!contactInfo.phone) {
             errors.phone = t({ en: 'Phone number is required', ar: 'رقم الهاتف مطلوب' });
-        } else if (!phoneRegex.test(contactInfo.phone)) {
-            errors.phone = t({ en: 'Invalid phone number (digits only)', ar: 'رقم الهاتف غير صحيح (أرقام فقط)' });
+        } else if (contactInfo.phone.length < 10) {
+            // Basic length check for E.164
+            errors.phone = t({ en: 'Invalid phone number', ar: 'رقم الهاتف غير صحيح' });
         }
 
         setFormErrors(errors);
@@ -516,6 +521,12 @@ export default function SchoolWizard() {
             return;
         }
 
+        // Logo Validation (Optional but recommended to ensure data integrity if used)
+        // if (details.logoType && !details.logoPlacement) {
+        //    alert(t({en: 'Please select logo placement', ar: 'يرجى اختيار مكان الشعار'}));
+        //    return;
+        // }
+
         // Fabric validation
         if (!details.fabric) {
             alert('Please select a fabric type');
@@ -549,6 +560,8 @@ export default function SchoolWizard() {
             customColorName: details.customColorName || null,
             customColorUrl: details.customColorUrl || null,
             referenceFileUrl: details.referenceUrl || null,
+            logoType: details.logoType,
+            logoPlacement: details.logoPlacement,
             // -----------------------------------------------------
 
             details: {
@@ -560,6 +573,8 @@ export default function SchoolWizard() {
                 fabric: details.fabric,
                 fabricAr: fabricTranslations[details.fabric]?.ar || details.fabric,
                 stage: details.stage,
+                logoType: details.logoType,
+                logoPlacement: details.logoPlacement,
                 sizes: Object.fromEntries(
                     Object.entries(sizeQuantities).filter(([_, qty]) => qty > 0)
                 ),
@@ -608,8 +623,11 @@ export default function SchoolWizard() {
                 logoName: null,
                 referenceUrl: null,
                 referenceFileName: null,
+                referenceFileName: null,
                 notes: '',
-                stage: 'kg_primary'
+                stage: 'kg_primary',
+                logoType: null,
+                logoPlacement: null
             });
             setSizeQuantities({});
         } else {
@@ -622,6 +640,21 @@ export default function SchoolWizard() {
 
     // Back to selection from customization
     const handleBackToSelection = () => {
+        // 1. If currently viewing product details (Fabric, Color, etc.), go back to Style Selection
+        if (currentProduct) {
+            setCurrentProduct(null);
+            return;
+        }
+
+        // 2. If viewing Style Selection for > 0 category index, go back to previous category
+        if (currentCategoryIndex > 0) {
+            setCurrentCategoryIndex(prev => prev - 1);
+            // Ensure we start at style selection for the previous category
+            setCurrentProduct(null);
+            return;
+        }
+
+        // 3. If at the first category style selection, go back to Category Grid (Selection Phase)
         setWizardPhase('SELECTION');
         setCurrentCategoryIndex(0);
         setCurrentProduct(null);
@@ -647,8 +680,11 @@ export default function SchoolWizard() {
             logoName: null,
             referenceUrl: null,
             referenceFileName: null,
+            referenceFileName: null,
             notes: '',
-            stage: 'kg_primary'
+            stage: 'kg_primary',
+            logoType: null,
+            logoPlacement: null
         });
         setSizeQuantities({});
     };
@@ -736,49 +772,36 @@ export default function SchoolWizard() {
                     {t(translations.phone)} <span className="text-red-500">*</span>
                 </label>
                 <div className="flex direction-ltr" style={{ direction: 'ltr' }}>
-                    {/* Country Select */}
-                    <select
-                        value={contactInfo.countryCode || '+966'}
-                        onChange={(e) => setContactInfo({ ...contactInfo, countryCode: e.target.value })}
-                        className="w-28 px-2 py-3 border border-gray-300 rounded-l-lg bg-gray-50 focus:ring-2 focus:ring-primary focus:border-primary border-r-0 outline-none"
-                    >
-                        {countryCodes.map((c) => (
-                            <option key={c.country} value={c.code}>
-                                {c.flag} {c.code}
-                            </option>
-                        ))}
-                    </select>
-
-                    {/* Phone Number Input */}
-                    <input
-                        type="tel"
-                        value={contactInfo.phone}
-                        onChange={(e) => {
-                            // Only allow numbers
-                            const val = e.target.value.replace(/\D/g, '');
-                            setContactInfo({ ...contactInfo, phone: val });
-                            // Clear error on type
-                            if (formErrors.phone) setFormErrors({ ...formErrors, phone: null });
-                        }}
-                        placeholder="500000000"
-                        className={`flex-1 px-4 py-3 border rounded-r-lg focus:ring-2 focus:border-primary outline-none ${formErrors.phone ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-primary'
-                            }`}
-                    />
+                    <div className={`phone-input-wrapper w-full px-4 py-3 border rounded-lg focus-within:ring-2 focus-within:ring-primary focus-within:border-primary transition-all ${formErrors.phone ? 'border-red-500 focus-within:ring-red-200' : 'border-gray-300'}`} style={{ direction: 'ltr' }}>
+                        <PhoneInput
+                            international
+                            defaultCountry="SA"
+                            value={contactInfo.phone}
+                            onChange={(val) => {
+                                setContactInfo({ ...contactInfo, phone: val });
+                                if (formErrors.phone) setFormErrors({ ...formErrors, phone: null });
+                            }}
+                            className="flex items-center gap-3"
+                            numberInputProps={{
+                                className: "w-full bg-transparent outline-none text-gray-900 placeholder-gray-400 focus:ring-0 border-none p-0"
+                            }}
+                        />
+                    </div>
+                    {formErrors.phone && (
+                        <p className="text-red-500 text-sm mt-1 text-right" style={{ direction: language === 'ar' ? 'rtl' : 'ltr' }}>
+                            {formErrors.phone}
+                        </p>
+                    )}
                 </div>
-                {formErrors.phone && (
-                    <p className="text-red-500 text-sm mt-1 text-right" style={{ direction: language === 'ar' ? 'rtl' : 'ltr' }}>
-                        {formErrors.phone}
-                    </p>
-                )}
             </div>
 
             <button
                 onClick={handleContinueToCatalog}
-                className="w-full py-4 rounded-lg font-bold text-lg shadow-lg transition-all duration-300 bg-primary text-white hover:bg-primary-700 hover:shadow-xl"
+                className="w-full py-4 mt-6 rounded-lg font-bold text-lg shadow-lg transition-all duration-300 bg-primary text-white hover:bg-primary-700 hover:shadow-xl"
             >
                 {t(translations.continue)}
             </button>
-        </div>
+        </div> // This wrapper div was missing
     );
 
     // Phase 1: Multi-Category Selection Grid
@@ -925,7 +948,7 @@ export default function SchoolWizard() {
                                             src={product.image}
                                             alt={product.name}
                                             fill
-                                            className="object-contain p-4"
+                                            className="object-contain mix-blend-multiply p-2 group-hover:scale-110 transition-transform duration-500"
                                         />
                                     </div>
                                     <div className="p-3 bg-white">
@@ -970,24 +993,24 @@ export default function SchoolWizard() {
                             </label>
                             <div className="grid grid-cols-2 gap-4">
                                 <button
-                                    onClick={() => setDetails({ ...details, stage: 'kg_primary' })}
-                                    className={`p-4 rounded-lg border-2 transition-all ${details.stage === 'kg_primary'
-                                        ? 'border-primary bg-primary/10'
-                                        : 'border-gray-300 hover:border-primary'
-                                        }`}
-                                >
-                                    <div className="text-2xl mb-2">🎒</div>
-                                    <div className="font-semibold">{t(translations.kgPrimary)}</div>
-                                </button>
-                                <button
                                     onClick={() => setDetails({ ...details, stage: 'prep_secondary' })}
                                     className={`p-4 rounded-lg border-2 transition-all ${details.stage === 'prep_secondary'
                                         ? 'border-primary bg-primary/10'
                                         : 'border-gray-300 hover:border-primary'
                                         }`}
                                 >
+                                    <div className="text-2xl mb-2">🎒</div>
+                                    <div className="font-semibold">{t(translations.middleSchool)}</div>
+                                </button>
+                                <button
+                                    onClick={() => setDetails({ ...details, stage: 'high_school' })}
+                                    className={`p-4 rounded-lg border-2 transition-all ${details.stage === 'high_school'
+                                        ? 'border-primary bg-primary/10'
+                                        : 'border-gray-300 hover:border-primary'
+                                        }`}
+                                >
                                     <div className="text-2xl mb-2">🎓</div>
-                                    <div className="font-semibold">{t(translations.prepSecondary)}</div>
+                                    <div className="font-semibold">{t(translations.highSchool)}</div>
                                 </button>
                             </div>
                         </div>
@@ -1038,6 +1061,110 @@ export default function SchoolWizard() {
                                         )}
                                     </button>
                                 ))}
+                            </div>
+                        </div>
+
+                        {/* Logo Type Selection */}
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-3">
+                                {t(translations.logoType)}
+                            </label>
+                            <div className="grid grid-cols-3 gap-4">
+                                {['embroidery', 'printing', 'wovenPatch'].map((type) => {
+                                    // Map type IDs to image paths
+                                    const imgMap = {
+                                        embroidery: '/images/customization/logo-embroidery.png',
+                                        printing: '/images/customization/logo-printing.png',
+                                        wovenPatch: '/images/customization/logo-woven.png'
+                                    };
+
+                                    return (
+                                        <button
+                                            key={type}
+                                            onClick={() => setDetails({ ...details, logoType: type })}
+                                            className={`relative group flex flex-col items-center p-0 rounded-xl border-2 overflow-hidden transition-all duration-300 ${details.logoType === type
+                                                ? 'border-primary ring-2 ring-primary ring-offset-2 scale-105 shadow-md'
+                                                : 'border-gray-200 hover:border-primary hover:shadow-lg opacity-90 hover:opacity-100'
+                                                }`}
+                                        >
+                                            <div className="relative w-full aspect-square bg-gray-50">
+                                                <Image
+                                                    src={imgMap[type]}
+                                                    alt={t(translations[type])}
+                                                    fill
+                                                    className="object-cover transition-transform duration-500 group-hover:scale-110"
+                                                />
+                                            </div>
+                                            <div className={`w-full py-3 text-center border-t transition-colors ${details.logoType === type ? 'bg-primary/10 border-primary/20' : 'bg-white border-gray-100'
+                                                }`}>
+                                                <span className={`text-sm font-semibold ${details.logoType === type ? 'text-primary' : 'text-gray-700'
+                                                    }`}>
+                                                    {t(translations[type])}
+                                                </span>
+                                            </div>
+
+                                            {details.logoType === type && (
+                                                <div className="absolute top-2 right-2 text-primary bg-white rounded-full p-0.5 shadow-sm">
+                                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                                    </svg>
+                                                </div>
+                                            )}
+                                        </button>
+                                    )
+                                })}
+                            </div>
+                        </div>
+
+                        {/* Logo Placement Selection */}
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-3">
+                                {t(translations.logoPlacement)}
+                            </label>
+                            <div className="grid grid-cols-3 gap-4">
+                                {['chest', 'shoulder', 'back'].map((placement) => {
+                                    // Map placement IDs to image paths
+                                    const imgMap = {
+                                        chest: '/images/customization/placement-chest.png',
+                                        shoulder: '/images/customization/placement-shoulder.png',
+                                        back: '/images/customization/placement-back.png'
+                                    };
+
+                                    return (
+                                        <button
+                                            key={placement}
+                                            onClick={() => setDetails({ ...details, logoPlacement: placement })}
+                                            className={`relative group flex flex-col items-center p-0 rounded-xl border-2 overflow-hidden transition-all duration-300 ${details.logoPlacement === placement
+                                                ? 'border-primary ring-2 ring-primary ring-offset-2 scale-105 shadow-md'
+                                                : 'border-gray-200 hover:border-primary hover:shadow-lg opacity-90 hover:opacity-100'
+                                                }`}
+                                        >
+                                            <div className="relative w-full aspect-square bg-gray-50">
+                                                <Image
+                                                    src={imgMap[placement]}
+                                                    alt={t(translations[placement === 'back' ? 'logoBack' : placement])}
+                                                    fill
+                                                    className="object-cover transition-transform duration-500 group-hover:scale-110"
+                                                />
+                                            </div>
+                                            <div className={`w-full py-3 text-center border-t transition-colors ${details.logoPlacement === placement ? 'bg-primary/10 border-primary/20' : 'bg-white border-gray-100'
+                                                }`}>
+                                                <span className={`text-sm font-semibold ${details.logoPlacement === placement ? 'text-primary' : 'text-gray-700'
+                                                    }`}>
+                                                    {t(translations[placement === 'back' ? 'logoBack' : placement])}
+                                                </span>
+                                            </div>
+
+                                            {details.logoPlacement === placement && (
+                                                <div className="absolute top-2 right-2 text-primary bg-white rounded-full p-0.5 shadow-sm">
+                                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                                    </svg>
+                                                </div>
+                                            )}
+                                        </button>
+                                    )
+                                })}
                             </div>
                         </div>
 
@@ -1162,25 +1289,37 @@ export default function SchoolWizard() {
 
                         {/* Size Matrix */}
                         <div>
-                            <h3 className="text-lg font-bold text-gray-900 mb-4">
-                                {t(translations.sizeMatrix)}
-                            </h3>
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-lg font-bold text-gray-900">
+                                    {t(translations.sizeMatrix)}
+                                </h3>
+                                <button
+                                    onClick={() => setShowSizingWizard(true)}
+                                    className="flex items-center gap-2 text-primary hover:text-primary-700 font-semibold text-sm transition-colors bg-primary/5 px-3 py-1.5 rounded-lg hover:bg-primary/10 border border-primary/10 hover:border-primary/20"
+                                >
+                                    <Ruler className="w-4 h-4" />
+                                    {language === 'ar' ? 'اعرف مقاسك' : 'Know Your Size'}
+                                </button>
+                            </div>
                             <div className="space-y-4">
                                 {sizes.map((size) => (
-                                    <div key={size} className="flex items-center justify-between p-4 border border-gray-200 rounded-xl bg-gray-50 hover:border-primary transition-colors">
+                                    <div key={size} className="flex items-center justify-between gap-4 p-3 md:p-4 border border-gray-200 rounded-xl bg-white hover:border-primary hover:shadow-sm transition-all mb-3">
                                         {/* Size Label */}
-                                        <div className="flex flex-col">
-                                            <span className="font-bold text-gray-900 text-lg">
-                                                {language === 'ar' ? 'مقاس' : 'Size'} {size}
+                                        <div className="flex items-center gap-2 md:gap-3">
+                                            <span className="bg-gray-100 text-gray-600 px-2 md:px-3 py-1 rounded-lg text-sm font-medium whitespace-nowrap">
+                                                {language === 'ar' ? 'مقاس' : 'Size'}
+                                            </span>
+                                            <span className="font-bold text-gray-900 text-lg md:text-xl w-6 md:w-8 text-center inline-block">
+                                                {size}
                                             </span>
                                         </div>
 
-                                        {/* Stepper Controls */}
-                                        <div className="flex items-center gap-3" dir="ltr">
+                                        {/* Modern Grouped Stepper */}
+                                        <div className="flex items-center bg-gray-50 border border-gray-200 rounded-lg overflow-hidden shadow-sm shrink-0" dir="ltr">
                                             {/* Minus Button */}
                                             <button
                                                 onClick={() => updateQuantity(size, (sizeQuantities[size] || 0) - 1)}
-                                                className="w-10 h-10 flex items-center justify-center rounded-full bg-white border border-gray-300 text-gray-600 active:bg-gray-100 touch-manipulation transition-colors hover:border-red-300 hover:text-red-500"
+                                                className="w-10 h-10 flex items-center justify-center text-gray-600 hover:bg-red-50 hover:text-red-600 transition-colors active:bg-gray-200"
                                             >
                                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M20 12H4" />
@@ -1190,18 +1329,19 @@ export default function SchoolWizard() {
                                             {/* Numeric Input */}
                                             <input
                                                 type="tel"
+                                                inputMode="numeric"
                                                 value={sizeQuantities[size] || 0}
                                                 onChange={(e) => {
                                                     const val = e.target.value.replace(/\D/g, '');
                                                     updateQuantity(size, val);
                                                 }}
-                                                className="w-16 text-center font-bold text-xl bg-transparent border-b-2 border-gray-300 focus:border-primary focus:outline-none p-1"
+                                                className="w-12 h-10 text-center font-bold text-lg bg-white border-x border-gray-200 focus:outline-none focus:ring-0 p-0 text-primary"
                                             />
 
                                             {/* Plus Button */}
                                             <button
                                                 onClick={() => updateQuantity(size, (sizeQuantities[size] || 0) + 1)}
-                                                className="w-10 h-10 flex items-center justify-center rounded-full bg-primary text-white shadow-md active:bg-primary-700 touch-manipulation transition-transform active:scale-95 hover:bg-primary-600"
+                                                className="w-10 h-10 flex items-center justify-center bg-primary text-white hover:bg-primary-600 transition-colors active:bg-primary-700"
                                             >
                                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 4v16m8-8H4" />
@@ -1271,21 +1411,53 @@ export default function SchoolWizard() {
         </div>
     );
 
-    return (
-        <div ref={wizardTopRef} className="max-w-6xl mx-auto px-4 py-8">
-            <div className="bg-white rounded-2xl shadow-xl p-6 md:p-10">
-                {/* Contact Info Step */}
-                {!contactInfoSubmitted && renderContactInfoStep()}
+    // Sticky Mobile Cart Bar
+    const renderMobileCartBar = () => {
+        if (cart.length === 0) return null;
 
-                {/* Selection Phase */}
-                {contactInfoSubmitted && wizardPhase === 'SELECTION' && renderSelectionPhase()}
+        const totalCartItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
-                {/* Customization Phase */}
-                {contactInfoSubmitted && wizardPhase === 'CUSTOMIZATION' && renderCustomizationPhase()}
-
-                {/* Success View (replaces form when complete) */}
-                {contactInfoSubmitted && wizardPhase === 'COMPLETED' && renderSuccessView()}
+        return (
+            <div className="fixed bottom-0 left-0 right-0 z-50 bg-primary/95 backdrop-blur-md shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)] p-4 lg:hidden animate-slide-up">
+                <div className="flex items-center justify-between max-w-6xl mx-auto">
+                    <div className="text-white">
+                        <div className="text-sm opacity-90 mb-0.5">
+                            {language === 'ar' ? 'لديك في السلة' : 'In your cart'}
+                        </div>
+                        <div className="font-bold text-lg">
+                            {totalCartItems} {language === 'ar' ? 'منتجات' : 'items'}
+                        </div>
+                    </div>
+                    <button
+                        onClick={() => router.push('/cart')}
+                        className="px-6 py-2.5 bg-white text-primary rounded-lg font-bold shadow-lg hover:bg-gray-50 active:scale-95 transition-all"
+                    >
+                        {language === 'ar' ? 'مراجعة الطلب 🛒' : 'Review Order 🛒'}
+                    </button>
+                </div>
             </div>
-        </div>
+        );
+    };
+
+    return (
+        <>
+            <div ref={wizardTopRef} className="max-w-6xl mx-auto px-4 py-8 pb-32 lg:pb-8">
+                <div className="bg-white rounded-2xl shadow-xl p-6 md:p-10">
+                    {/* Contact Info Step */}
+                    {!contactInfoSubmitted && renderContactInfoStep()}
+
+                    {/* Selection Phase */}
+                    {contactInfoSubmitted && wizardPhase === 'SELECTION' && renderSelectionPhase()}
+
+                    {/* Customization Phase */}
+                    {contactInfoSubmitted && wizardPhase === 'CUSTOMIZATION' && renderCustomizationPhase()}
+
+                    {/* Success View (replaces form when complete) */}
+                    {contactInfoSubmitted && wizardPhase === 'COMPLETED' && renderSuccessView()}
+                </div>
+            </div>
+            {renderMobileCartBar()}
+            {showSizingWizard && <SizingWizard onClose={() => setShowSizingWizard(false)} sector="schools" />}
+        </>
     );
 }

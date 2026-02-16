@@ -160,6 +160,25 @@ export default function OrderDetailsDrawer({ isOpen, onClose, order }) {
                 expectedCompletionDate: targetDate || null,
                 lastUpdated: new Date()
             });
+
+            // --- Send Status Update Email ---
+            try {
+                await fetch('/api/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        to: order.customer?.email,
+                        orderId: order.orderId,
+                        customerName: order.customer?.name,
+                        status: newStatus,
+                        type: 'STATUS_UPDATE'
+                    })
+                });
+                console.log('📧 Status update email sent');
+            } catch (emailError) {
+                console.error('❌ Failed to send email:', emailError);
+            }
+            // -------------------------------
             alert('✅ ' + t(adminTrans.statusUpdated));
             setTimeout(() => {
                 window.location.reload();

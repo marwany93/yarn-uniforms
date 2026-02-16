@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { Pencil, Trash2 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useLanguage } from '@/hooks/useLanguage';
 import { db } from '@/lib/firebase';
@@ -78,6 +79,32 @@ export default function CartPage() {
         return cart.reduce((sum, item) => sum + item.quantity, 0);
     };
 
+    // --- Translation Maps ---
+    const stageMap = {
+        'kg_primary': { ar: 'رياض أطفال وابتدائي', en: 'KG & Primary' },
+        'prep_secondary': { ar: 'متوسط', en: 'Middle School' },
+        'high_school': { ar: 'ثانوي', en: 'High School' }
+    };
+
+    const colorMap = {
+        1: { ar: 'أبيض', en: 'White' }, 2: { ar: 'أخضر', en: 'Green' },
+        3: { ar: 'برتقالي', en: 'Orange' }, 4: { ar: 'أصفر', en: 'Yellow' },
+        5: { ar: 'أزرق', en: 'Blue' }, 6: { ar: 'كحلي', en: 'Navy' },
+        7: { ar: 'أحمر', en: 'Red' }, 'custom': { ar: 'لون مخصص', en: 'Custom Color' }
+    };
+
+    const logoTypeMap = {
+        'embroidery': { ar: 'تطريز', en: 'Embroidery' },
+        'printing': { ar: 'طباعة', en: 'Printing' },
+        'wovenPatch': { ar: 'حياكة', en: 'Woven Patch' }
+    };
+
+    const logoPlacementMap = {
+        'chest': { ar: 'الصدر', en: 'Chest' },
+        'shoulder': { ar: 'الكتف', en: 'Shoulder' },
+        'back': { ar: 'الظهر', en: 'Back' }
+    };
+
     const handleSubmit = async () => {
         if (cart.length === 0) return;
 
@@ -116,6 +143,30 @@ export default function CartPage() {
             // Save order to Firestore
             await addDoc(collection(db, 'orders'), orderData);
             console.log('✅ Order saved to Firestore:', newOrderId);
+
+            // --- Send Confirmation Email ---
+            try {
+                await fetch('/api/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        to: contactInfo.email,
+                        orderId: newOrderId,
+                        customerName: contactInfo.contactPerson || contactInfo.name,
+                        items: cart.map(item => ({
+                            name: item.productNameAr || item.productName,
+                            size: item.details.sizes ? Object.keys(item.details.sizes).join(', ') : '',
+                            quantity: item.quantity
+                        })),
+                        total: 0, // Quotation request = 0 price
+                        type: 'NEW_ORDER'
+                    })
+                });
+                console.log('📧 Confirmation email sent');
+            } catch (emailError) {
+                console.error('❌ Failed to send email:', emailError);
+            }
+            // -------------------------------
 
             // Clear cart after successful save
             clearCart();
@@ -288,87 +339,99 @@ export default function CartPage() {
                                 <div key={item.id} className="bg-white rounded-xl shadow-lg overflow-hidden">
                                     <div className="p-6">
                                         {/* Item Header */}
-                                        <div className="flex items-start gap-4 mb-4">
-                                            {/* Image */}
-                                            <div className="relative w-24 h-24 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden">
+                                        <div className="flex gap-4 mb-4">
+                                            {/* Product Image (Right side in RTL) */}
+                                            <div className="w-20 h-20 sm:w-24 sm:h-24 shrink-0 bg-gray-50 rounded-lg overflow-hidden border border-gray-100 relative">
                                                 <Image
                                                     src={item.image}
-                                                    alt={item.productName}
+                                                    alt={language === 'ar' ? item.productNameAr : item.productName}
                                                     fill
                                                     className="object-contain p-2"
                                                 />
                                             </div>
 
-                                            {/* Item Info */}
-                                            <div className="flex-1">
-                                                <div className="flex items-start justify-between">
-                                                    <div>
-                                                        <div className="text-xl font-bold text-primary mb-1">
+                                            {/* Info & Actions */}
+                                            <div className="flex-1 min-w-0 flex flex-col justify-between py-1">
+                                                <div className="flex justify-between items-start gap-2">
+                                                    {/* Title */}
+                                                    <div className="min-w-0 flex-1">
+                                                        <div className="text-xl font-bold text-primary mb-0.5">
                                                             {item.code}
                                                         </div>
-                                                        <div className="text-gray-700 font-semibold">
+                                                        <h3 className="text-sm font-semibold text-gray-900 truncate" title={item.productName}>
                                                             {item.productName}
-                                                        </div>
+                                                        </h3>
                                                     </div>
-                                                    <button
-                                                        onClick={() => removeFromCart(item.id)}
-                                                        className="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-all flex items-center gap-2"
-                                                    >
-                                                        <span>🗑️</span>
-                                                        <span className="font-semibold">{t(translations.remove)}</span>
-                                                    </button>
-                                                    <button
-                                                        onClick={() => router.push('/sectors/schools?editId=' + item.id)}
-                                                        className="px-4 py-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-all flex items-center gap-2"
-                                                    >
-                                                        <span>✏️</span>
-                                                        <span className="font-semibold">{t({ en: 'Edit', ar: 'تعديل' })}</span>
-                                                    </button>
+
+                                                    {/* Action Buttons (Strictly constrained) */}
+                                                    <div className="flex items-center gap-2 shrink-0">
+                                                        <button
+                                                            onClick={() => router.push('/sectors/schools?editId=' + item.id)}
+                                                            className="w-8 h-8 flex items-center justify-center text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
+                                                            title={language === 'ar' ? 'تعديل' : 'Edit'}
+                                                        >
+                                                            <Pencil size={16} />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => removeFromCart(item.id)}
+                                                            className="w-8 h-8 flex items-center justify-center text-red-600 bg-red-50 hover:bg-red-100 rounded-md transition-colors"
+                                                            title={language === 'ar' ? 'حذف' : 'Delete'}
+                                                        >
+                                                            <Trash2 size={16} />
+                                                        </button>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
 
                                         {/* Specifications */}
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4 p-4 bg-gray-50 rounded-lg">
+                                        <div className="bg-gray-50 rounded-xl p-3 mb-3 text-sm grid grid-cols-2 gap-y-3 gap-x-2">
+                                            {/* Fabric */}
                                             <div>
-                                                <div className="text-sm text-gray-500 font-semibold mb-1">
-                                                    {t(translations.fabric)}
-                                                </div>
-                                                <div className="text-gray-900">
-                                                    {language === 'ar' ? (item.details.fabricAr || item.details.fabric) : item.details.fabric}
-                                                </div>
+                                                <span className="block text-gray-500 text-xs mb-0.5">{language === 'ar' ? 'القماش' : 'Fabric'}</span>
+                                                <span className="font-bold text-gray-800">{language === 'ar' ? (item.details.fabricAr || item.details.fabric) : item.details.fabric}</span>
                                             </div>
 
+                                            {/* Stage */}
                                             <div>
-                                                <div className="text-sm text-gray-500 font-semibold mb-1">
-                                                    {t(translations.stage)}
-                                                </div>
-                                                <div className="text-gray-900">
-                                                    {item.details.stage === 'kg_primary'
-                                                        ? t(translations.kgPrimary)
-                                                        : t(translations.prepSecondary)
-                                                    }
-                                                </div>
+                                                <span className="block text-gray-500 text-xs mb-0.5">{language === 'ar' ? 'المرحلة' : 'Stage'}</span>
+                                                <span className="font-bold text-gray-800">
+                                                    {item.details.stage ? (language === 'ar' ? stageMap[item.details.stage]?.ar : stageMap[item.details.stage]?.en) : '-'}
+                                                </span>
                                             </div>
+
+                                            {/* Color */}
                                             <div>
-                                                <div className="text-sm text-gray-500 font-semibold mb-1">
-                                                    {t(translations.logo)}
-                                                </div>
-                                                <div className="text-gray-900">
-                                                    {item.details.logo
-                                                        ? `${t(translations.uploaded)} ✓`
-                                                        : t(translations.none)
-                                                    }
-                                                </div>
+                                                <span className="block text-gray-500 text-xs mb-0.5">{language === 'ar' ? 'اللون' : 'Color'}</span>
+                                                <span className="font-bold text-gray-800">
+                                                    {item.details.color === 'custom'
+                                                        ? (item.details.customColorName || (language === 'ar' ? 'مخصص' : 'Custom'))
+                                                        : (item.details.color ? (language === 'ar' ? colorMap[item.details.color]?.ar : colorMap[item.details.color]?.en) : '-')}
+                                                </span>
                                             </div>
+
+                                            {/* Logo */}
+                                            <div>
+                                                <span className="block text-gray-500 text-xs mb-0.5">{language === 'ar' ? 'الشعار' : 'Logo'}</span>
+                                                <span className="font-bold text-gray-800">
+                                                    {!item.details.logoType ? (language === 'ar' ? 'لا يوجد' : 'None') : (
+                                                        <>
+                                                            {language === 'ar' ? logoTypeMap[item.details.logoType]?.ar : logoTypeMap[item.details.logoType]?.en}
+                                                            {item.details.logoPlacement && (
+                                                                <span className="text-gray-500 text-xs mx-1">
+                                                                    ({language === 'ar' ? logoPlacementMap[item.details.logoPlacement]?.ar : logoPlacementMap[item.details.logoPlacement]?.en})
+                                                                </span>
+                                                            )}
+                                                        </>
+                                                    )}
+                                                </span>
+                                            </div>
+
+                                            {/* Notes (Full Width) */}
                                             {item.details.notes && (
-                                                <div className="md:col-span-2">
-                                                    <div className="text-sm text-gray-500 font-semibold mb-1">
-                                                        {t(translations.notes)}
-                                                    </div>
-                                                    <div className="text-gray-900">
-                                                        {item.details.notes}
-                                                    </div>
+                                                <div className="col-span-2 mt-2 pt-2 border-t border-gray-200">
+                                                    <span className="block text-gray-500 text-xs mb-0.5">{t(translations.notes)}</span>
+                                                    <p className="text-gray-800">{item.details.notes}</p>
                                                 </div>
                                             )}
                                         </div>

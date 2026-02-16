@@ -48,14 +48,7 @@ const Footer = () => {
     return (
         <footer className="relative bg-primary text-white overflow-hidden">
             {/* Background Pattern */}
-            <div className="absolute inset-0 opacity-5">
-                <Image
-                    src="/assets/pattern-symbol-repeat.png"
-                    alt=""
-                    fill
-                    className="object-cover"
-                />
-            </div>
+            <div className="absolute inset-0 opacity-5 pointer-events-none bg-[url('/assets/pattern-symbol-repeat.png')] bg-repeat bg-fixed" />
 
             <div className="relative z-10 container-custom py-12">
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">

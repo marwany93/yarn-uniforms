@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { useLanguage } from '@/hooks/useLanguage';
 import Hero from '@/components/Hero';
 import Partners from '@/components/Partners';
@@ -51,8 +52,11 @@ export default function HomePage() {
             <Partners />
 
             {/* 5. Track Order Section - Dark Blue Background */}
-            <section id="track" className="py-20 bg-primary text-white">
-                <div className="container-custom">
+            <section id="track" className="py-20 bg-primary text-white relative z-10 overflow-hidden">
+                {/* Background Pattern */}
+                <div className="absolute inset-0 opacity-5 pointer-events-none bg-[url('/assets/pattern-symbol-repeat.png')] bg-repeat bg-fixed" />
+
+                <div className="container-custom relative z-10">
                     <div className="max-w-2xl mx-auto text-center">
                         {/* Icon */}
                         <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-white/10 backdrop-blur-sm text-5xl mb-6">

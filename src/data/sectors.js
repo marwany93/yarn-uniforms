@@ -6,44 +6,64 @@
 export const sectors = [
     {
         id: 'schools',
-        title: 'Schools',
-        titleAr: 'المدارس',
+        title: 'Educational Sector',
+        titleAr: 'القطاع التعليمي',
         icon: '🎓',
-        description: 'Premium school uniforms designed for comfort, durability, and style. Perfect for students of all ages.',
-        descriptionAr: 'زي مدرسي فاخر مصمم للراحة والمتانة والأناقة. مثالي للطلاب من جميع الأعمار.',
+        description: 'Premium school uniforms designed for comfort, durability, and professional identity.',
+        descriptionAr: 'زي مدرسي فاخر مصمم للراحة والمتانة والهوية المهنية.',
         color: '#3B82F6', // Blue
-        image: '/assets/sector-schools.png',
+        image: '/sectors/sector-schools.png',
     },
     {
         id: 'medical',
         title: 'Medical Sector',
         titleAr: 'القطاع الطبي',
         icon: '⚕️',
-        description: 'Professional medical scrubs and uniforms that meet healthcare industry standards with superior comfort.',
-        descriptionAr: 'زي طبي احترافي يلبي معايير الصناعة الصحية مع راحة فائقة.',
+        description: 'Professional medical scrubs and uniforms that meet healthcare industry standards.',
+        descriptionAr: 'زي طبي احترافي يلبي معايير الصناعة الصحية.',
         color: '#10B981', // Green
-        image: '/assets/sector-medical.png',
+        image: '/sectors/sector-medical.png',
     },
     {
         id: 'corporate',
-        title: 'Corporate & Factories',
-        titleAr: 'الشركات والمصانع',
+        title: 'Industrial & Corporate',
+        titleAr: 'القطاع الصناعي والشركات',
         icon: '🏭',
-        description: 'High-quality corporate and industrial uniforms built for safety, functionality, and professional appearance.',
-        descriptionAr: 'زي شركات وصناعي عالي الجودة مصمم للسلامة والوظائف والمظهر المهني.',
+        description: 'High-quality corporate and industrial uniforms built for safety and professionalism.',
+        descriptionAr: 'زي شركات وصناعي عالي الجودة مصمم للسلامة والاحترافية.',
         color: '#F59E0B', // Amber
-        image: '/assets/sector-corporate.png',
+        image: '/sectors/sector-corporate.png',
     },
     {
         id: 'hospitality',
-        title: 'Hotels & Restaurants',
-        titleAr: 'الفنادق والمطاعم',
-        icon: '🍽️',
-        description: 'Elegant hospitality uniforms that enhance your brand image while ensuring staff comfort and mobility.',
-        descriptionAr: 'زي ضيافة أنيق يعزز صورة علامتك التجارية مع ضمان راحة وحركة الموظفين.',
+        title: 'Restaurants & Cafes',
+        titleAr: 'قطاع المطاعم والمقاهي',
+        icon: '☕',
+        description: 'Elegant hospitality uniforms that enhance your brand image.',
+        descriptionAr: 'زي ضيافة أنيق يعزز صورة علامتك التجارية.',
         color: '#8B5CF6', // Purple
-        image: '/assets/sector-hospitality.png',
+        image: '/sectors/sector-hospitality.png',
     },
+    {
+        id: 'transportation',
+        title: 'Transportation & Aviation',
+        titleAr: 'قطاع النقل والطيران',
+        icon: '✈️',
+        description: 'Professional uniforms for airlines and transport services.',
+        descriptionAr: 'زي رسمي احترافي لخدمات الطيران والنقل.',
+        color: '#64748B', // Slate
+        image: '/sectors/sector-transport.png',
+    },
+    {
+        id: 'domestic',
+        title: 'Domestic Labor',
+        titleAr: 'قطاع العمالة المنزلية',
+        icon: '🏠',
+        description: 'High-quality uniforms for domestic staff with comfort and style.',
+        descriptionAr: 'زي موحد عالي الجودة للعمالة المنزلية يجمع بين الراحة والأناقة.',
+        color: '#EC4899', // Pink
+        image: '/sectors/sector-domestic.png',
+    }
 ];
 
 /**

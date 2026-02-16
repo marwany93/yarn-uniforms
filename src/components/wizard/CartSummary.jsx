@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { useCart } from '@/context/CartContext';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -9,6 +10,16 @@ export default function CartSummary() {
     const { cart, getCartItemCount } = useCart();
     const router = useRouter();
     const { t, language } = useLanguage();
+    const [isBouncing, setIsBouncing] = useState(false);
+
+    // Trigger bounce animation when cart items change
+    useEffect(() => {
+        if (cart.length > 0) {
+            setIsBouncing(true);
+            const timer = setTimeout(() => setIsBouncing(false), 300);
+            return () => clearTimeout(timer);
+        }
+    }, [cart.length]);
 
     const translations = {
         title: { en: 'Cart Summary', ar: 'ملخص الطلب' },
@@ -38,12 +49,12 @@ export default function CartSummary() {
     }
 
     return (
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div className={`bg-white rounded-xl shadow-lg overflow-hidden transition-all duration-300 ${cart.length > 0 ? 'border-2 border-primary/20 shadow-primary/10' : ''}`}>
             {/* Header */}
             <div className="bg-gradient-to-r from-primary to-primary-600 text-white p-4">
                 <h3 className="text-lg font-bold flex items-center justify-between text-white">
                     <span>🛒 {t(translations.title)}</span>
-                    <span className="text-sm bg-white/20 px-3 py-1 rounded-full">
+                    <span className={`text-sm bg-white/20 px-3 py-1 rounded-full transition-transform duration-300 ${isBouncing ? 'scale-125 bg-white/40' : 'scale-100'} ${cart.length > 0 ? 'animate-pulse' : ''}`}>
                         {cart.length} {cart.length === 1 ? t(translations.item) : t(translations.items)}
                     </span>
                 </h3>
