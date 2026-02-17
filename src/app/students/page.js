@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import { useLanguage } from '@/hooks/useLanguage';
 import Image from 'next/image';
 import StudentWizard from '@/components/wizard/StudentWizard';
@@ -37,7 +38,9 @@ export default function StudentPage() {
                 <div className="flex flex-col lg:flex-row gap-8">
                     {/* Wizard Section */}
                     <div className="flex-1">
-                        <StudentWizard />
+                        <Suspense fallback={<div className="p-12 text-center text-gray-500">جاري تحميل المصمم...</div>}>
+                            <StudentWizard />
+                        </Suspense>
                     </div>
 
                     {/* Sidebar (Cart Summary) - Visible on Desktop */}
