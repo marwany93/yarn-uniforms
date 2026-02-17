@@ -39,6 +39,7 @@ const OrderDetailsModal = ({ order, isOpen, onClose }) => {
     ready_for_delivery: { en: 'Ready for Delivery', ar: 'جاهز للتسليم' },
     delivered: { en: 'Delivered', ar: 'تم التسليم' },
     cancelled: { en: 'Cancelled', ar: 'ملغي' },
+    students: { en: 'Students (B2C)', ar: 'أفراد (طلاب)' },
   };
 
   const statusOptions = [
@@ -49,6 +50,16 @@ const OrderDetailsModal = ({ order, isOpen, onClose }) => {
     { value: 'delivered', label: t(translations.delivered) },
     { value: 'cancelled', label: t(translations.cancelled) },
   ];
+
+  const sectorMap = {
+    'students': { ar: 'أفراد (طالب/ولي أمر)', en: 'Individuals (Student/Parent)' },
+    'schools': { ar: 'مدارس', en: 'Schools' },
+    'medical': { ar: 'القطاع الطبي', en: 'Medical' },
+    'corporate': { ar: 'الشركات والمكاتب', en: 'Corporate' },
+    'hospitality': { ar: 'المطاعم والكافيهات', en: 'Hospitality' },
+    'transportation': { ar: 'النقل والطيران', en: 'Transportation' },
+    'domestic': { ar: 'العمالة المنزلية', en: 'Domestic' }
+  };
 
   const statusColors = {
     pending: 'bg-yellow-100 text-yellow-800',
@@ -166,7 +177,11 @@ const OrderDetailsModal = ({ order, isOpen, onClose }) => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
               <div className="bg-gray-50 rounded-lg p-4">
                 <p className="text-sm text-gray-500 mb-1">{t(translations.sector)}</p>
-                <p className="text-lg font-semibold text-gray-900">{t(translations[order.sector])}</p>
+                <p className="text-lg font-semibold text-gray-900">
+                  {language === 'ar'
+                    ? (order.sectorAr || sectorMap[order.sector]?.ar || order.sector)
+                    : (sectorMap[order.sector]?.en || order.sector)}
+                </p>
               </div>
               <div className="bg-gray-50 rounded-lg p-4">
                 <p className="text-sm text-gray-500 mb-1">{t(translations.createdAt)}</p>

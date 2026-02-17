@@ -67,12 +67,15 @@ export default function AdminDashboard() {
     };
 
     const sectorMap = {
-        'schools': { en: 'Schools', ar: 'مدارس' },
-        'school': { en: 'Schools', ar: 'مدارس' },
-        'factories': { en: 'Factories', ar: 'مصانع' },
-        'corporate': { en: 'Corporate', ar: 'شركات' },
-        'medical': { en: 'Medical', ar: 'طبي' },
-        'hospitality': { en: 'Hospitality', ar: 'ضيافة' }
+        'students': { ar: 'أفراد (طالب/ولي أمر)', en: 'Individuals (Student/Parent)' },
+        'schools': { ar: 'مدارس', en: 'Schools' },
+        'school': { ar: 'مدارس', en: 'Schools' },
+        'factories': { ar: 'مصانع', en: 'Factories' },
+        'corporate': { ar: 'الشركات والمكاتب', en: 'Corporate' },
+        'medical': { ar: 'القطاع الطبي', en: 'Medical' },
+        'hospitality': { ar: 'المطاعم والكافيهات', en: 'Hospitality' },
+        'transportation': { ar: 'النقل والطيران', en: 'Transportation' },
+        'domestic': { ar: 'العمالة المنزلية', en: 'Domestic' }
     };
 
     const statusColors = { 'Order Received': 'bg-yellow-100 text-yellow-800', pending: 'bg-yellow-100 text-yellow-800', processing: 'bg-blue-100 text-blue-800', in_production: 'bg-purple-100 text-purple-800', ready_for_delivery: 'bg-green-100 text-green-800', delivered: 'bg-gray-100 text-gray-800', cancelled: 'bg-red-100 text-red-800', 'Contacting': 'bg-blue-100 text-blue-800', 'Quotation Sent': 'bg-indigo-100 text-indigo-800', 'Sample Production': 'bg-purple-100 text-purple-800', 'Manufacturing': 'bg-orange-100 text-orange-800', 'Delivered': 'bg-green-100 text-green-800', 'Cancelled': 'bg-red-100 text-red-800' };
@@ -131,7 +134,11 @@ export default function AdminDashboard() {
                                                 </div>
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{order.customer?.schoolName || order.customer?.name || 'N/A'}</td>
-                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{sectorMap[order.sector?.toLowerCase()]?.[language] || order.sector || 'N/A'}</td>
+                                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                                {language === 'ar'
+                                                    ? (order.sectorAr || sectorMap[order.sector?.toLowerCase()]?.ar || order.sector || 'N/A')
+                                                    : (sectorMap[order.sector?.toLowerCase()]?.en || order.sector || 'N/A')}
+                                            </td>
                                             <td className="px-6 py-4 whitespace-nowrap"><span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColors[order.status] || 'bg-gray-100 text-gray-800'}`}>{statusMap[order.status?.toLowerCase()]?.[language] || order.status || 'N/A'}</span></td>
                                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500" dir="ltr">{order.createdAt?.toDate ? order.createdAt.toDate().toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US') : (order.createdAt?.seconds ? new Date(order.createdAt.seconds * 1000).toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US') : 'N/A')}</td>
                                             <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium ltr:text-right rtl:text-left"><button onClick={(e) => { e.stopPropagation(); console.log('Order Details:', order); setSelectedOrder(order); setIsModalOpen(true); }} className="text-primary-600 hover:text-primary-900 transition-colors font-semibold">{t(translations.viewDetails)}</button></td>

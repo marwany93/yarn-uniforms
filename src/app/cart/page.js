@@ -19,6 +19,7 @@ export default function CartPage() {
     const { t, language } = useLanguage();
     const [showSuccess, setShowSuccess] = useState(false);
     const [orderId, setOrderId] = useState(null);
+    const [lastOrderSector, setLastOrderSector] = useState(null);
 
     // Auto-scroll to top when Success View appears
     useEffect(() => {
@@ -32,7 +33,7 @@ export default function CartPage() {
 
     const translations = {
         pageTitle: { en: 'Quotation Request Review', ar: 'مراجعة طلب عرض السعر' },
-        clientInformation: { en: 'Client Information', ar: 'معلومات العميل' },
+        clientInformation: { en: 'Client Information', ar: 'بيانات العميل' },
         schoolName: { en: 'School Name', ar: 'اسم المدرسة' },
         contactPerson: { en: 'Contact Person', ar: 'شخص الاتصال' },
         email: { en: 'Email', ar: 'البريد الإلكتروني' },
@@ -80,6 +81,7 @@ export default function CartPage() {
     };
 
     // --- Translation Maps ---
+    // ... (maps omitted for brevity, logic remains)
     const stageMap = {
         'kg_primary': { ar: 'رياض أطفال وابتدائي', en: 'KG & Primary' },
         'prep_secondary': { ar: 'إعدادي وثانوي', en: 'Middle/High School' },
@@ -116,6 +118,12 @@ export default function CartPage() {
             // Get contact info from first cart item (from details.contactInfo)
             const contactInfo = cart[0]?.details?.contactInfo || {};
 
+            // Determine Sector Logic (Dynamic)
+            // Check if items are from 'students' wizard (B2C) or default to 'schools' (B2B)
+            const isStudentOrder = cart.some(item => item.sector === 'students' || item.details?.isStudentOrder);
+            const orderSector = isStudentOrder ? 'students' : 'schools';
+            setLastOrderSector(orderSector);
+
             // Create structured order object for Firestore
             const orderData = {
                 orderId: newOrderId,
@@ -123,10 +131,11 @@ export default function CartPage() {
                     name: contactInfo.contactPerson || contactInfo.name || 'N/A',
                     email: contactInfo.email || 'N/A',
                     phone: contactInfo.phone || 'N/A',
-                    schoolName: contactInfo.schoolName || 'N/A'
+                    schoolName: contactInfo.schoolName || 'N/A',
+                    type: isStudentOrder ? 'B2C' : 'B2B'
                 },
                 items: cart,
-                sector: 'Schools',
+                sector: orderSector,
                 status: 'Order Received',
                 statusHistory: [
                     {
@@ -176,7 +185,10 @@ export default function CartPage() {
             try {
                 sessionStorage.removeItem('schoolContactInfo');
                 sessionStorage.removeItem('selectedCategoryIds');
-                sessionStorage.removeItem('schoolWizardState'); // Just in case
+                sessionStorage.removeItem('schoolWizardState');
+                // Student Portal Cleanup
+                sessionStorage.removeItem('studentContactInfo');
+                sessionStorage.removeItem('studentSelectedCategoryIds');
                 sessionStorage.clear(); // Safety wipe to ensure no stale data persists
                 console.log('🧹 Session storage cleared');
             } catch (e) {
@@ -191,10 +203,15 @@ export default function CartPage() {
         }
     };
 
+    // Dynamic Redirect Logic (for buttons visible BEFORE submit)
+    const isStudentOrder = cart.length > 0 && cart.some(item => item.sector === 'students' || item.details?.sector === 'students');
+    const backUrl = isStudentOrder ? '/students' : '/sectors/schools';
+
     const handleNewOrder = () => {
-        clearCart();
+        clearCart(); // Already cleared, but for safety
         setShowSuccess(false);
-        router.push('/sectors/schools');
+        // Use the preserved sector captured during submission
+        router.push(lastOrderSector === 'students' ? '/students' : '/sectors/schools');
     };
 
     // Empty cart state
@@ -214,7 +231,10 @@ export default function CartPage() {
                             }
                         </p>
                         <button
-                            onClick={() => router.push('/sectors/schools')}
+                            onClick={() => {
+                                const isStudentSession = typeof window !== 'undefined' && sessionStorage.getItem('studentContactInfo');
+                                router.push(isStudentSession ? '/students' : '/sectors/schools');
+                            }}
                             className="px-8 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-primary-700 transition-all"
                         >
                             {t(translations.startOrdering)}
@@ -259,7 +279,7 @@ export default function CartPage() {
                             {t(translations.backToHome)}
                         </button>
                         <button
-                            onClick={handleNewOrder}
+                            onClick={handleNewOrder} // Updated handler
                             className="px-8 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-primary-700 transition-all"
                         >
                             {t(translations.newOrder)}
@@ -366,7 +386,7 @@ export default function CartPage() {
                                                     {/* Action Buttons (Strictly constrained) */}
                                                     <div className="flex items-center gap-2 shrink-0">
                                                         <button
-                                                            onClick={() => router.push('/sectors/schools?editId=' + item.id)}
+                                                            onClick={() => router.push((item.sector === 'students' ? '/students' : '/sectors/schools') + '?editId=' + item.id)}
                                                             className="w-8 h-8 flex items-center justify-center text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-md transition-colors"
                                                             title={language === 'ar' ? 'تعديل' : 'Edit'}
                                                         >
@@ -504,7 +524,7 @@ export default function CartPage() {
                             </button>
 
                             <button
-                                onClick={() => router.push('/sectors/schools')}
+                                onClick={() => router.push(backUrl)}
                                 className="w-full mt-3 py-3 bg-gray-200 text-gray-900 rounded-lg font-semibold hover:bg-gray-300 transition-all"
                             >
                                 {language === 'ar' ? 'إضافة المزيد' : 'Add More Items'}

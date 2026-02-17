@@ -781,6 +781,7 @@ export default function SchoolWizard() {
                         <PhoneInput
                             international
                             defaultCountry="SA"
+                            countryCallingCodeEditable={false}
                             value={contactInfo.phone}
                             onChange={(val) => {
                                 setContactInfo({ ...contactInfo, phone: val });
@@ -1224,7 +1225,7 @@ export default function SchoolWizard() {
                             <select
                                 value={details.fabric}
                                 onChange={(e) => setDetails({ ...details, fabric: e.target.value })}
-                                className={`w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary ${language === 'ar' ? 'pr-10 pl-4' : 'pl-4 pr-10'}`}
+                                className={`w-full py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary transition-all ${language === 'ar' ? '!bg-[position:left_1rem_center] !pl-12 !pr-4' : '!bg-[position:right_1rem_center] !pr-12 !pl-4'}`}
                             >
                                 <option value="">{t(translations.selectFabricPlaceholder)}</option>
                                 {getFabricOptions().map(fabric => (

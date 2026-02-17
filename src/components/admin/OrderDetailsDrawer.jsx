@@ -78,7 +78,8 @@ export default function OrderDetailsDrawer({ isOpen, onClose, order }) {
         'factories': { en: 'Factories', ar: 'مصانع' },
         'corporate': { en: 'Corporate', ar: 'شركات' },
         'medical': { en: 'Medical', ar: 'طبي' },
-        'hospitality': { en: 'Hospitality', ar: 'ضيافة' }
+        'hospitality': { en: 'Hospitality', ar: 'ضيافة' },
+        'students': { en: 'Students (B2C)', ar: 'أفراد (طلاب)' }
     };
 
     const stageMap = {
