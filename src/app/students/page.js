@@ -23,7 +23,7 @@ export default function StudentPage() {
                 <div className="absolute inset-0 bg-black/50" />
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
                     <h1 className="text-4xl md:text-5xl font-bold text-white mb-4 animate-fade-in">
-                        {language === 'ar' ? 'زي الطلاب وأولياء الأمور' : 'Uniforms for Students'}
+                        {language === 'ar' ? 'زي الطلاب' : 'Uniforms for Students'}
                     </h1>
                     <p className="text-xl text-gray-200 max-w-2xl animate-slide-up">
                         {language === 'ar'
