@@ -45,26 +45,20 @@ function TrackOrderContent() {
     const [error, setError] = useState('');
     const [orderFound, setOrderFound] = useState(false);
 
-    useEffect(() => {
-        const idFromUrl = searchParams.get('id');
-        if (idFromUrl) {
-            setOrderId(idFromUrl);
-            fetchOrder(idFromUrl);
-        }
-    }, [searchParams, fetchOrder]);
-
+    // 1. الدالة معرفة بـ async و useCallback وتسبق الـ useEffect
     const fetchOrder = useCallback(async (id) => {
         if (!id) return;
+
         setLoading(true);
         setError('');
         setOrderFound(false);
         setExpectedDate(null);
 
         try {
-            const cleanId = id.trim();
+            const cleanId = id.trim().toUpperCase();
             const ordersRef = collection(db, 'orders');
 
-            // Search by orderId (primary)
+            // البحث عن طريق orderId (الأساسي)
             const q = query(ordersRef, where('orderId', '==', cleanId));
             const querySnapshot = await getDocs(q);
 
@@ -73,7 +67,7 @@ function TrackOrderContent() {
             if (!querySnapshot.empty) {
                 data = querySnapshot.docs[0].data();
             } else {
-                // Fallback search by document ID if field match fails
+                // محاولة البحث عن طريق Document ID كخيار احتياطي
                 const q2 = query(ordersRef, where('id', '==', cleanId));
                 const querySnapshot2 = await getDocs(q2);
                 if (!querySnapshot2.empty) {
@@ -82,13 +76,13 @@ function TrackOrderContent() {
             }
 
             if (data) {
-                // 1. Determine Step
+                // تحديد المرحلة الحالية
                 const rawStatus = data.status || data.orderStatus || 'new';
                 const statusKey = rawStatus.toString().toLowerCase().trim();
                 const stepIndex = STATUS_MAP[statusKey] !== undefined ? STATUS_MAP[statusKey] : 0;
                 setCurrentStep(stepIndex);
 
-                // 2. Parse Expected Date (Targeting 'expectedCompletionDate' specifically)
+                // معالجة تاريخ الانتهاء المتوقع
                 const dateField = data.expectedCompletionDate || data.expectedDate || data.deliveryDate;
 
                 if (dateField) {
@@ -96,7 +90,7 @@ function TrackOrderContent() {
                     if (dateField.toDate) {
                         dateObj = dateField.toDate(); // Firestore Timestamp
                     } else if (typeof dateField === 'string' || typeof dateField === 'number') {
-                        dateObj = new Date(dateField); // String
+                        dateObj = new Date(dateField);
                     }
 
                     if (dateObj && !isNaN(dateObj.getTime())) {
@@ -111,11 +105,20 @@ function TrackOrderContent() {
 
         } catch (err) {
             console.error("Error fetching order:", err);
-            setError("حدث خطأ أثناء البحث");
+            setError(language === 'ar' ? "حدث خطأ أثناء البحث" : "An error occurred during search");
         } finally {
             setLoading(false);
         }
-    }, [t]); // translations and STATUS_MAP are now static constants
+    }, [t, language]);
+
+    // 2. استدعاء الدالة عند وجود ID في الرابط
+    useEffect(() => {
+        const idFromUrl = searchParams.get('id');
+        if (idFromUrl) {
+            setOrderId(idFromUrl);
+            fetchOrder(idFromUrl);
+        }
+    }, [searchParams, fetchOrder]);
 
     const handleTrack = (e) => {
         e.preventDefault();
@@ -208,7 +211,7 @@ function TrackOrderContent() {
                                         return (
                                             <div key={index} className="flex items-start gap-4 sm:gap-6 relative">
                                                 <div className={`z-10 w-14 h-14 rounded-full flex items-center justify-center border-4 shrink-0 transition-all duration-300
-                                                    ${statusClass === 'completed' ? 'bg-green-500 border-green-100 text-white shadow-md' :
+                                                        ${statusClass === 'completed' ? 'bg-green-500 border-green-100 text-white shadow-md' :
                                                         statusClass === 'current' ? 'bg-primary border-white text-white shadow-xl ring-4 ring-primary-100 scale-110' :
                                                             'bg-white border-gray-200 text-gray-300'}`}>
                                                     {statusClass === 'completed' ? (

@@ -67,7 +67,7 @@ export default function AdminDashboard() {
     };
 
     const sectorMap = {
-        'students': { ar: 'أفراد (طالب/ولي أمر)', en: 'Individuals (Student/Parent)' },
+        'students': { ar: 'أفراد (طلاب)', en: 'Students (B2C)' },
         'schools': { ar: 'مدارس', en: 'Schools' },
         'school': { ar: 'مدارس', en: 'Schools' },
         'factories': { ar: 'مصانع', en: 'Factories' },
@@ -82,7 +82,7 @@ export default function AdminDashboard() {
 
     return (
         <div className="min-h-screen bg-gray-50" dir={language === 'ar' ? 'rtl' : 'ltr'}>
-            <nav className="bg-white shadow-sm"><div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"><div className="flex justify-between h-16"><div className="flex items-center"><div className="flex-shrink-0 flex items-center"><div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-lg flex items-center justify-center"><span className="text-white font-bold text-xl">Y</span></div><span className="ltr:ml-2 rtl:mr-2 text-xl font-bold text-gray-900">Yarn Uniforms</span></div></div><div className="flex items-center space-x-4 rtl:space-x-reverse"><button onClick={() => router.push('/')} className="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium">Home</button><button onClick={() => router.push('/admin/login')} className="bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-red-700 transition-colors">{t(translations.logout)}</button></div></div></div></nav>
+            <nav className="bg-white shadow-sm"><div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"><div className="flex justify-between h-16"><div className="flex items-center"><div className="flex-shrink-0 flex items-center cursor-pointer" onClick={() => router.push('/admin')}><div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-secondary-500 rounded-lg flex items-center justify-center"><span className="text-white font-bold text-xl">Y</span></div><span className="ltr:ml-2 rtl:mr-2 text-xl font-bold text-gray-900">Yarn Uniforms</span></div></div><div className="flex items-center space-x-4 rtl:space-x-reverse"><button onClick={() => router.push('/')} className="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium">Home</button><button onClick={() => router.push('/admin/schools')} className="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium">{language === 'ar' ? 'المدارس' : 'Schools'}</button><button onClick={() => router.push('/admin/login')} className="bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-red-700 transition-colors">{t(translations.logout)}</button></div></div></div></nav>
             <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
                 <div className="px-4 sm:px-0 mb-8"><h1 className="text-3xl font-bold text-gray-900">{t(translations.dashboard)}</h1><p className="mt-1 text-sm text-gray-600">{t(translations.manageOrders)}</p></div>
 

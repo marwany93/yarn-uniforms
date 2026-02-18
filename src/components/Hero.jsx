@@ -68,10 +68,10 @@ export default function Hero() {
                     {/* CTA Buttons */}
                     <div className="flex flex-col sm:flex-row gap-4 justify-center px-4 md:px-0">
                         <a
-                            href="/students"
+                            href="#sectors"
                             className="w-full sm:w-auto px-8 py-4 bg-secondary text-primary rounded-lg font-semibold hover:bg-secondary/90 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
                         >
-                            {language === 'ar' ? 'اطلب الزي' : 'Order Uniform'}
+                            {t(translations.orderNow)}
                         </a>
                         <a
                             href="#track"

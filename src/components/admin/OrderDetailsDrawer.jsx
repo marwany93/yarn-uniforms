@@ -49,7 +49,14 @@ export default function OrderDetailsDrawer({ isOpen, onClose, order }) {
         created: { en: 'Created', ar: 'تاريخ الإنشاء' },
         totalItems: { en: 'Total Items', ar: 'إجمالي القطع' },
         close: { en: 'Close', ar: 'إغلاق' },
-        statusUpdated: { en: 'Status Updated Successfully', ar: 'تم تحديث الحالة بنجاح' }
+        statusUpdated: { en: 'Status Updated Successfully', ar: 'تم تحديث الحالة بنجاح' },
+        shippingAddress: { en: 'Shipping Address', ar: 'عنوان التوصيل' },
+        region: { en: 'Region', ar: 'المنطقة' },
+        city: { en: 'City', ar: 'المدينة' },
+        district: { en: 'District', ar: 'الحي' },
+        street: { en: 'Street', ar: 'الشارع' },
+        building: { en: 'Building No', ar: 'رقم المبنى' },
+        landmark: { en: 'Landmark', ar: 'معلم مميز' }
     };
 
     const STATUS_STAGES = [
@@ -298,6 +305,43 @@ export default function OrderDetailsDrawer({ isOpen, onClose, order }) {
                             </div>
                         </div>
                     </div>
+                    {/* --- Shipping Address Section --- */}
+                    {order.customer?.shippingAddress && (
+                        <div className="bg-gray-50 p-5 rounded-xl border border-gray-100 mb-6">
+                            <h4 className={`text-xs font-bold text-gray-400 uppercase mb-4 tracking-wider border-b border-gray-200 pb-2 ${language === 'ar' ? 'text-right' : 'text-left'}`}>
+                                📍 {t(adminTrans.shippingAddress)}
+                            </h4>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className={language === 'ar' ? 'text-right' : 'text-left'}>
+                                    <span className="block text-xs text-gray-500 mb-1">{t(adminTrans.region)}</span>
+                                    <p className="text-sm font-bold text-gray-900">{language === 'ar' ? (order.customer.shippingAddress.regionAr || order.customer.shippingAddress.region) : (order.customer.shippingAddress.regionEn || order.customer.shippingAddress.region)}</p>
+                                </div>
+                                <div className={language === 'ar' ? 'text-right' : 'text-left'}>
+                                    <span className="block text-xs text-gray-500 mb-1">{t(adminTrans.city)}</span>
+                                    <p className="text-sm font-bold text-gray-900">{language === 'ar' ? (order.customer.shippingAddress.cityAr || order.customer.shippingAddress.city) : (order.customer.shippingAddress.cityEn || order.customer.shippingAddress.city)}</p>
+                                </div>
+                                <div className={language === 'ar' ? 'text-right' : 'text-left'}>
+                                    <span className="block text-xs text-gray-500 mb-1">{t(adminTrans.district)}</span>
+                                    <p className="text-sm font-bold text-gray-900">{order.customer.shippingAddress.district}</p>
+                                </div>
+                                <div className={language === 'ar' ? 'text-right' : 'text-left'}>
+                                    <span className="block text-xs text-gray-500 mb-1">{t(adminTrans.street)}</span>
+                                    <p className="text-sm font-bold text-gray-900">{order.customer.shippingAddress.street}</p>
+                                </div>
+                                <div className={language === 'ar' ? 'text-right' : 'text-left'}>
+                                    <span className="block text-xs text-gray-500 mb-1">{t(adminTrans.building)}</span>
+                                    <p className="text-sm font-bold text-gray-900">{order.customer.shippingAddress.building}</p>
+                                </div>
+                                {order.customer.shippingAddress.landmark && (
+                                    <div className={language === 'ar' ? 'text-right' : 'text-left'}>
+                                        <span className="block text-xs text-gray-500 mb-1">{t(adminTrans.landmark)}</span>
+                                        <p className="text-sm font-bold text-gray-900">{order.customer.shippingAddress.landmark}</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
 
                     {/* --- Status & Timeline --- */}
                     <div className="bg-white border border-gray-200 rounded-lg p-4">

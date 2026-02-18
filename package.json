@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "clsx": "^2.1.1",
+    "country-state-city": "^3.2.1",
     "firebase": "^12.8.0",
     "framer-motion": "^12.34.0",
     "i18next": "^23.11.0",

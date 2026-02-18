@@ -5,9 +5,11 @@ import Image from 'next/image';
 import { ChevronDown } from 'lucide-react';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useCart } from '@/context/CartContext';
+import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 
 const Header = () => {
+    const pathname = usePathname();
     const { language, changeLanguage, t } = useLanguage();
     const { getCartItemCount } = useCart();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -37,7 +39,17 @@ const Header = () => {
 
     return (
         <header className="bg-white shadow-md sticky top-0 z-50">
-            {/* Top Announcement Bar - Removed */}
+            {/* Top Announcement Bar - Only on Homepage */}
+            {pathname === '/' && (
+                <div className="bg-slate-900 text-white py-2 px-4 text-center text-sm relative z-50">
+                    <div className="container mx-auto flex justify-center items-center gap-2">
+                        <span>{language === 'ar' ? 'أنت ولي أمر أو طالب؟' : 'Are you a parent or student?'}</span>
+                        <Link href="/students" className="underline font-bold text-yellow-400 hover:text-yellow-300 transition-colors">
+                            {language === 'ar' ? 'اطلب الزي' : 'Order Uniform'}
+                        </Link>
+                    </div>
+                </div>
+            )}
 
             <nav className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8" aria-label="Top">
                 <div className="flex w-full items-center justify-between py-4">
