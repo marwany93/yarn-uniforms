@@ -9,11 +9,11 @@ import { useLanguage } from '@/hooks/useLanguage';
 import { useCart } from '@/context/CartContext';
 import Image from 'next/image';
 import SizingWizard from '@/components/wizard/SizingWizard';
-import { ShoppingCart } from 'lucide-react';
+import { ShoppingCart, AlertTriangle } from 'lucide-react';
 
 export default function SchoolStorefront() {
     const { t, language } = useLanguage();
-    const { addToCart, cart, removeFromCart } = useCart();
+    const { addToCart, cart, removeFromCart, checkCartConflict, clearCart } = useCart();
     const params = useParams();
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -31,6 +31,10 @@ export default function SchoolStorefront() {
     const [selectedStage, setSelectedStage] = useState('primary');
     const [showSizingGuide, setShowSizingGuide] = useState(false);
     const [isEditMode, setIsEditMode] = useState(false);
+
+    // Conflict Modal State
+    const [showConflictModal, setShowConflictModal] = useState(false);
+    const [pendingCartItem, setPendingCartItem] = useState(null);
 
     const stageSizes = {
         primary: ['4', '6', '8', '10', '12', '14', '16'],
@@ -81,6 +85,28 @@ export default function SchoolStorefront() {
         }
     }, [editId, cart, school]);
 
+    const executeAddToCart = (item) => {
+        if (isEditMode) {
+            removeFromCart(editId);
+        }
+
+        addToCart(item);
+
+        // Reset
+        setSelectedProduct(null);
+        setSelectedSizes({});
+        setPendingCartItem(null);
+        setShowConflictModal(false);
+
+        // Smart Redirect
+        if (isEditMode) {
+            setIsEditMode(false);
+            router.push('/cart');
+        } else {
+            router.replace(window.location.pathname);
+        }
+    };
+
     const handleAddToCart = () => {
         const totalQuantity = Object.values(selectedSizes).reduce((sum, qty) => sum + qty, 0);
         if (totalQuantity === 0) return; // Don't add if no sizes selected
@@ -104,22 +130,21 @@ export default function SchoolStorefront() {
             }
         };
 
-        if (isEditMode) {
-            removeFromCart(editId);
+        // Check for Conflict (B2B vs B2C)
+        // Skip check if in edit mode (as we are updating an existing item which implies context is correct or we are fixing it)
+        if (!isEditMode && checkCartConflict('students')) {
+            setPendingCartItem(cartItem);
+            setShowConflictModal(true);
+            return;
         }
 
-        addToCart(cartItem);
+        executeAddToCart(cartItem);
+    };
 
-        // Reset
-        setSelectedProduct(null);
-        setSelectedSizes({});
-
-        // التوجيه الذكي بعد الإضافة أو التعديل
-        if (isEditMode) {
-            setIsEditMode(false);
-            router.push('/cart'); // لو بيعدل، يرجع للسلة فوراً
-        } else {
-            router.replace(window.location.pathname); // لو إضافة جديدة، يفضل في المتجر
+    const handleConfirmConflict = () => {
+        clearCart();
+        if (pendingCartItem) {
+            executeAddToCart(pendingCartItem);
         }
     };
 
@@ -344,6 +369,40 @@ export default function SchoolStorefront() {
                     sector="schools"
                 />
             )}
+
+            {/* Conflict Modal */}
+            {showConflictModal && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-scale-up text-center border border-gray-200">
+                        <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
+                            <AlertTriangle size={32} />
+                        </div>
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">
+                            {language === 'ar' ? 'تنبيه السلة' : 'Cart Alert'}
+                        </h3>
+                        <p className="text-gray-600 mb-6">
+                            {language === 'ar'
+                                ? 'سلتك الحالية تحتوي على طلبات من قسم آخر. هل تريد إفراغ السلة والبدء في طلب جديد للطلاب؟'
+                                : 'Your cart has items from another sector. Clear cart and start a new student order?'}
+                        </p>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setShowConflictModal(false)}
+                                className="flex-1 py-3 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition-colors"
+                            >
+                                {language === 'ar' ? 'إلغاء' : 'Cancel'}
+                            </button>
+                            <button
+                                onClick={handleConfirmConflict}
+                                className="flex-1 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-colors"
+                            >
+                                {language === 'ar' ? 'إفراغ وبدء جديد' : 'Clear & Start New'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Floating Cart Button (Shows only if cart has items) */}
             {totalCartItems > 0 && (
                 <div className="fixed bottom-6 left-0 right-0 z-40 flex justify-center px-4 pointer-events-none">

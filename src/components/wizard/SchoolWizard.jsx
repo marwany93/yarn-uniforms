@@ -15,14 +15,14 @@ import {
 } from '@/data/schoolProducts';
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
-import { Ruler } from 'lucide-react';
+import { Ruler, AlertTriangle } from 'lucide-react';
 import SizingWizard from './SizingWizard';
 
 
 
 export default function SchoolWizard() {
     const { t, language } = useLanguage();
-    const { addToCart, cart, updateCartItem } = useCart();
+    const { addToCart, cart, updateCartItem, checkCartConflict, clearCart } = useCart();
     const searchParams = useSearchParams();
     const router = useRouter();
     const editId = searchParams.get('editId');
@@ -47,6 +47,10 @@ export default function SchoolWizard() {
     // Current item being customized
     const [currentProduct, setCurrentProduct] = useState(null);
     const [showSizingWizard, setShowSizingWizard] = useState(false);
+
+    // Conflict Modal State
+    const [showConflictModal, setShowConflictModal] = useState(false);
+    const [pendingCartItem, setPendingCartItem] = useState(null);
 
     // Product details for current item
     const [details, setDetails] = useState({
@@ -496,6 +500,45 @@ export default function SchoolWizard() {
         }
     };
 
+    // Helper to proceed after adding item
+    const proceedAfterAdd = () => {
+        console.log('✅ Item added - proceeding to next step');
+
+        // Check if more items to customize
+        if (currentCategoryIndex < selectedCategoryIds.length - 1) {
+            console.log('➡️ Moving to next category');
+
+            // Move to next category
+            setCurrentCategoryIndex(prev => prev + 1);
+            setCurrentProduct(null);
+            setDetails({
+                color: null,
+                customColorName: '',
+                customColorUrl: null,
+                customColorFileName: null,
+                fabric: '',
+                logoUrl: null,
+                logoName: null,
+                referenceUrl: null,
+                referenceFileName: null,
+                referenceFileName: null,
+                notes: '',
+                stage: 'kg_primary',
+                logoType: null,
+                logoPlacement: null
+            });
+            setSizeQuantities({});
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+            console.log('🎉 All categories complete - showing success view');
+
+            // All done - transition to COMPLETED phase
+            setWizardPhase('COMPLETED');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+    };
+
     // Save current item and move to next
     const handleSaveAndNext = () => {
         console.log('🔵 handleSaveAndNext: Function called');
@@ -591,7 +634,7 @@ export default function SchoolWizard() {
                 contactInfo: contactInfo
             },
             quantity: totalItems,
-            price: 0
+            price: 0 // B2B usually 0 or hidden price
         };
 
         if (editId) {
@@ -601,46 +644,32 @@ export default function SchoolWizard() {
             return;
         }
 
+        // Check for Cart Conflict (B2B vs B2C)
+        // Pass 'schools' (or 'b2b') to checkCartConflict.
+        // It returns TRUE if current cart is 'students' type.
+        if (checkCartConflict('schools')) {
+            console.log('⚠️ Cart conflict detected');
+            setPendingCartItem(cartItem);
+            setShowConflictModal(true);
+            return;
+        }
+
         console.log('🛒 Cart item constructed:', cartItem);
         console.log('🚀 Calling addToCart...');
 
         // Add to cart
         addToCart(cartItem);
+        proceedAfterAdd();
+    };
 
-        console.log('✅ addToCart called successfully');
-        console.log('📊 Current category index:', currentCategoryIndex);
-        console.log('📊 Total categories:', selectedCategoryIds.length);
-
-        // Check if more items to customize
-        if (currentCategoryIndex < selectedCategoryIds.length - 1) {
-            console.log('➡️ Moving to next category');
-
-            // Move to next category
-            setCurrentCategoryIndex(prev => prev + 1);
-            setCurrentProduct(null);
-            setDetails({
-                color: null,
-                customColorName: '',
-                customColorUrl: null,
-                customColorFileName: null,
-                fabric: '',
-                logoUrl: null,
-                logoName: null,
-                referenceUrl: null,
-                referenceFileName: null,
-                referenceFileName: null,
-                notes: '',
-                stage: 'kg_primary',
-                logoType: null,
-                logoPlacement: null
-            });
-            setSizeQuantities({});
-        } else {
-            console.log('🎉 All categories complete - showing success view');
-
-            // All done - transition to COMPLETED phase
-            setWizardPhase('COMPLETED');
+    const handleConfirmConflict = () => {
+        clearCart();
+        if (pendingCartItem) {
+            addToCart(pendingCartItem);
+            proceedAfterAdd();
         }
+        setShowConflictModal(false);
+        setPendingCartItem(null);
     };
 
     // Back to selection from customization
@@ -1462,6 +1491,39 @@ export default function SchoolWizard() {
                     {contactInfoSubmitted && wizardPhase === 'COMPLETED' && renderSuccessView()}
                 </div>
             </div>
+            {/* Conflict Modal */}
+            {showConflictModal && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-scale-up text-center border border-gray-200">
+                        <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4 text-3xl">
+                            <AlertTriangle size={32} />
+                        </div>
+                        <h3 className="text-xl font-bold text-gray-900 mb-2">
+                            {language === 'ar' ? 'تنبيه السلة' : 'Cart Alert'}
+                        </h3>
+                        <p className="text-gray-600 mb-6">
+                            {language === 'ar'
+                                ? 'سلتك الحالية تحتوي على طلبات من قسم الطلاب. هل تريد إفراغ السلة والبدء في طلب جديد للمدارس؟'
+                                : 'Your cart contains items from the students section. Do you want to clear the cart and start a new schools order?'}
+                        </p>
+                        <div className="flex gap-3">
+                            <button
+                                onClick={() => setShowConflictModal(false)}
+                                className="flex-1 py-3 bg-gray-100 text-gray-700 font-bold rounded-xl hover:bg-gray-200 transition-colors"
+                            >
+                                {language === 'ar' ? 'إلغاء' : 'Cancel'}
+                            </button>
+                            <button
+                                onClick={handleConfirmConflict}
+                                className="flex-1 py-3 bg-red-600 text-white font-bold rounded-xl hover:bg-red-700 transition-colors"
+                            >
+                                {language === 'ar' ? 'إفراغ وبدء جديد' : 'Clear & Start New'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {renderMobileCartBar()}
             {showSizingWizard && <SizingWizard onClose={() => setShowSizingWizard(false)} sector="schools" />}
         </>

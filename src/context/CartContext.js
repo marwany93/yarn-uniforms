@@ -12,7 +12,8 @@ const CartContext = createContext({
   updateCartItem: () => { },
   clearCart: () => { },
   getCartItemCount: () => 0,
-  cartItems: []
+  cartItems: [],
+  checkCartConflict: () => false,
 });
 
 const STORAGE_KEY = 'yarn_b2b_cart';
@@ -84,6 +85,19 @@ export function CartProvider({ children }) {
     return cart.reduce((total, item) => total + (item.quantity || 0), 0);
   };
 
+  const checkCartConflict = (newSector) => {
+    if (cart.length === 0) return false;
+
+    // Detect if current cart has ANY student items
+    const isStudentCart = cart.some(item => item.sector === 'students' || item.details?.sector === 'students');
+    const currentType = isStudentCart ? 'students' : 'b2b';
+
+    // Verify incoming sector
+    const incomingType = newSector === 'students' ? 'students' : 'b2b';
+
+    return currentType !== incomingType;
+  };
+
   return (
     <CartContext.Provider value={{
       cart,
@@ -92,7 +106,8 @@ export function CartProvider({ children }) {
       removeFromCart,
       updateCartItem,
       clearCart,
-      getCartItemCount
+      getCartItemCount,
+      checkCartConflict
     }}>
       {children}
     </CartContext.Provider>
