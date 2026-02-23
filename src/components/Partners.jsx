@@ -35,46 +35,67 @@ export default function Partners() {
                 </h2>
             </div>
 
-            {/* Swiper Grid Slider */}
+            {/* Swiper Grid Slider Container */}
             <div className="container mx-auto px-4 relative">
-                <Swiper
-                    modules={[Grid, Navigation]}
-                    navigation={true}
-                    grid={{
-                        rows: 2,
-                        fill: 'row'
-                    }}
-                    slidesPerView={3}
-                    slidesPerGroup={3}      // Mobile: Flips entire page (3 columns x 2 rows = 6 items)
-                    spaceBetween={10}
-                    breakpoints={{
-                        1024: {
-                            slidesPerView: 6,
-                            slidesPerGroup: 3,  // Desktop: Scrolls 3 columns (6 logos) for continuity
-                            spaceBetween: 30,
-                            grid: {
-                                rows: 2,
-                                fill: 'row'
-                            }
-                        }
-                    }}
-                    className="partners-swiper"
-                >
-                    {allLogos.map((logo) => (
-                        <SwiperSlide key={logo.id}>
-                            <div className="flex items-center justify-center h-16 md:h-20 p-2">
-                                <Image
-                                    src={logo.src}
-                                    alt={logo.alt}
-                                    width={140}
-                                    height={80}
-                                    loading="lazy"
-                                    className="h-full w-auto object-contain transition-all duration-300"
-                                />
-                            </div>
-                        </SwiperSlide>
-                    ))}
-                </Swiper>
+
+                {/* 1. نسخة الموبايل والتابلت (صفين - 6 لوجوهات في الشاشة) */}
+                <div className="block lg:hidden">
+                    <Swiper
+                        modules={[Grid, Navigation]}
+                        navigation={true}
+                        grid={{
+                            rows: 2,
+                            fill: 'row'
+                        }}
+                        slidesPerView={3}
+                        slidesPerGroup={3}
+                        spaceBetween={10}
+                        className="partners-swiper"
+                    >
+                        {allLogos.map((logo) => (
+                            <SwiperSlide key={`mob-${logo.id}`}>
+                                <div className="flex items-center justify-center h-16 p-2">
+                                    <Image
+                                        src={logo.src}
+                                        alt={logo.alt}
+                                        width={140}
+                                        height={80}
+                                        loading="lazy"
+                                        className="h-full w-auto object-contain transition-all duration-300"
+                                    />
+                                </div>
+                            </SwiperSlide>
+                        ))}
+                    </Swiper>
+                </div>
+
+                {/* 2. نسخة الديسكتوب (صف واحد كبير وشياكة - 6 لوجوهات في الشاشة) */}
+                <div className="hidden lg:block">
+                    <Swiper
+                        modules={[Navigation]}
+                        navigation={true}
+                        slidesPerView={6}
+                        slidesPerGroup={3}
+                        spaceBetween={30}
+                        className="partners-swiper"
+                    >
+                        {allLogos.map((logo) => (
+                            <SwiperSlide key={`desk-${logo.id}`}>
+                                <div className="flex items-center justify-center h-28 p-4">
+                                    <Image
+                                        src={logo.src}
+                                        alt={logo.alt}
+                                        width={200}
+                                        height={120}
+                                        loading="lazy"
+                                        className="h-full w-auto object-contain hover:scale-110 transition-transform duration-300"
+                                    />
+                                </div>
+                            </SwiperSlide>
+                        ))}
+                    </Swiper>
+                </div>
+
             </div>
 
             {/* Custom Swiper Navigation Styles */}
@@ -115,7 +136,7 @@ export default function Partners() {
                 /* Mobile Optimizations */
                 @media (max-width: 1023px) {
                     .partners-swiper {
-                        padding: 0 25px; /* Reduced padding for better arrow visibility */
+                        padding: 0 25px;
                     }
 
                     .partners-swiper .swiper-button-prev,
@@ -129,7 +150,6 @@ export default function Partners() {
                         font-size: 14px;
                     }
 
-                    /* Position arrows closer to edges on mobile */
                     .partners-swiper .swiper-button-prev {
                         left: 0;
                     }

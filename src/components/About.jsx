@@ -270,7 +270,7 @@ export default function About() {
                                 initial={{ opacity: 0, y: 20 }}
                                 whileInView={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.5 }}
-                                className="text-4xl font-display font-bold leading-tight drop-shadow-lg"
+                                className="text-4xl font-bold leading-tight drop-shadow-lg"
                             >
                                 {language === 'ar'
                                     ? "تفاصيل تُروى في كل خيط"

@@ -11,7 +11,6 @@ const Footer = () => {
         // Company
         company: { en: 'Company', ar: 'الشركة' },
         about: { en: 'About Us', ar: 'من نحن' },
-        about: { en: 'About Us', ar: 'من نحن' },
         contact: { en: 'Contact', ar: 'اتصل بنا' },
         description: {
             en: 'Professional uniform solutions for schools, factories, companies, and hospitals across Saudi Arabia.',
@@ -20,11 +19,12 @@ const Footer = () => {
 
         // Quick Links
         quickLinks: { en: 'Quick Links', ar: 'روابط سريعة' },
-        schools: { en: 'Schools', ar: 'المدارس' },
-        factories: { en: 'Factories', ar: 'المصانع' },
-        companies: { en: 'Companies', ar: 'الشركات' },
-        hospitals: { en: 'Hospitals', ar: 'المستشفيات' },
-        trackOrder: { en: 'Track Order', ar: 'تتبع الطلب' },
+        schools: { en: 'Educational Sector', ar: 'القطاع التعليمي' },
+        medical: { en: 'Medical Sector', ar: 'القطاع الطبي' },
+        corporate: { en: 'Industrial & Corporate', ar: 'القطاع الصناعي والشركات' },
+        hospitality: { en: 'Restaurants & Cafes', ar: 'قطاع المطاعم والمقاهي' },
+        transportation: { en: 'Transportation & Aviation', ar: 'قطاع النقل والطيران' },
+        domestic: { en: 'Domestic Labor', ar: 'قطاع العمالة المنزلية' },
 
         // Contact
         contactInfo: { en: 'Contact', ar: 'اتصل بنا' },
@@ -38,11 +38,12 @@ const Footer = () => {
     };
 
     const quickLinks = [
-        { name: t(translations.schools), href: '/order/schools' },
-        { name: t(translations.factories), href: '/order/factories' },
-        { name: t(translations.companies), href: '/order/companies' },
-        { name: t(translations.hospitals), href: '/order/hospitals' },
-        { name: t(translations.trackOrder), href: '/track-order' },
+        { name: t(translations.schools), href: '/sectors/schools' },
+        { name: t(translations.medical), href: '/sectors/medical' },
+        { name: t(translations.corporate), href: '/sectors/corporate' },
+        { name: t(translations.hospitality), href: '/sectors/hospitality' },
+        { name: t(translations.transportation), href: '/sectors/transportation' },
+        { name: t(translations.domestic), href: '/sectors/domestic' },
     ];
 
     return (
@@ -70,7 +71,7 @@ const Footer = () => {
 
                     {/* Quick Links */}
                     <div>
-                        <h3 className="text-lg font-display font-bold mb-4">{t(translations.quickLinks)}</h3>
+                        <h3 className="text-lg font-display font-bold text-white mb-4">{t(translations.quickLinks)}</h3>
                         <ul className="space-y-2">
                             {quickLinks.map((link) => (
                                 <li key={link.href}>
@@ -87,24 +88,24 @@ const Footer = () => {
 
                     {/* Contact Info */}
                     <div>
-                        <h3 className="text-lg font-display font-bold mb-4">{t(translations.contactInfo)}</h3>
+                        <h3 className="text-lg font-display font-bold text-white mb-4">{t(translations.contactInfo)}</h3>
                         <ul className="space-y-3 text-white/80">
                             <li className="flex items-center gap-2">
                                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
                                 </svg>
-                                <a href="mailto:info@yarnuniforms.com.sa" className="hover:text-secondary transition-colors">
-                                    info@yarnuniforms.com.sa
+                                <a href="mailto:info@yarnuniforms.com" className="hover:text-secondary transition-colors">
+                                    info@yarnuniforms.com
                                 </a>
                             </li>
-                            <li className="flex items-center gap-2">
+                            {/* <li className="flex items-center gap-2">
                                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
                                 </svg>
                                 <a href="tel:+966123456789" className="hover:text-secondary transition-colors" dir="ltr">
                                     +966 12 345 6789
                                 </a>
-                            </li>
+                            </li> */}
                         </ul>
                     </div>
                 </div>

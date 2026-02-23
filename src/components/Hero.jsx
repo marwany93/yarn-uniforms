@@ -9,9 +9,7 @@ export default function Hero() {
 
     const translations = {
         heroTitle: { en: 'Professional Uniforms', ar: 'زي موحد احترافي' },
-        heroSubtitle: { en: 'Quality uniforms for schools, factories, companies & hospitals', ar: 'زي موحد عالي الجودة للمدارس والمصانع والشركات والمستشفيات' },
-        orderNow: { en: 'Order Now', ar: 'اطلب الآن' },
-        trackYourOrder: { en: 'Track Order', ar: 'تتبع طلبك' },
+        heroSubtitle: { en: 'High-quality uniforms for the Educational, Medical, Industrial & Corporate, Hospitality, Transportation & Aviation, and Domestic Labor sectors.', ar: 'زي موحد عالي الجودة للقطاع التعليمي، القطاع الطبي، القطاع الصناعي والشركات، قطاع المطاعم والمقاهي، قطاع النقل والطيران، وقطاع العمالة المنزلية.' },
         slogan: { en: 'IDENTITY WOVEN', ar: 'هوية تُنسَجُ' }
     };
 
@@ -65,21 +63,7 @@ export default function Hero() {
                         {t(translations.heroSubtitle)}
                     </p>
 
-                    {/* CTA Buttons */}
-                    <div className="flex flex-col sm:flex-row gap-4 justify-center px-4 md:px-0">
-                        <a
-                            href="#sectors"
-                            className="w-full sm:w-auto px-8 py-4 bg-secondary text-primary rounded-lg font-semibold hover:bg-secondary/90 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-                        >
-                            {t(translations.orderNow)}
-                        </a>
-                        <a
-                            href="#track"
-                            className="w-full sm:w-auto px-8 py-4 bg-transparent border-2 border-white text-white rounded-lg font-semibold hover:bg-white hover:text-primary shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
-                        >
-                            {t(translations.trackYourOrder)}
-                        </a>
-                    </div>
+
                 </motion.div>
             </div>
         </section>
