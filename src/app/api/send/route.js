@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 export async function POST(req) {
     try {
         const body = await req.json();
-        const { to, orderId, customerName, items, total, status, type } = body;
+        const { to, orderId, customerName, items, total, status, type, schoolName, phone, message } = body;
 
         // --- Design & Styles ---
         const primaryColor = '#1a237e'; // Navy Blue
@@ -17,6 +17,56 @@ export async function POST(req) {
 
         // Helper to format currency
         const formatPrice = (price) => new Intl.NumberFormat('ar-SA', { style: 'currency', currency: 'SAR' }).format(price);
+
+        // --- Handle Contact Form Dual Email ---
+        if (type === 'CONTACT_FORM') {
+            const adminEmail = 'marrony90@gmail.com'; // Temporary testing email
+
+            // 1. Send to Admin
+            await resend.emails.send({
+                from: 'Yarn Uniforms <info@yarnuniforms.com>',
+                to: [adminEmail],
+                subject: '📩 طلب تواصل جديد - يارن للزي الموحد',
+                html: `
+                    <div style="font-family: Arial, sans-serif; direction: rtl; text-align: right; padding: 20px; background-color: #f8fafc;">
+                        <div style="max-width: 600px; margin: auto; background: #fff; padding: 30px; border-radius: 10px; border-top: 5px solid #1a237e;">
+                            <h2 style="color: #1a237e;">طلب تواصل جديد</h2>
+                            <p><strong>الاسم:</strong> ${customerName}</p>
+                            <p><strong>المدرسة/الشركة:</strong> ${schoolName}</p>
+                            <p><strong>رقم الهاتف:</strong> <span dir="ltr">${phone}</span></p>
+                            <p><strong>البريد الإلكتروني:</strong> ${to}</p>
+                            <div style="background: #f1f5f9; padding: 15px; border-radius: 8px; margin-top: 20px;">
+                                <strong>الرسالة/الطلب:</strong>
+                                <p style="white-space: pre-wrap;">${message}</p>
+                            </div>
+                        </div>
+                    </div>
+                `,
+            });
+
+            // 2. Send Auto-Reply to Customer
+            const { data, error } = await resend.emails.send({
+                from: 'Yarn Uniforms <info@yarnuniforms.com>',
+                to: [to], // Customer email
+                subject: 'شكراً لتواصلك معنا - يارن للزي الموحد',
+                html: `
+                    <div style="font-family: Arial, sans-serif; direction: rtl; text-align: right; padding: 20px; background-color: #f8fafc;">
+                        <div style="max-width: 600px; margin: auto; background: #fff; padding: 30px; border-radius: 10px; border-top: 5px solid #1a237e;">
+                            <h2 style="color: #1a237e;">مرحباً ${customerName}،</h2>
+                            <p>شكراً لتواصلك مع يارن للزي الموحد. لقد استلمنا رسالتك بنجاح وسيقوم فريقنا بمراجعتها والتواصل معك في أقرب وقت ممكن.</p>
+                            <p style="color: #666; font-size: 14px; margin-top: 30px;">نسخة من رسالتك:</p>
+                            <blockquote style="background: #f1f5f9; padding: 10px 15px; border-right: 4px solid #D4AF37; margin: 0; color: #555;">
+                                ${message}
+                            </blockquote>
+                            <p style="margin-top: 30px;">مع تحيات،<br/>فريق يارن للزي الموحد</p>
+                        </div>
+                    </div>
+                `,
+            });
+
+            if (error) return NextResponse.json({ error }, { status: 500 });
+            return NextResponse.json({ message: 'Contact emails sent successfully', data });
+        }
 
         // --- Template Generator ---
         const getEmailTemplate = () => {

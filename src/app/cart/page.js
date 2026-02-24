@@ -75,7 +75,7 @@ export default function CartPage() {
 
     const colorMap = {
         '1': { ar: 'أبيض', en: 'White' }, '2': { ar: 'أخضر', en: 'Green' },
-        '3': { ar: 'برتقالي', en: 'Orange' }, '4': { ar: 'أصفر', en: 'Yellow' },
+        '3': { ar: 'أسود', en: 'Black' }, '4': { ar: 'أصفر', en: 'Yellow' },
         '5': { ar: 'أزرق', en: 'Blue' }, '6': { ar: 'كحلي', en: 'Navy' },
         '7': { ar: 'أحمر', en: 'Red' }, 'custom': { ar: 'لون مخصص', en: 'Custom Color' }
     };
@@ -381,6 +381,55 @@ export default function CartPage() {
                                                         <h3 className="text-sm sm:text-base font-bold text-gray-800 truncate" title={item.productName}>
                                                             {language === 'ar' ? (item.productNameAr || item.productName) : item.productName}
                                                         </h3>
+
+                                                        {/* Customization Specs */}
+                                                        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-sm">
+                                                            {/* Fabric */}
+                                                            {(item.details?.fabric || item.fabric) && (
+                                                                <div className="flex items-center gap-1.5">
+                                                                    <span className="text-gray-500 font-medium">{t(translations.fabric)}:</span>
+                                                                    <span className="font-semibold text-gray-900">
+                                                                        {language === 'ar' ? (item.details?.fabricAr || item.fabricAr || item.details?.fabric) : (item.details?.fabric || item.fabric)}
+                                                                    </span>
+                                                                </div>
+                                                            )}
+
+                                                            {/* Color */}
+                                                            {(item.details?.color || item.details?.customColorName) && (
+                                                                <div className="flex items-center gap-1.5">
+                                                                    <span className="text-gray-500 font-medium">{language === 'ar' ? 'اللون' : 'Color'}:</span>
+                                                                    <span className="font-semibold text-gray-900">
+                                                                        {item.details?.color === 'custom'
+                                                                            ? (item.details?.customColorName || (language === 'ar' ? 'مخصص' : 'Custom'))
+                                                                            : (colorMap[item.details?.color]?.[language] || item.details?.color)}
+                                                                    </span>
+                                                                </div>
+                                                            )}
+
+                                                            {/* Multi-Logos */}
+                                                            {(item.details?.logos || []).map((logo, idx) => (
+                                                                logo.type && (
+                                                                    <div key={idx} className="flex items-center gap-1.5">
+                                                                        <span className="text-gray-500 font-medium">{t(translations.logo)} {idx + 1}:</span>
+                                                                        <span className="inline-flex items-center bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-xs font-bold">
+                                                                            {logoTypeMap[logo.type]?.[language]}
+                                                                            {logo.placement && ` (${logoPlacementMap[logo.placement]?.[language]})`}
+                                                                        </span>
+                                                                    </div>
+                                                                )
+                                                            ))}
+
+                                                            {/* Fallback for single legacy logo */}
+                                                            {!item.details?.logos && item.details?.logoType && (
+                                                                <div className="flex items-center gap-1.5">
+                                                                    <span className="text-gray-500 font-medium">{t(translations.logo)}:</span>
+                                                                    <span className="inline-flex items-center bg-blue-50 text-blue-700 px-2 py-0.5 rounded text-xs font-bold">
+                                                                        {logoTypeMap[item.details?.logoType]?.[language]}
+                                                                        {item.details?.logoPlacement && ` (${logoPlacementMap[item.details?.logoPlacement]?.[language]})`}
+                                                                    </span>
+                                                                </div>
+                                                            )}
+                                                        </div>
                                                     </div>
 
                                                     {/* Action Buttons */}
@@ -389,9 +438,9 @@ export default function CartPage() {
                                                         <button
                                                             onClick={() => {
                                                                 if (item.sector === 'students' && item.details?.schoolId) {
-                                                                    router.push(`/students/${item.details.schoolId}?editId=${item.id}`);
+                                                                    router.push(`/students/${item.details.schoolId}?editId=${item.id}&returnTo=cart`);
                                                                 } else {
-                                                                    router.push(`/sectors/schools?editId=${item.id}`);
+                                                                    router.push(`/sectors/schools?editId=${item.id}&returnTo=cart`);
                                                                 }
                                                             }}
                                                             className="w-9 h-9 flex items-center justify-center text-blue-600 bg-blue-50 hover:bg-blue-600 hover:text-white rounded-lg transition-colors shadow-sm"

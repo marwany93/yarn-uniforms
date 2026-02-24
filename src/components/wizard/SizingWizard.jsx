@@ -81,7 +81,7 @@ const SizingWizard = ({ onClose, sector = 'general' }) => {
       icon: <User className="w-6 h-6" />,
       questionAr: 'أين يتركز الوزن؟',
       questionEn: 'Where is weight concentrated?',
-      type: 'choice',
+      type: 'multichoice',
       options: [
         { valueAr: 'الصدر / الأكتاف', valueEn: 'Chest / Shoulders', value: 'shoulders' },
         { valueAr: 'البطن / الخصر', valueEn: 'Midsection / Waist', value: 'midsection' },
@@ -210,7 +210,8 @@ const SizingWizard = ({ onClose, sector = 'general' }) => {
       else sizeIdx = 6;                  // 3XL
 
       // Adjust for Body Shape
-      if (bodyShape === 'midsection' || bodyShape === 'bottom') {
+      const bodyShapeArr = bodyShape || [];
+      if (bodyShapeArr.includes('midsection') || bodyShapeArr.includes('bottom')) {
         sizeIdx += 1;
         notes.push(language === 'ar' ? 'تم تعديل المقاس لراحة منطقة الوسط/الأرداف.' : 'Adjusted for comfort in midsection/hips.');
       }
@@ -281,7 +282,14 @@ const SizingWizard = ({ onClose, sector = 'general' }) => {
                 {availableQuestions.map((q, idx) => {
                   let displayValue = answers[q.id];
                   // If choice, find the label
-                  if (q.type === 'choice') {
+                  if (q.type === 'multichoice') {
+                    const opts = q.options || q.getOptions?.();
+                    const selectedVals = displayValue || [];
+                    displayValue = selectedVals.map(val => {
+                      const found = opts?.find(opt => opt.value === val);
+                      return language === 'ar' ? found?.valueAr : found?.valueEn;
+                    }).join(' + ');
+                  } else if (q.type === 'choice') {
                     const opts = q.options || q.getOptions?.();
                     const found = opts?.find(opt => opt.value === displayValue);
                     displayValue = language === 'ar' ? found?.valueAr : found?.valueEn;
@@ -387,7 +395,40 @@ const SizingWizard = ({ onClose, sector = 'general' }) => {
             </div>
 
             <div className="min-h-[200px] flex flex-col justify-center">
-              {currentQuestion.type === 'choice' ? (
+              {currentQuestion.type === 'multichoice' ? (
+                <div className="space-y-3">
+                  {(currentQuestion.options || currentQuestion.getOptions())?.map((option) => {
+                    const selectedItems = answers[currentQuestion.id] || [];
+                    const isSelected = selectedItems.includes(option.value);
+                    return (
+                      <button
+                        key={option.value}
+                        onClick={() => {
+                          let newAnswers;
+                          if (option.value === 'proportional') {
+                            newAnswers = isSelected ? [] : ['proportional'];
+                          } else {
+                            let filtered = selectedItems.filter(v => v !== 'proportional');
+                            newAnswers = isSelected
+                              ? filtered.filter(v => v !== option.value)
+                              : [...filtered, option.value];
+                          }
+                          setAnswers({ ...answers, [currentQuestion.id]: newAnswers });
+                        }}
+                        className={`w-full p-4 rounded-xl border-2 text-right transition-all flex items-center justify-between group ${isSelected
+                          ? 'border-indigo-600 bg-indigo-50 text-indigo-700 shadow-md'
+                          : 'border-gray-100 hover:border-indigo-300 hover:bg-gray-50'
+                          }`}
+                      >
+                        <span className={`font-bold ${isSelected ? 'text-indigo-700' : 'text-gray-700'}`}>
+                          {language === 'ar' ? option.valueAr : option.valueEn}
+                        </span>
+                        {isSelected && <Check className="w-5 h-5 text-indigo-600" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : currentQuestion.type === 'choice' ? (
                 <div className="space-y-3">
                   {(currentQuestion.options || currentQuestion.getOptions())?.map((option) => (
                     <button
@@ -464,6 +505,28 @@ const SizingWizard = ({ onClose, sector = 'general' }) => {
                     {language === 'ar' ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
                   </button>
                 </div>
+              </div>
+            )}
+
+            {/* Navigation for Multichoice Inputs */}
+            {currentQuestion.type === 'multichoice' && (
+              <div className="mt-8 flex justify-between gap-4">
+                <button
+                  onClick={prevStep}
+                  disabled={currentStep === 0}
+                  className={`px-6 py-3 rounded-xl font-bold transition flex items-center justify-center gap-2 ${currentStep === 0 ? 'bg-gray-100 text-gray-300 cursor-not-allowed' : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'}`}
+                >
+                  {language === 'ar' ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
+                  {language === 'ar' ? 'عودة' : 'Back'}
+                </button>
+                <button
+                  onClick={nextStep}
+                  disabled={!answers[currentQuestion.id] || answers[currentQuestion.id].length === 0}
+                  className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold transition ${(!answers[currentQuestion.id] || answers[currentQuestion.id].length === 0) ? 'bg-gray-100 text-gray-300 cursor-not-allowed' : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-lg shadow-indigo-200'}`}
+                >
+                  {currentStep === availableQuestions.length - 1 ? (language === 'ar' ? 'احصل على النتيجة' : 'Get Result') : (language === 'ar' ? 'التالي' : 'Next')}
+                  {language === 'ar' ? <ChevronLeft className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+                </button>
               </div>
             )}
 

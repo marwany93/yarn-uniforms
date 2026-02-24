@@ -26,6 +26,7 @@ export default function SchoolWizard() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const editId = searchParams.get('editId');
+    const returnTo = searchParams.get('returnTo');
 
     // Contact information (collected once at start)
     const [contactInfo, setContactInfo] = useState({
@@ -65,8 +66,7 @@ export default function SchoolWizard() {
         referenceFileName: null,      // Reference filename
         notes: '',
         stage: 'kg_primary',
-        logoType: null,
-        logoPlacement: null
+        logos: [{ type: null, placement: null }]
     });
     const [sizeQuantities, setSizeQuantities] = useState({});
     const [isUploadingLogo, setIsUploadingLogo] = useState(false);
@@ -78,6 +78,8 @@ export default function SchoolWizard() {
 
     // Success modal heading ref for focus-shift scroll fix
     const successHeadingRef = useRef(null);
+    const lastProcessedEditId = useRef(null);
+    const resumeCategoryIndex = useRef(0);
 
     const fabricTranslations = {
         'Poplin': { en: 'Poplin', ar: 'بوبلين' },
@@ -135,7 +137,8 @@ export default function SchoolWizard() {
         highSchool: { en: 'High School', ar: 'ثانوي' },
         sizeMatrix: { en: 'Size & Quantity', ar: 'المقاسات والكميات' },
         totalItems: { en: 'Total Items', ar: 'إجمالي القطع' },
-        saveAndNext: { en: 'Save & Next Item ➡️', ar: '➡️ حفظ والتالي' },
+        saveAndNext: { en: 'Save & Next Item', ar: 'حفظ والتالي' },
+        saveEdit: { en: 'Save Edit', ar: 'حفظ التعديل' },
         atLeastOne: { en: 'Please add at least one item', ar: 'يرجى إضافة قطعة واحدة على الأقل' },
         selectProduct: { en: 'Please select a product style', ar: 'يرجى اختيار نمط المنتج' },
 
@@ -194,22 +197,40 @@ export default function SchoolWizard() {
 
         // 3. Load Item for Editing if editId exists
         if (editId) {
-            const itemToEdit = cart.find(item => item.id === editId);
-            if (itemToEdit) {
-                console.log('✏️ Editing item:', itemToEdit);
-                setWizardPhase('CUSTOMIZATION');
+            if (lastProcessedEditId.current !== editId) {
+                const itemToEdit = cart.find(item => item.id === editId);
+                if (itemToEdit) {
+                    console.log('✏️ Editing item:', itemToEdit);
+                    lastProcessedEditId.current = editId; // Lock it
+                    setWizardPhase('CUSTOMIZATION');
 
-                // Set Categories (find category of product)
-                const product = getProductById(itemToEdit.productId);
-                if (product) {
-                    setSelectedCategoryIds([product.category]);
-                    setCurrentProduct(itemToEdit.productId);
+                    // Set Categories (find category of product)
+                    const product = getProductById(itemToEdit.productId);
+                    if (product) {
+                        setSelectedCategoryIds(prev => {
+                            if (prev.includes(product.category)) {
+                                setCurrentCategoryIndex(prev.indexOf(product.category));
+                                return prev;
+                            } else {
+                                setCurrentCategoryIndex(prev.length);
+                                return [...prev, product.category];
+                            }
+                        });
+                        setCurrentProduct(itemToEdit.productId);
+                    }
+
+                    // Restore Details with backward compatibility for logos
+                    const restoredDetails = { ...itemToEdit.details };
+                    if (!restoredDetails.logos) {
+                        restoredDetails.logos = [{ type: restoredDetails.logoType || null, placement: restoredDetails.logoPlacement || null }];
+                    }
+                    setDetails(restoredDetails);
+                    setSizeQuantities(itemToEdit.details.sizes || {});
                 }
-
-                // Restore Details
-                setDetails(itemToEdit.details);
-                setSizeQuantities(itemToEdit.details.sizes || {});
             }
+        } else {
+            // ONLY clear the lock when the URL no longer has the editId.
+            lastProcessedEditId.current = null;
         }
     }, [editId, cart]);
 
@@ -253,11 +274,14 @@ export default function SchoolWizard() {
         'Heavy Duty Gabardine'
     ];
 
+    const ordinalAr = ['الأول', 'الثاني', 'الثالث'];
+    const ordinalEn = ['First', 'Second', 'Third'];
+
     // Color Options
     const colorOptions = [
         { id: 1, label: { en: 'White', ar: 'أبيض' }, hex: '#FFFFFF', border: 'gray-300' },
         { id: 2, label: { en: 'Green', ar: 'أخضر' }, hex: '#166534', border: 'transparent' },
-        { id: 3, label: { en: 'Orange', ar: 'برتقالي' }, hex: '#F97316', border: 'transparent' },
+        { id: 3, label: { en: 'Black', ar: 'أسود' }, hex: '#000000', border: 'transparent' },
         { id: 4, label: { en: 'Yellow', ar: 'أصفر' }, hex: '#EAB308', border: 'transparent' },
         { id: 5, label: { en: 'Blue', ar: 'أزرق' }, hex: '#2563EB', border: 'transparent' },
         { id: 6, label: { en: 'Navy', ar: 'كحلي' }, hex: '#1E3A8A', border: 'transparent' },
@@ -362,6 +386,36 @@ export default function SchoolWizard() {
         });
     };
 
+    const handleUpdateLogo = (index, field, value) => {
+        const newLogos = [...(details.logos || [])];
+
+        // Prevent duplicate placement selection
+        if (field === 'placement') {
+            const isDuplicate = newLogos.some((logo, i) => i !== index && logo.placement === value);
+            if (isDuplicate) {
+                alert(language === 'ar' ? 'تم اختيار هذا المكان مسبقاً لشعار آخر' : 'This placement is already selected for another logo');
+                return;
+            }
+        }
+
+        newLogos[index] = { ...newLogos[index], [field]: value };
+        setDetails({ ...details, logos: newLogos });
+    };
+
+    const handleAddLogo = () => {
+        const currentLogos = details.logos || [];
+        if (currentLogos.length >= 3) {
+            alert(language === 'ar' ? 'الحد الأقصى هو 3 شعارات' : 'Maximum of 3 logos allowed');
+            return;
+        }
+        setDetails({ ...details, logos: [...currentLogos, { type: null, placement: null }] });
+    };
+
+    const handleRemoveLogo = (index) => {
+        const newLogos = details.logos.filter((_, i) => i !== index);
+        setDetails({ ...details, logos: newLogos });
+    };
+
     // Start customization phase
     const handleStartCustomizing = () => {
         if (selectedCategoryIds.length === 0) {
@@ -370,8 +424,14 @@ export default function SchoolWizard() {
         }
         setWizardPhase('CUSTOMIZATION');
         setCurrentCategoryIndex(0);
+        resumeCategoryIndex.current = 0;
         setCurrentProduct(null);
         setSizeQuantities({});
+        setDetails({
+            color: null, customColorName: '', customColorUrl: null, customColorFileName: null,
+            fabric: '', logoUrl: null, logoName: null, referenceUrl: null, referenceFileName: null,
+            notes: '', stage: 'kg_primary', logos: [{ type: null, placement: null }]
+        });
     };
 
     // Select product style
@@ -509,7 +569,11 @@ export default function SchoolWizard() {
             console.log('➡️ Moving to next category');
 
             // Move to next category
-            setCurrentCategoryIndex(prev => prev + 1);
+            setCurrentCategoryIndex(prev => {
+                const nextIdx = prev + 1;
+                resumeCategoryIndex.current = nextIdx; // Track the furthest progression
+                return nextIdx;
+            });
             setCurrentProduct(null);
             setDetails({
                 color: null,
@@ -534,6 +598,7 @@ export default function SchoolWizard() {
             console.log('🎉 All categories complete - showing success view');
 
             // All done - transition to COMPLETED phase
+            resumeCategoryIndex.current = selectedCategoryIds.length; // Mark as all done
             setWizardPhase('COMPLETED');
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
@@ -565,13 +630,17 @@ export default function SchoolWizard() {
         }
 
         // Logo Validation - MANDATORY
-        if (!details.logoType) {
-            alert(t({ en: 'Please select logo type', ar: 'يرجى اختيار نوع الشعار' }));
+        const invalidLogo = (details.logos || []).some(l => !l.type || !l.placement);
+        if (invalidLogo) {
+            alert(t({ en: 'Please select type and placement for all logos', ar: 'يرجى اختيار نوع ومكان كل شعار' }));
             return;
         }
 
-        if (!details.logoPlacement) {
-            alert(t({ en: 'Please select logo placement', ar: 'يرجى اختيار مكان الشعار' }));
+        // Check for duplicate placements
+        const placements = details.logos.map(l => l.placement).filter(Boolean);
+        const uniquePlacements = new Set(placements);
+        if (placements.length !== uniquePlacements.size) {
+            alert(language === 'ar' ? 'يجب أن يكون لكل شعار مكان مختلف' : 'Each logo must have a unique placement');
             return;
         }
 
@@ -594,7 +663,7 @@ export default function SchoolWizard() {
 
         // Create cart item
         const cartItem = {
-            id: `${currentProduct}-${Date.now()}`,
+            id: editId ? editId : `${currentProduct}-${Date.now()}`,
             productId: currentProduct,
             productName: product.name,
             productNameAr: product.nameAr, // Store Arabic Name
@@ -608,8 +677,7 @@ export default function SchoolWizard() {
             customColorName: details.customColorName || null,
             customColorUrl: details.customColorUrl || null,
             referenceFileUrl: details.referenceUrl || null,
-            logoType: details.logoType,
-            logoPlacement: details.logoPlacement,
+            logos: details.logos,
             // -----------------------------------------------------
 
             details: {
@@ -621,8 +689,7 @@ export default function SchoolWizard() {
                 fabric: details.fabric,
                 fabricAr: fabricTranslations[details.fabric]?.ar || details.fabric,
                 stage: details.stage,
-                logoType: details.logoType,
-                logoPlacement: details.logoPlacement,
+                logos: details.logos,
                 sizes: Object.fromEntries(
                     Object.entries(sizeQuantities).filter(([_, qty]) => qty > 0)
                 ),
@@ -639,8 +706,37 @@ export default function SchoolWizard() {
 
         if (editId) {
             console.log('✏️ Updating existing item:', editId);
+
             updateCartItem(editId, cartItem);
-            router.push('/cart');
+
+            // 1. If user came from the main cart page, return them there immediately
+            if (returnTo === 'cart') {
+                router.push('/cart');
+                return;
+            }
+
+            // 2. Otherwise, do the normal resume flow (for Mini-Cart edits)
+            router.replace(window.location.pathname, { scroll: false });
+
+            // CRITICAL: DO NOT set lastProcessedEditId.current = null here. 
+            // The useEffect will handle it when editId actually becomes null.
+
+            // Restore flow seamlessly back to where the user left off
+            if (resumeCategoryIndex.current < selectedCategoryIds.length) {
+                setCurrentCategoryIndex(resumeCategoryIndex.current);
+                setWizardPhase('CUSTOMIZATION');
+            } else {
+                setWizardPhase('COMPLETED');
+            }
+
+            setCurrentProduct(null);
+            setSizeQuantities({});
+            setDetails({
+                color: null, customColorName: '', customColorUrl: null, customColorFileName: null,
+                fabric: '', logoUrl: null, logoName: null, referenceUrl: null, referenceFileName: null,
+                notes: '', stage: 'kg_primary', logos: [{ type: null, placement: null }]
+            });
+
             return;
         }
 
@@ -717,8 +813,7 @@ export default function SchoolWizard() {
             referenceFileName: null,
             notes: '',
             stage: 'kg_primary',
-            logoType: null,
-            logoPlacement: null
+            logos: [{ type: null, placement: null }]
         });
         setSizeQuantities({});
     };
@@ -1099,127 +1194,23 @@ export default function SchoolWizard() {
                             </div>
                         </div>
 
-                        {/* Logo Type Selection */}
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-3">
-                                {t(translations.logoType)} <span className="text-red-500">*</span>
-                            </label>
-                            <div className="grid grid-cols-3 gap-4">
-                                {['embroidery', 'printing', 'wovenPatch'].map((type) => {
-                                    // Map type IDs to image paths
-                                    const imgMap = {
-                                        embroidery: '/images/customization/logo-embroidery.png',
-                                        printing: '/images/customization/logo-printing.png',
-                                        wovenPatch: '/images/customization/logo-woven.png'
-                                    };
-
-                                    return (
-                                        <button
-                                            key={type}
-                                            onClick={() => setDetails({ ...details, logoType: type })}
-                                            className={`relative group flex flex-col items-center p-0 rounded-xl border-2 overflow-hidden transition-all duration-300 ${details.logoType === type
-                                                ? 'border-primary ring-2 ring-primary ring-offset-2 scale-105 shadow-md'
-                                                : 'border-gray-200 hover:border-primary hover:shadow-lg opacity-90 hover:opacity-100'
-                                                }`}
-                                        >
-                                            <div className="relative w-full aspect-square bg-gray-50">
-                                                <Image
-                                                    src={imgMap[type]}
-                                                    alt={t(translations[type])}
-                                                    fill
-                                                    className="object-cover transition-transform duration-500 group-hover:scale-110"
-                                                />
-                                            </div>
-                                            <div className={`w-full py-3 text-center border-t transition-colors ${details.logoType === type ? 'bg-primary/10 border-primary/20' : 'bg-white border-gray-100'
-                                                }`}>
-                                                <span className={`text-sm font-semibold ${details.logoType === type ? 'text-primary' : 'text-gray-700'
-                                                    }`}>
-                                                    {t(translations[type])}
-                                                </span>
-                                            </div>
-
-                                            {details.logoType === type && (
-                                                <div className="absolute top-2 right-2 text-primary bg-white rounded-full p-0.5 shadow-sm">
-                                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                                    </svg>
-                                                </div>
-                                            )}
-                                        </button>
-                                    )
-                                })}
-                            </div>
-                        </div>
-
-                        {/* Logo Placement Selection */}
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 mb-3">
-                                {t(translations.logoPlacement)} <span className="text-red-500">*</span>
-                            </label>
-                            <div className="grid grid-cols-3 gap-4">
-                                {['chest', 'shoulder', 'back'].map((placement) => {
-                                    // Map placement IDs to image paths
-                                    const imgMap = {
-                                        chest: '/images/customization/placement-chest.png',
-                                        shoulder: '/images/customization/placement-shoulder.png',
-                                        back: '/images/customization/placement-back.png'
-                                    };
-
-                                    return (
-                                        <button
-                                            key={placement}
-                                            onClick={() => setDetails({ ...details, logoPlacement: placement })}
-                                            className={`relative group flex flex-col items-center p-0 rounded-xl border-2 overflow-hidden transition-all duration-300 ${details.logoPlacement === placement
-                                                ? 'border-primary ring-2 ring-primary ring-offset-2 scale-105 shadow-md'
-                                                : 'border-gray-200 hover:border-primary hover:shadow-lg opacity-90 hover:opacity-100'
-                                                }`}
-                                        >
-                                            <div className="relative w-full aspect-square bg-gray-50">
-                                                <Image
-                                                    src={imgMap[placement]}
-                                                    alt={t(translations[placement === 'back' ? 'logoBack' : placement])}
-                                                    fill
-                                                    className="object-cover transition-transform duration-500 group-hover:scale-110"
-                                                />
-                                            </div>
-                                            <div className={`w-full py-3 text-center border-t transition-colors ${details.logoPlacement === placement ? 'bg-primary/10 border-primary/20' : 'bg-white border-gray-100'
-                                                }`}>
-                                                <span className={`text-sm font-semibold ${details.logoPlacement === placement ? 'text-primary' : 'text-gray-700'
-                                                    }`}>
-                                                    {t(translations[placement === 'back' ? 'logoBack' : placement])}
-                                                </span>
-                                            </div>
-
-                                            {details.logoPlacement === placement && (
-                                                <div className="absolute top-2 right-2 text-primary bg-white rounded-full p-0.5 shadow-sm">
-                                                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                                    </svg>
-                                                </div>
-                                            )}
-                                        </button>
-                                    )
-                                })}
-                            </div>
-                        </div>
-
                         {/* Custom Color Inputs - Conditional */}
                         {details.color === 'custom' && (
-                            <div className="p-4 bg-yellow-50 border-2 border-yellow-200 rounded-lg space-y-4">
+                            <div className="mt-4 p-4 bg-yellow-50 border-2 border-yellow-200 rounded-lg space-y-4">
                                 <p className="text-sm font-semibold text-yellow-900">
-                                    📝 Custom Color Details
+                                    📝 {language === 'ar' ? 'تفاصيل اللون المخصص' : 'Custom Color Details'}
                                 </p>
 
                                 {/* Color Name Input */}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Color Name/Code <span className="text-red-500">*</span>
+                                        {language === 'ar' ? 'اسم / كود اللون' : 'Color Name/Code'} <span className="text-red-500">*</span>
                                     </label>
                                     <input
                                         type="text"
                                         value={details.customColorName}
                                         onChange={(e) => setDetails({ ...details, customColorName: e.target.value })}
-                                        placeholder="e.g., Burgundy, Pantone 19-1764, #8B0000"
+                                        placeholder={language === 'ar' ? 'مثال: عنابي، بانتون 19-1764، #8B0000' : 'e.g., Burgundy, Pantone 19-1764, #8B0000'}
                                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary"
                                     />
                                 </div>
@@ -1227,7 +1218,7 @@ export default function SchoolWizard() {
                                 {/* Color Sample Upload */}
                                 <div>
                                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                                        Upload Color Sample/Image (Optional)
+                                        {language === 'ar' ? 'رفع عينة / صورة للون (اختياري)' : 'Upload Color Sample/Image (Optional)'}
                                     </label>
                                     <input
                                         type="file"
@@ -1237,7 +1228,7 @@ export default function SchoolWizard() {
                                         className="w-full px-4 py-2 border border-gray-300 rounded-lg disabled:bg-gray-100 disabled:cursor-not-allowed"
                                     />
                                     {isUploadingCustomColor && (
-                                        <p className="mt-2 text-sm text-blue-600">⏳ Uploading color sample...</p>
+                                        <p className="mt-2 text-sm text-blue-600">{language === 'ar' ? '⏳ جاري رفع العينة...' : '⏳ Uploading color sample...'}</p>
                                     )}
                                     {details.customColorFileName && !isUploadingCustomColor && (
                                         <p className="mt-2 text-sm text-green-600">✓ {details.customColorFileName}</p>
@@ -1245,6 +1236,149 @@ export default function SchoolWizard() {
                                 </div>
                             </div>
                         )}
+
+                        {/* Multi-Logo Selection */}
+                        <div className="space-y-6">
+                            {(details.logos || []).map((logo, index) => (
+                                <div key={index} className="p-4 bg-gray-50 border border-gray-200 rounded-xl relative">
+                                    {/* Logo Section Header */}
+                                    <div className="flex items-center justify-between mb-4">
+                                        <h4 className="text-md font-bold text-gray-900 flex items-center gap-2">
+                                            {details.logos.length === 1
+                                                ? (language === 'ar' ? 'الشعار' : 'Logo')
+                                                : (language === 'ar' ? `الشعار ${ordinalAr[index]}` : `${ordinalEn[index]} Logo`)}
+                                        </h4>
+
+                                        {/* Remove Button for extra logos */}
+                                        {index > 0 && (
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRemoveLogo(index)}
+                                                className="text-red-500 hover:text-red-700 bg-red-50 p-2 rounded-full transition-colors flex items-center justify-center"
+                                                title={language === 'ar' ? 'إزالة الشعار' : 'Remove Logo'}
+                                            >
+                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                                                </svg>
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    {/* Logo Type Selection */}
+                                    <div className="mb-6">
+                                        <label className="block text-sm font-semibold text-gray-700 mb-3">
+                                            {t(translations.logoType)} <span className="text-red-500">*</span>
+                                        </label>
+                                        <div className="grid grid-cols-3 gap-4">
+                                            {['embroidery', 'printing', 'wovenPatch'].map((type) => {
+                                                const imgMap = {
+                                                    embroidery: '/images/customization/logo-embroidery.png',
+                                                    printing: '/images/customization/logo-printing.png',
+                                                    wovenPatch: '/images/customization/logo-woven.png'
+                                                };
+                                                return (
+                                                    <button
+                                                        key={type}
+                                                        onClick={() => handleUpdateLogo(index, 'type', type)}
+                                                        className={`relative group flex flex-col items-center p-0 rounded-xl border-2 overflow-hidden transition-all duration-300 ${logo.type === type
+                                                            ? 'border-primary ring-2 ring-primary ring-offset-2 scale-105 shadow-md'
+                                                            : 'border-gray-200 hover:border-primary hover:shadow-lg opacity-90 hover:opacity-100'
+                                                            }`}
+                                                    >
+                                                        <div className="relative w-full aspect-square bg-gray-50">
+                                                            <Image
+                                                                src={imgMap[type]}
+                                                                alt={t(translations[type])}
+                                                                fill
+                                                                className="object-cover transition-transform duration-500 group-hover:scale-110"
+                                                            />
+                                                        </div>
+                                                        <div className={`w-full py-3 text-center border-t transition-colors ${logo.type === type ? 'bg-primary/10 border-primary/20' : 'bg-white border-gray-100'
+                                                            }`}>
+                                                            <span className={`text-sm font-semibold ${logo.type === type ? 'text-primary' : 'text-gray-700'
+                                                                }`}>
+                                                                {t(translations[type])}
+                                                            </span>
+                                                        </div>
+
+                                                        {logo.type === type && (
+                                                            <div className="absolute top-2 right-2 text-primary bg-white rounded-full p-0.5 shadow-sm">
+                                                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                                                </svg>
+                                                            </div>
+                                                        )}
+                                                    </button>
+                                                )
+                                            })}
+                                        </div>
+                                    </div>
+
+                                    {/* Logo Placement Selection */}
+                                    <div>
+                                        <label className="block text-sm font-semibold text-gray-700 mb-3">
+                                            {t(translations.logoPlacement)} <span className="text-red-500">*</span>
+                                        </label>
+                                        <div className="grid grid-cols-3 gap-4">
+                                            {['chest', 'shoulder', 'back'].map((placement) => {
+                                                const imgMap = {
+                                                    chest: '/images/customization/placement-chest.png',
+                                                    shoulder: '/images/customization/placement-shoulder.png',
+                                                    back: '/images/customization/placement-back.png'
+                                                };
+                                                return (
+                                                    <button
+                                                        key={placement}
+                                                        onClick={() => handleUpdateLogo(index, 'placement', placement)}
+                                                        className={`relative group flex flex-col items-center p-0 rounded-xl border-2 overflow-hidden transition-all duration-300 ${logo.placement === placement
+                                                            ? 'border-primary ring-2 ring-primary ring-offset-2 scale-105 shadow-md'
+                                                            : 'border-gray-200 hover:border-primary hover:shadow-lg opacity-90 hover:opacity-100'
+                                                            }`}
+                                                    >
+                                                        <div className="relative w-full aspect-square bg-gray-50">
+                                                            <Image
+                                                                src={imgMap[placement]}
+                                                                alt={t(translations[placement === 'back' ? 'logoBack' : placement])}
+                                                                fill
+                                                                className="object-cover transition-transform duration-500 group-hover:scale-110"
+                                                            />
+                                                        </div>
+                                                        <div className={`w-full py-3 text-center border-t transition-colors ${logo.placement === placement ? 'bg-primary/10 border-primary/20' : 'bg-white border-gray-100'
+                                                            }`}>
+                                                            <span className={`text-sm font-semibold ${logo.placement === placement ? 'text-primary' : 'text-gray-700'
+                                                                }`}>
+                                                                {t(translations[placement === 'back' ? 'logoBack' : placement])}
+                                                            </span>
+                                                        </div>
+
+                                                        {logo.placement === placement && (
+                                                            <div className="absolute top-2 right-2 text-primary bg-white rounded-full p-0.5 shadow-sm">
+                                                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                                                </svg>
+                                                            </div>
+                                                        )}
+                                                    </button>
+                                                )
+                                            })}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+
+                            {(details.logos || []).length < 3 && (
+                                <button
+                                    type="button"
+                                    onClick={handleAddLogo}
+                                    className="w-full py-4 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 font-semibold hover:border-primary hover:text-primary transition-colors flex items-center justify-center gap-2"
+                                >
+                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
+                                    {language === 'ar' ? 'إضافة شعار آخر' : 'Add Another Logo'}
+                                </button>
+                            )}
+                        </div>
+
+
 
                         {/* Fabric Selection */}
                         <div>
@@ -1398,7 +1532,7 @@ export default function SchoolWizard() {
                             </span>
                         </div>
 
-                        {/* Save & Next Button */}
+                        {/* Save & Next / Edit Button */}
                         <button
                             onClick={handleSaveAndNext}
                             disabled={totalItems === 0}
@@ -1407,7 +1541,7 @@ export default function SchoolWizard() {
                                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                                 }`}
                         >
-                            {t(translations.saveAndNext)}
+                            {editId ? t(translations.saveEdit) : t(translations.saveAndNext)}
                         </button>
                     </div>
                 )}

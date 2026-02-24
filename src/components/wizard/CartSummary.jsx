@@ -5,9 +5,10 @@ import { useCart } from '@/context/CartContext';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useLanguage } from '@/hooks/useLanguage';
+import { Pencil, Trash2 } from 'lucide-react';
 
 export default function CartSummary() {
-    const { cart, getCartItemCount } = useCart();
+    const { cart, getCartItemCount, removeFromCart } = useCart();
     const router = useRouter();
     const { t, language } = useLanguage();
     const [isBouncing, setIsBouncing] = useState(false);
@@ -37,7 +38,7 @@ export default function CartSummary() {
 
     const colorMap = {
         '1': { ar: 'أبيض', en: 'White' }, '2': { ar: 'أخضر', en: 'Green' },
-        '3': { ar: 'برتقالي', en: 'Orange' }, '4': { ar: 'أصفر', en: 'Yellow' },
+        '3': { ar: 'أسود', en: 'Black' }, '4': { ar: 'أصفر', en: 'Yellow' },
         '5': { ar: 'أزرق', en: 'Blue' }, '6': { ar: 'كحلي', en: 'Navy' },
         '7': { ar: 'أحمر', en: 'Red' }, 'custom': { ar: 'لون مخصص', en: 'Custom Color' }
     };
@@ -55,16 +56,7 @@ export default function CartSummary() {
     };
 
     if (cart.length === 0) {
-        return (
-            <div className="bg-white rounded-xl shadow-lg p-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">🛒 {t(translations.title)}</h3>
-                <div className="text-center py-8">
-                    <div className="text-5xl mb-3">📦</div>
-                    <p className="text-gray-500 text-sm">{t(translations.emptyTitle)}</p>
-                    <p className="text-gray-400 text-xs mt-2">{t(translations.emptyHint)}</p>
-                </div>
-            </div>
-        );
+        return null;
     }
 
     return (
@@ -101,14 +93,41 @@ export default function CartSummary() {
 
                         {/* Details Column */}
                         <div className="flex-1 min-w-0">
-                            {/* Header: Name & Qty */}
+                            {/* Header: Name, Qty & Actions */}
                             <div className="flex justify-between items-start mb-1">
-                                <h4 className="font-bold text-sm text-gray-900 truncate ml-1">
+                                <h4 className="font-bold text-sm text-gray-900 truncate ml-1" title={language === 'ar' ? (item.details?.nameAr || item.productNameAr || item.productName) : item.productName}>
                                     {language === 'ar' ? (item.details?.nameAr || item.productNameAr || item.productName) : item.productName}
                                 </h4>
-                                <span className="shrink-0 bg-primary/10 text-primary text-[10px] font-bold px-1.5 py-0.5 rounded">
-                                    {item.quantity} {t(translations.pcs)}
-                                </span>
+
+                                <div className="flex items-center gap-1.5 shrink-0">
+                                    <span className="shrink-0 bg-primary/10 text-primary text-[10px] font-bold px-1.5 py-0.5 rounded">
+                                        {item.quantity} {t(translations.pcs)}
+                                    </span>
+
+                                    {/* Edit Button */}
+                                    <button
+                                        onClick={() => {
+                                            if (item.sector === 'students' && item.details?.schoolId) {
+                                                router.push(`/students/${item.details.schoolId}?editId=${item.id}`);
+                                            } else {
+                                                router.push(`/sectors/schools?editId=${item.id}`);
+                                            }
+                                        }}
+                                        className="w-6 h-6 flex items-center justify-center text-blue-600 bg-blue-50 hover:bg-blue-600 hover:text-white rounded transition-colors shadow-sm"
+                                        title={language === 'ar' ? 'تعديل' : 'Edit'}
+                                    >
+                                        <Pencil size={12} />
+                                    </button>
+
+                                    {/* Delete Button */}
+                                    <button
+                                        onClick={() => removeFromCart(item.id)}
+                                        className="w-6 h-6 flex items-center justify-center text-red-500 bg-red-50 hover:bg-red-500 hover:text-white rounded transition-colors shadow-sm"
+                                        title={language === 'ar' ? 'حذف' : 'Delete'}
+                                    >
+                                        <Trash2 size={12} />
+                                    </button>
+                                </div>
                             </div>
 
                             {/* Specs List (Compact) */}
@@ -135,8 +154,20 @@ export default function CartSummary() {
                                     </div>
                                 )}
 
-                                {/* Logo (Conditionally Rendered) */}
-                                {item.details?.logoType && (
+                                {/* Multi-Logos */}
+                                {(item.details?.logos || []).map((logo, idx) => (
+                                    logo.type && (
+                                        <div key={idx} className="flex items-center gap-1 text-blue-600 bg-blue-50 px-1 rounded w-fit mt-1">
+                                            <span className="font-medium">
+                                                {logoTypeMap[logo.type]?.[language]}
+                                                {logo.placement && ` (${logoPlacementMap[logo.placement]?.[language]})`}
+                                            </span>
+                                        </div>
+                                    )
+                                ))}
+
+                                {/* Fallback for single legacy logo */}
+                                {!item.details?.logos && item.details?.logoType && (
                                     <div className="flex items-center gap-1 text-blue-600 bg-blue-50 px-1 rounded w-fit mt-1">
                                         <span className="font-medium">
                                             {logoTypeMap[item.details.logoType]?.[language]}
