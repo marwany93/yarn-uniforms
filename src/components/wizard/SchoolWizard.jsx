@@ -166,6 +166,8 @@ export default function SchoolWizard() {
         chest: { en: 'Chest', ar: 'الصدر' },
         shoulder: { en: 'Shoulder', ar: 'الكتف' },
         logoBack: { en: 'Back', ar: 'الظهر' },
+        pocket: { en: 'Pocket', ar: 'الجيب' },
+        leg: { en: 'Leg', ar: 'الساق' },
     };
 
     useEffect(() => {
@@ -1018,6 +1020,20 @@ export default function SchoolWizard() {
         </div>
     );
 
+    const getLogoPlacementOptions = () => {
+        if (!currentProduct) return ['chest', 'shoulder', 'back'];
+        const product = getProductById(currentProduct);
+        if (!product) return ['chest', 'shoulder', 'back'];
+
+        const name = (product.name || '').toLowerCase();
+        const nameAr = (product.nameAr || '').toLowerCase();
+
+        if (name.includes('pant') || name.includes('trouser') || name.includes('skirt') || name.includes('short') || nameAr.includes('بنطلون') || nameAr.includes('تنورة') || nameAr.includes('شورت') || nameAr.includes('جيب')) {
+            return ['pocket', 'leg', 'back']; // Bottoms placements
+        }
+        return ['chest', 'shoulder', 'back']; // Tops placements
+    };
+
     // Phase 2: Sequential Customization
     const renderCustomizationPhase = () => {
         const currentCategory = getCurrentCategory();
@@ -1320,11 +1336,19 @@ export default function SchoolWizard() {
                                             {t(translations.logoPlacement)} <span className="text-red-500">*</span>
                                         </label>
                                         <div className="grid grid-cols-3 gap-4">
-                                            {['chest', 'shoulder', 'back'].map((placement) => {
+                                            {getLogoPlacementOptions().map((placement) => {
+                                                // Check if the current product is a bottom (pants, skirts, shorts)
+                                                const product = getProductById(currentProduct);
+                                                const name = (product?.name || '').toLowerCase();
+                                                const nameAr = (product?.nameAr || '').toLowerCase();
+                                                const isBottom = name.includes('pant') || name.includes('trouser') || name.includes('skirt') || name.includes('short') || nameAr.includes('بنطلون') || nameAr.includes('تنورة') || nameAr.includes('شورت') || nameAr.includes('جيب');
+
                                                 const imgMap = {
                                                     chest: '/images/customization/placement-chest.png',
                                                     shoulder: '/images/customization/placement-shoulder.png',
-                                                    back: '/images/customization/placement-back.png'
+                                                    back: isBottom ? '/images/customization/placement-pant-back.png' : '/images/customization/placement-back.png',
+                                                    pocket: '/images/customization/placement-pocket.png',
+                                                    leg: '/images/customization/placement-leg.png'
                                                 };
                                                 return (
                                                     <button

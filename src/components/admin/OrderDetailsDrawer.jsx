@@ -111,7 +111,9 @@ export default function OrderDetailsDrawer({ isOpen, onClose, order }) {
     const logoPlacementMap = {
         'chest': { ar: 'الصدر', en: 'Chest' },
         'shoulder': { ar: 'الكتف', en: 'Shoulder' },
-        'back': { ar: 'الظهر', en: 'Back' }
+        'back': { ar: 'الظهر', en: 'Back' },
+        'pocket': { ar: 'الجيب', en: 'Pocket' },
+        'leg': { ar: 'الساق', en: 'Leg' }
     };
 
     // Color mapping for standard palette logic (keeping hex values)
@@ -454,7 +456,7 @@ export default function OrderDetailsDrawer({ isOpen, onClose, order }) {
                                         </div>
 
                                         {/* Details Box: Fabric, Color, Ref, Logo */}
-                                        {(item.details?.fabric || item.fabric || item.details?.color || item.selectedColor || item.referenceFileUrl || item.details?.uploadedLogoUrl || item.details?.logoType) && (
+                                        {(item.details?.fabric || item.fabric || item.details?.color || item.selectedColor || item.referenceFileUrl || item.details?.uploadedLogoUrl || item.details?.logoType || (item.details?.logos && item.details.logos.length > 0)) && (
                                             <div className="mt-3 space-y-2 text-sm text-gray-700 bg-gray-50 p-3 rounded border border-gray-200">
 
                                                 {/* Fabric */}
@@ -502,27 +504,37 @@ export default function OrderDetailsDrawer({ isOpen, onClose, order }) {
                                                     </div>
                                                 )}
 
-                                                {/* Logo Details */}
-                                                {item.details?.logoType && (
-                                                    <div className="flex items-center gap-2">
-                                                        <span className="font-semibold text-gray-500">{t(adminTrans.logo)}:</span>
-                                                        <span className="px-2 py-0.5 bg-white border rounded text-gray-800">
-                                                            {(() => {
-                                                                const type = item.details.logoType;
-                                                                const placement = item.details.logoPlacement;
-
-                                                                const typeText = logoTypeMap[type]
-                                                                    ? (language === 'ar' ? logoTypeMap[type].ar : logoTypeMap[type].en)
-                                                                    : type;
-
-                                                                const placementText = logoPlacementMap[placement]
-                                                                    ? (language === 'ar' ? logoPlacementMap[placement].ar : logoPlacementMap[placement].en)
-                                                                    : placement;
-
-                                                                return `${typeText} ${placementText ? `(${placementText})` : ''}`;
-                                                            })()}
-                                                        </span>
-                                                    </div>
+                                                {/* Multi-Logos Details */}
+                                                {item.details?.logos && item.details.logos.length > 0 ? (
+                                                    item.details.logos.map((logo, idx) => (
+                                                        logo.type && (
+                                                            <div key={idx} className="flex items-center gap-2 mt-2">
+                                                                <span className="font-semibold text-gray-500">
+                                                                    {item.details.logos.length === 1
+                                                                        ? t(adminTrans.logo)
+                                                                        : (language === 'ar'
+                                                                            ? `الشعار ${['الأول', 'الثاني', 'الثالث'][idx] || idx + 1}`
+                                                                            : `${['First', 'Second', 'Third'][idx] || idx + 1} Logo`)
+                                                                    }:
+                                                                </span>
+                                                                <span className="px-2 py-0.5 bg-white border border-gray-200 rounded text-gray-800 text-xs font-bold">
+                                                                    {logoTypeMap[logo.type]?.[language] || logo.type}
+                                                                    {logo.placement && ` (${logoPlacementMap[logo.placement]?.[language] || logo.placement})`}
+                                                                </span>
+                                                            </div>
+                                                        )
+                                                    ))
+                                                ) : (
+                                                    /* Fallback for legacy single logo orders */
+                                                    item.details?.logoType && (
+                                                        <div className="flex items-center gap-2 mt-2">
+                                                            <span className="font-semibold text-gray-500">{t(adminTrans.logo)}:</span>
+                                                            <span className="px-2 py-0.5 bg-white border border-gray-200 rounded text-gray-800 text-xs font-bold">
+                                                                {logoTypeMap[item.details.logoType]?.[language] || item.details.logoType}
+                                                                {item.details.logoPlacement && ` (${logoPlacementMap[item.details.logoPlacement]?.[language] || item.details.logoPlacement})`}
+                                                            </span>
+                                                        </div>
+                                                    )
                                                 )}
 
                                                 {/* Reference File */}

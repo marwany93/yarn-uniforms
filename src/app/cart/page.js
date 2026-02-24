@@ -89,7 +89,9 @@ export default function CartPage() {
     const logoPlacementMap = {
         'chest': { ar: 'الصدر', en: 'Chest' },
         'shoulder': { ar: 'الكتف', en: 'Shoulder' },
-        'back': { ar: 'الظهر', en: 'Back' }
+        'back': { ar: 'الظهر', en: 'Back' },
+        'pocket': { ar: 'الجيب', en: 'Pocket' },
+        'leg': { ar: 'الساق', en: 'Leg' }
     };
 
     const getContactInfo = () => {
