@@ -20,7 +20,7 @@ export async function POST(req) {
 
         // --- Handle Contact Form Dual Email ---
         if (type === 'CONTACT_FORM') {
-            const adminEmail = 'marrony90@gmail.com'; // Temporary testing email
+            const adminEmail = 'info@yarnuniforms.com';
 
             // 1. Send to Admin
             await resend.emails.send({
