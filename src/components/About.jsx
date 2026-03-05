@@ -102,8 +102,8 @@ export default function About() {
                     sizes="(max-width: 768px) 100vw, 50vw"
                     className="object-cover block md:hidden opacity-30"
                 />
-                {/* Dark Overlay for Text Readability */}
-                <div className="absolute inset-0 bg-black/70" />
+                {/* Navy Blue Overlay for Brand Identity & Text Readability */}
+                <div className="absolute inset-0 bg-primary/75" />
             </div>
 
             <div className="flex flex-col md:flex-row relative z-10">

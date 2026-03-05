@@ -290,14 +290,30 @@ export default function SchoolStorefront() {
                         </div>
 
                         <div className="p-6 max-h-[60vh] overflow-y-auto">
-                            {/* Sizing Guide Button */}
-                            <div className="flex justify-end mb-4">
+                            {/* Sizing Guide Banner / Button */}
+                            <div className="mb-6">
                                 <button
                                     onClick={() => setShowSizingGuide(true)}
-                                    className="text-primary-600 hover:text-primary-700 text-sm font-bold flex items-center gap-1 bg-primary-50 px-3 py-1.5 rounded-lg transition-colors"
+                                    className="w-full flex items-center justify-between p-3 sm:p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-indigo-100 rounded-xl hover:shadow-md hover:border-indigo-300 transition-all duration-300 group"
                                 >
-                                    <span className="text-lg">📏</span>
-                                    <span>{language === 'ar' ? 'اعرف مقاسك' : 'Know Your Size'}</span>
+                                    <div className="flex items-center gap-3 md:gap-4">
+                                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-full flex items-center justify-center shadow-sm text-xl sm:text-2xl group-hover:scale-110 transition-transform shrink-0">
+                                            📏
+                                        </div>
+                                        <div className={language === 'ar' ? 'text-right' : 'text-left'}>
+                                            <span className="block text-sm sm:text-base font-bold text-indigo-900 leading-tight">
+                                                {language === 'ar' ? 'عشان يضبط المقاس صح.. احسبها من هنا 🎯' : 'To get the perfect fit.. Calculate it here 🎯'}
+                                            </span>
+                                            <span className="block text-xs text-indigo-600 mt-1 opacity-80 group-hover:opacity-100 font-medium">
+                                                {language === 'ar' ? 'دليلك الذكي لمعرفة المقاس المناسب' : 'Your smart guide to find the right size'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div className="text-indigo-400 group-hover:text-indigo-600 transition-colors shrink-0">
+                                        <svg className="w-5 h-5 rtl:rotate-180" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" />
+                                        </svg>
+                                    </div>
                                 </button>
                             </div>
 

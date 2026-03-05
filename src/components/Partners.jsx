@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { Grid, Navigation } from 'swiper/modules';
+import { Grid, Navigation, Autoplay } from 'swiper/modules';
 import { useLanguage } from '@/hooks/useLanguage';
 
 // Swiper styles
@@ -13,14 +13,26 @@ import 'swiper/css/navigation';
 export default function Partners() {
     const { language } = useLanguage();
 
-    // Generate paths for 27 logos (excluding #11)
-    const allLogos = Array.from({ length: 28 }, (_, i) => i + 1)
+    // Generate regular logos (1 to 28, excluding 11)
+    const regularLogos = Array.from({ length: 28 }, (_, i) => i + 1)
         .filter(num => num !== 11)
         .map(num => ({
             src: `/partners/Logo ${num.toString().padStart(2, '0')}.png`,
             alt: `Partner ${num}`,
-            id: num
+            id: num,
+            isVip: false
         }));
+
+    // Add VIP logo at the very beginning
+    const allLogos = [
+        {
+            src: '/partners/Logo 29.png',
+            alt: 'VIP Partner',
+            id: 29,
+            isVip: true
+        },
+        ...regularLogos
+    ];
 
     const translations = {
         title: { en: 'Trusted by Industry Leaders', ar: 'شركاء النجاح' }
@@ -41,8 +53,9 @@ export default function Partners() {
                 {/* 1. نسخة الموبايل والتابلت (صفين - 6 لوجوهات في الشاشة) */}
                 <div className="block lg:hidden">
                     <Swiper
-                        modules={[Grid, Navigation]}
+                        modules={[Grid, Navigation, Autoplay]}
                         navigation={true}
+                        autoplay={{ delay: 2500, disableOnInteraction: false }}
                         grid={{
                             rows: 2,
                             fill: 'row'
@@ -54,14 +67,14 @@ export default function Partners() {
                     >
                         {allLogos.map((logo) => (
                             <SwiperSlide key={`mob-${logo.id}`}>
-                                <div className="flex items-center justify-center h-16 p-2">
+                                <div className={`flex items-center justify-center h-16 ${logo.isVip ? 'p-0' : 'p-2'}`}>
                                     <Image
                                         src={logo.src}
                                         alt={logo.alt}
                                         width={140}
                                         height={80}
                                         loading="lazy"
-                                        className="h-full w-auto object-contain transition-all duration-300"
+                                        className={`h-full w-auto object-contain transition-all duration-300 ${logo.isVip ? 'scale-[1.2]' : ''}`}
                                     />
                                 </div>
                             </SwiperSlide>
@@ -72,8 +85,9 @@ export default function Partners() {
                 {/* 2. نسخة الديسكتوب (صف واحد كبير وشياكة - 6 لوجوهات في الشاشة) */}
                 <div className="hidden lg:block">
                     <Swiper
-                        modules={[Navigation]}
+                        modules={[Navigation, Autoplay]}
                         navigation={true}
+                        autoplay={{ delay: 3000, disableOnInteraction: false }}
                         slidesPerView={6}
                         slidesPerGroup={3}
                         spaceBetween={30}
@@ -81,14 +95,14 @@ export default function Partners() {
                     >
                         {allLogos.map((logo) => (
                             <SwiperSlide key={`desk-${logo.id}`}>
-                                <div className="flex items-center justify-center h-28 p-4">
+                                <div className={`flex items-center justify-center h-28 ${logo.isVip ? 'p-1' : 'p-4'}`}>
                                     <Image
                                         src={logo.src}
                                         alt={logo.alt}
                                         width={200}
                                         height={120}
                                         loading="lazy"
-                                        className="h-full w-auto object-contain hover:scale-110 transition-transform duration-300"
+                                        className={`h-full w-auto object-contain transition-transform duration-300 ${logo.isVip ? 'scale-[1.2] hover:scale-[1.3]' : 'hover:scale-110'}`}
                                     />
                                 </div>
                             </SwiperSlide>
