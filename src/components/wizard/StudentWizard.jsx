@@ -35,6 +35,12 @@ export default function StudentWizard() {
     });
     const [contactInfoSubmitted, setContactInfoSubmitted] = useState(false);
     const [formErrors, setFormErrors] = useState({});
+    const [alertMessage, setAlertMessage] = useState(null);
+    const [missingFields, setMissingFields] = useState([]);
+
+    const clearMissingField = (field) => {
+        setMissingFields(prev => prev.includes(field) ? prev.filter(f => f !== field) : prev);
+    };
 
     // Wizard Phase: 'SELECTION' or 'CUSTOMIZATION'
     const [wizardPhase, setWizardPhase] = useState('SELECTION');
@@ -341,7 +347,7 @@ export default function StudentWizard() {
 
     const handleStartCustomizing = () => {
         if (selectedCategoryIds.length === 0) {
-            alert(t(translations.selectAtLeastOne));
+            setAlertMessage(t(translations.selectAtLeastOne));
             return;
         }
         setWizardPhase('CUSTOMIZATION');
@@ -359,13 +365,14 @@ export default function StudentWizard() {
         if (isNaN(val) || val < 0) val = 0;
         if (val > 999) val = 999;
         setSizeQuantities(prev => ({ ...prev, [size]: val }));
+        clearMissingField('sizes'); // Clear error highlight dynamically
     };
 
     const handleLogoUpload = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
         if (file.size > 10 * 1024 * 1024) {
-            alert('File size must be less than 10MB');
+            setAlertMessage(language === 'ar' ? 'يجب أن يكون حجم الملف أقل من 10 ميجابايت' : 'File size must be less than 10MB');
             return;
         }
         setIsUploadingLogo(true);
@@ -378,7 +385,7 @@ export default function StudentWizard() {
             setDetails({ ...details, logoUrl: downloadUrl, logoName: file.name });
         } catch (error) {
             console.error('❌ Logo upload failed:', error);
-            alert('Failed to upload logo.');
+            setAlertMessage(language === 'ar' ? 'فشل رفع الشعار. يرجى المحاولة مرة أخرى.' : 'Failed to upload logo. Please try again.');
         } finally {
             setIsUploadingLogo(false);
         }
@@ -421,35 +428,44 @@ export default function StudentWizard() {
     };
 
     const handleSaveAndNext = () => {
+        const errors = [];
+        const missing = [];
+
         if (!currentProduct) {
-            alert(t(translations.selectProduct));
-            return;
+            errors.push(t(translations.selectProduct));
+            missing.push('product');
         }
         if (!details.color) {
-            alert(t({ en: 'Please select a color', ar: 'يرجى اختيار لون' }));
-            return;
+            errors.push(t({ en: 'Please select a color', ar: 'يرجى اختيار لون' }));
+            missing.push('color');
+        } else if (details.color === 'custom' && !details.customColorName.trim()) {
+            errors.push(t({ en: 'Please specify the custom color name', ar: 'يرجى تحديد اسم اللون المخصص' }));
+            missing.push('customColorName');
         }
-        if (details.color === 'custom' && !details.customColorName.trim()) {
-            alert(t({ en: 'Please specify the custom color name', ar: 'يرجى تحديد اسم اللون المخصص' }));
-            return;
-        }
-        // Strict Logo Validation
         if (!details.logoType) {
-            alert(t({ en: 'Please select logo type', ar: 'يرجى اختيار نوع الشعار' }));
-            return;
+            errors.push(t({ en: 'Please select logo type', ar: 'يرجى اختيار نوع الشعار' }));
+            missing.push('logoType');
         }
         if (!details.logoPlacement) {
-            alert(t({ en: 'Please select logo placement', ar: 'يرجى اختيار مكان الشعار' }));
-            return;
+            errors.push(t({ en: 'Please select logo placement', ar: 'يرجى اختيار مكان الشعار' }));
+            missing.push('logoPlacement');
         }
         if (!details.fabric) {
-            alert(t({ en: 'Please select a fabric type', ar: 'يرجى اختيار نوع القماش' }));
-            return;
+            errors.push(t({ en: 'Please select a fabric type', ar: 'يرجى اختيار نوع القماش' }));
+            missing.push('fabric');
         }
         if (totalItems === 0) {
-            alert(t(translations.atLeastOne));
+            errors.push(t(translations.atLeastOne));
+            missing.push('sizes');
+        }
+
+        if (errors.length > 0) {
+            setAlertMessage(errors);
+            setMissingFields(missing);
             return;
         }
+
+        setMissingFields([]); // Clear highlights on success
 
         const product = getProductById(currentProduct);
 
@@ -871,12 +887,15 @@ export default function StudentWizard() {
 
                         <div>
                             <label className="block text-sm font-semibold text-gray-700 mb-3">{t(translations.selectColor)} <span className="text-red-500">*</span></label>
-                            <div className="grid grid-cols-4 gap-3">
+                            <div className={`grid grid-cols-4 gap-3 ${missingFields.includes('color') ? 'p-2 border border-red-500 rounded-lg bg-red-50' : ''}`}>
                                 {colorOptions.map((color) => (
                                     <button
                                         key={color.id}
                                         type="button"
-                                        onClick={() => setDetails({ ...details, color: color.id, customColorName: color.id !== 'custom' ? '' : details.customColorName })}
+                                        onClick={() => {
+                                            setDetails({ ...details, color: color.id, customColorName: color.id !== 'custom' ? '' : details.customColorName });
+                                            clearMissingField('color');
+                                        }}
                                         className={`relative p-4 rounded-lg border-2 transition-all ${details.color === color.id ? 'border-primary ring-2 ring-primary ring-offset-2' : 'border-gray-300 hover:border-primary'}`}
                                     >
                                         <div className="flex flex-col items-center">
@@ -898,11 +917,11 @@ export default function StudentWizard() {
                             <label className="block text-sm font-semibold text-gray-700 mb-3">
                                 {t(translations.logoType)} <span className="text-red-500">*</span>
                             </label>
-                            <div className="grid grid-cols-3 gap-4">
+                            <div className={`grid grid-cols-3 gap-4 ${missingFields.includes('logoType') ? 'p-2 border border-red-500 rounded-lg bg-red-50' : ''}`}>
                                 {['embroidery', 'printing', 'wovenPatch'].map((type) => {
                                     const imgMap = { embroidery: '/images/customization/logo-embroidery.png', printing: '/images/customization/logo-printing.png', wovenPatch: '/images/customization/logo-woven.png' };
                                     return (
-                                        <button key={type} onClick={() => setDetails({ ...details, logoType: type })} className={`relative group flex flex-col items-center p-0 rounded-xl border-2 overflow-hidden transition-all duration-300 ${details.logoType === type ? 'border-primary ring-2 ring-primary ring-offset-2 scale-105 shadow-md' : 'border-gray-200 hover:border-primary hover:shadow-lg opacity-90 hover:opacity-100'}`}>
+                                        <button key={type} onClick={() => { setDetails({ ...details, logoType: type }); clearMissingField('logoType'); }} className={`relative group flex flex-col items-center p-0 rounded-xl border-2 overflow-hidden transition-all duration-300 ${details.logoType === type ? 'border-primary ring-2 ring-primary ring-offset-2 scale-105 shadow-md' : 'border-gray-200 hover:border-primary hover:shadow-lg opacity-90 hover:opacity-100'}`}>
                                             <div className="relative w-full aspect-square bg-gray-50"><Image src={imgMap[type]} alt={t(translations[type])} fill className="object-cover" /></div>
                                             <div className={`w-full py-3 text-center border-t transition-colors ${details.logoType === type ? 'bg-primary/10 border-primary/20' : 'bg-white border-gray-100'}`}><span className={`text-sm font-semibold ${details.logoType === type ? 'text-primary' : 'text-gray-700'}`}>{t(translations[type])}</span></div>
                                             {details.logoType === type && (<div className="absolute top-2 right-2 text-primary bg-white rounded-full p-0.5 shadow-sm">✓</div>)}
@@ -917,11 +936,11 @@ export default function StudentWizard() {
                             <label className="block text-sm font-semibold text-gray-700 mb-3">
                                 {t(translations.logoPlacement)} <span className="text-red-500">*</span>
                             </label>
-                            <div className="grid grid-cols-3 gap-4">
+                            <div className={`grid grid-cols-3 gap-4 ${missingFields.includes('logoPlacement') ? 'p-2 border border-red-500 rounded-lg bg-red-50' : ''}`}>
                                 {['chest', 'shoulder', 'back'].map((placement) => {
                                     const imgMap = { chest: '/images/customization/placement-chest.png', shoulder: '/images/customization/placement-shoulder.png', back: '/images/customization/placement-back.png' };
                                     return (
-                                        <button key={placement} onClick={() => setDetails({ ...details, logoPlacement: placement })} className={`relative group flex flex-col items-center p-0 rounded-xl border-2 overflow-hidden transition-all duration-300 ${details.logoPlacement === placement ? 'border-primary ring-2 ring-primary ring-offset-2 scale-105 shadow-md' : 'border-gray-200 hover:border-primary hover:shadow-lg opacity-90 hover:opacity-100'}`}>
+                                        <button key={placement} onClick={() => { setDetails({ ...details, logoPlacement: placement }); clearMissingField('logoPlacement'); }} className={`relative group flex flex-col items-center p-0 rounded-xl border-2 overflow-hidden transition-all duration-300 ${details.logoPlacement === placement ? 'border-primary ring-2 ring-primary ring-offset-2 scale-105 shadow-md' : 'border-gray-200 hover:border-primary hover:shadow-lg opacity-90 hover:opacity-100'}`}>
                                             <div className="relative w-full aspect-square bg-gray-50"><Image src={imgMap[placement]} alt={t(translations[placement === 'back' ? 'logoBack' : placement])} fill className="object-cover" /></div>
                                             <div className={`w-full py-3 text-center border-t transition-colors ${details.logoPlacement === placement ? 'bg-primary/10 border-primary/20' : 'bg-white border-gray-100'}`}><span className={`text-sm font-semibold ${details.logoPlacement === placement ? 'text-primary' : 'text-gray-700'}`}>{t(translations[placement === 'back' ? 'logoBack' : placement])}</span></div>
                                             {details.logoPlacement === placement && (<div className="absolute top-2 right-2 text-primary bg-white rounded-full p-0.5 shadow-sm">✓</div>)}
@@ -933,16 +952,32 @@ export default function StudentWizard() {
 
                         {details.color === 'custom' && (
                             <div className="p-4 bg-yellow-50 border-2 border-yellow-200 rounded-lg space-y-4">
-                                <p className="text-sm font-semibold text-yellow-900">📝 Custom Color Details</p>
-                                <div><label className="block text-sm font-medium text-gray-700 mb-2">Color Name/Code <span className="text-red-500">*</span></label><input type="text" value={details.customColorName} onChange={(e) => setDetails({ ...details, customColorName: e.target.value })} className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary" /></div>
-                                <div><label className="block text-sm font-medium text-gray-700 mb-2">Upload Sample (Optional)</label><input type="file" accept="image/*" onChange={handleCustomColorUpload} disabled={isUploadingCustomColor} className="w-full px-4 py-2 border border-gray-300 rounded-lg" /></div>
+                                <p className="text-sm font-semibold text-yellow-900">📝 {language === 'ar' ? 'تفاصيل اللون المخصص' : 'Custom Color Details'}</p>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2">{language === 'ar' ? 'اسم / كود اللون' : 'Color Name/Code'} <span className="text-red-500">*</span></label>
+                                    <input
+                                        type="text"
+                                        value={details.customColorName}
+                                        onChange={(e) => {
+                                            setDetails({ ...details, customColorName: e.target.value });
+                                            clearMissingField('customColorName');
+                                        }}
+                                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary ${missingFields.includes('customColorName') ? 'border-red-500 ring-2 ring-red-200' : 'border-gray-300'}`}
+                                    />
+                                </div>
+                                <div><label className="block text-sm font-medium text-gray-700 mb-2">{language === 'ar' ? 'رفع عينة (اختياري)' : 'Upload Sample (Optional)'}</label><input type="file" accept="image/*" onChange={handleCustomColorUpload} disabled={isUploadingCustomColor} className="w-full px-4 py-2 border border-gray-300 rounded-lg" /></div>
                             </div>
                         )}
 
                         <div>
                             <label className="block text-sm font-semibold text-gray-700 mb-2">{t(translations.fabricType)} <span className="text-red-500">*</span></label>
-                            <select value={details.fabric} onChange={(e) => setDetails({ ...details, fabric: e.target.value })}
-                                className={`w-full py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary transition-all ${language === 'ar' ? '!bg-[position:left_1rem_center] !pl-12 !pr-4' : '!bg-[position:right_1rem_center] !pr-12 !pl-4'}`}>
+                            <select
+                                value={details.fabric}
+                                onChange={(e) => {
+                                    setDetails({ ...details, fabric: e.target.value });
+                                    clearMissingField('fabric');
+                                }}
+                                className={`w-full py-3 border rounded-lg focus:ring-2 focus:ring-primary transition-all ${language === 'ar' ? '!bg-[position:left_1rem_center] !pl-12 !pr-4' : '!bg-[position:right_1rem_center] !pr-12 !pl-4'} ${missingFields.includes('fabric') ? 'border-red-500 ring-2 ring-red-200 bg-red-50' : 'border-gray-300'}`}>
                                 <option value="">{t(translations.selectFabricPlaceholder)}</option>
                                 {getFabricOptions().map(fabric => (<option key={fabric} value={fabric}>{fabricTranslations[fabric] ? (language === 'ar' ? fabricTranslations[fabric].ar : fabricTranslations[fabric].en) : fabric}</option>))}
                             </select>
@@ -966,7 +1001,7 @@ export default function StudentWizard() {
                                     <Ruler className="w-4 h-4" /> {language === 'ar' ? 'اعرف مقاسك' : 'Know Your Size'}
                                 </button>
                             </div>
-                            <div className="space-y-4">
+                            <div className={`space-y-4 ${missingFields.includes('sizes') ? 'p-3 border border-red-500 rounded-xl bg-red-50' : ''}`}>
                                 {sizes.map((size) => (
                                     <div key={size} className="flex items-center justify-between gap-4 p-4 border border-gray-200 rounded-xl bg-white hover:border-primary transition-all">
                                         <div className="flex items-center gap-3">
@@ -1037,6 +1072,38 @@ export default function StudentWizard() {
                     {contactInfoSubmitted && wizardPhase === 'COMPLETED' && renderSuccessView()}
                 </div>
             </div>
+            {/* Custom Alert Modal */}
+            {alertMessage && (
+                <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden animate-scale-up border border-gray-100">
+                        <div className="p-6 text-center">
+                            <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+                            </div>
+                            <h3 className="text-xl font-bold text-gray-900 mb-2">
+                                {language === 'ar' ? 'تنبيه' : 'Attention'}
+                            </h3>
+                            <div className={`text-gray-600 mb-6 text-sm md:text-base leading-relaxed ${language === 'ar' ? 'text-right' : 'text-left'}`}>
+                                {Array.isArray(alertMessage) ? (
+                                    <ul className="list-disc list-inside space-y-2">
+                                        {alertMessage.map((msg, idx) => (
+                                            <li key={idx} className="text-red-600 font-medium">{msg}</li>
+                                        ))}
+                                    </ul>
+                                ) : (
+                                    <p>{alertMessage}</p>
+                                )}
+                            </div>
+                            <button
+                                onClick={() => setAlertMessage(null)}
+                                className="w-full py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary-700 transition-colors shadow-lg hover:shadow-xl"
+                            >
+                                {language === 'ar' ? 'حسناً' : 'OK'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
             {renderMobileCartBar()}
             {showSizingWizard && <SizingWizard onClose={() => setShowSizingWizard(false)} sector="schools" />}
         </>

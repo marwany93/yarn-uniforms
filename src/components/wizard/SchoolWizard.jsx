@@ -37,6 +37,8 @@ export default function SchoolWizard() {
     });
     const [contactInfoSubmitted, setContactInfoSubmitted] = useState(false);
     const [formErrors, setFormErrors] = useState({});
+    const [alertMessage, setAlertMessage] = useState(null);
+    const [missingFields, setMissingFields] = useState([]);
 
     // Wizard Phase: 'SELECTION' or 'CUSTOMIZATION'
     const [wizardPhase, setWizardPhase] = useState('SELECTION');
@@ -246,28 +248,21 @@ export default function SchoolWizard() {
     // Auto-scroll logic with "Scroller Hunter"
     useEffect(() => {
         const timer = setTimeout(() => {
-            if (wizardPhase === 'COMPLETED') {
-                // Phase replacement unmounts the form, naturally scrolling to top
-                // Standard window reset as backup
-                window.scrollTo({ top: 0, behavior: 'auto' });
-                document.body.scrollTop = 0;
-                document.documentElement.scrollTop = 0;
+            // Always scroll to the absolute top of the page smoothly
+            window.scrollTo({ top: 0, behavior: 'smooth' });
 
-                // Focus shift for extra insurance
+            // Focus shift for extra insurance on completion
+            if (wizardPhase === 'COMPLETED') {
                 setTimeout(() => {
                     if (successHeadingRef.current) {
                         successHeadingRef.current.focus({ preventScroll: true });
                     }
                 }, 100);
-
-            } else if (wizardTopRef.current && wizardPhase === 'CUSTOMIZATION') {
-                // Normal wizard navigation
-                wizardTopRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
         }, 100); // Delay for render
 
         return () => clearTimeout(timer);
-    }, [currentCategoryIndex, wizardPhase]);
+    }, [currentCategoryIndex, wizardPhase, contactInfoSubmitted]);
 
     // Material options
     const materialOptions = [
@@ -388,6 +383,10 @@ export default function SchoolWizard() {
         });
     };
 
+    const clearMissingField = (field) => {
+        setMissingFields(prev => prev.includes(field) ? prev.filter(f => f !== field) : prev);
+    };
+
     const handleUpdateLogo = (index, field, value) => {
         const newLogos = [...(details.logos || [])];
 
@@ -395,19 +394,20 @@ export default function SchoolWizard() {
         if (field === 'placement') {
             const isDuplicate = newLogos.some((logo, i) => i !== index && logo.placement === value);
             if (isDuplicate) {
-                alert(language === 'ar' ? 'تم اختيار هذا المكان مسبقاً لشعار آخر' : 'This placement is already selected for another logo');
+                setAlertMessage(language === 'ar' ? 'تم اختيار هذا المكان مسبقاً لشعار آخر' : 'This placement is already selected for another logo');
                 return;
             }
         }
 
         newLogos[index] = { ...newLogos[index], [field]: value };
         setDetails({ ...details, logos: newLogos });
+        clearMissingField('logos'); // Clear error highlight dynamically
     };
 
     const handleAddLogo = () => {
         const currentLogos = details.logos || [];
         if (currentLogos.length >= 3) {
-            alert(language === 'ar' ? 'الحد الأقصى هو 3 شعارات' : 'Maximum of 3 logos allowed');
+            setAlertMessage(language === 'ar' ? 'الحد الأقصى هو 3 شعارات' : 'Maximum of 3 logos allowed');
             return;
         }
         setDetails({ ...details, logos: [...currentLogos, { type: null, placement: null }] });
@@ -421,7 +421,7 @@ export default function SchoolWizard() {
     // Start customization phase
     const handleStartCustomizing = () => {
         if (selectedCategoryIds.length === 0) {
-            alert(t(translations.selectAtLeastOne));
+            setAlertMessage(t(translations.selectAtLeastOne));
             return;
         }
         setWizardPhase('CUSTOMIZATION');
@@ -453,6 +453,7 @@ export default function SchoolWizard() {
             ...prev,
             [size]: val
         }));
+        clearMissingField('sizes'); // Clear error highlight dynamically
     };
 
     const handleLogoUpload = async (e) => {
@@ -461,7 +462,7 @@ export default function SchoolWizard() {
 
         // Validate file size (max 10MB)
         if (file.size > 10 * 1024 * 1024) {
-            alert('File size must be less than 10MB');
+            setAlertMessage(language === 'ar' ? 'يجب أن يكون حجم الملف أقل من 10 ميجابايت' : 'File size must be less than 10MB');
             return;
         }
 
@@ -488,7 +489,7 @@ export default function SchoolWizard() {
             });
         } catch (error) {
             console.error('❌ Logo upload failed:', error);
-            alert('Failed to upload logo. Please try again.');
+            setAlertMessage(language === 'ar' ? 'فشل رفع الشعار. يرجى المحاولة مرة أخرى.' : 'Failed to upload logo. Please try again.');
         } finally {
             setIsUploadingLogo(false);
         }
@@ -499,7 +500,7 @@ export default function SchoolWizard() {
         if (!file) return;
 
         if (file.size > 10 * 1024 * 1024) {
-            alert('File size must be less than 10MB');
+            setAlertMessage(language === 'ar' ? 'يجب أن يكون حجم الملف أقل من 10 ميجابايت' : 'File size must be less than 10MB');
             return;
         }
 
@@ -522,7 +523,7 @@ export default function SchoolWizard() {
             });
         } catch (error) {
             console.error('❌ Custom color upload failed:', error);
-            alert('Failed to upload color sample. Please try again.');
+            setAlertMessage(language === 'ar' ? 'فشل رفع عينة اللون. يرجى المحاولة مرة أخرى.' : 'Failed to upload color sample. Please try again.');
         } finally {
             setIsUploadingCustomColor(false);
         }
@@ -533,7 +534,7 @@ export default function SchoolWizard() {
         if (!file) return;
 
         if (file.size > 10 * 1024 * 1024) {
-            alert('File size must be less than 10MB');
+            setAlertMessage(language === 'ar' ? 'يجب أن يكون حجم الملف أقل من 10 ميجابايت' : 'File size must be less than 10MB');
             return;
         }
 
@@ -556,7 +557,7 @@ export default function SchoolWizard() {
             });
         } catch (error) {
             console.error('❌ Reference upload failed:', error);
-            alert('Failed to upload reference. Please try again.');
+            setAlertMessage(language === 'ar' ? 'فشل رفع المرجع. يرجى المحاولة مرة أخرى.' : 'Failed to upload reference. Please try again.');
         } finally {
             setIsUploadingReference(false);
         }
@@ -612,51 +613,55 @@ export default function SchoolWizard() {
         console.log('🔍 Current product:', currentProduct);
         console.log('🔍 Total items:', totalItems);
 
-        // Validation
+        // Aggregated validation
+        const errors = [];
+        const missing = [];
+
         if (!currentProduct) {
             console.log('❌ Validation failed: No product selected');
-            alert(t(translations.selectProduct));
-            return;
+            errors.push(t(translations.selectProduct));
+            missing.push('product');
         }
-
-        // Color validation
         if (!details.color) {
-            alert('Please select a color');
-            return;
+            errors.push(language === 'ar' ? 'يرجى اختيار لون' : 'Please select a color');
+            missing.push('color');
+        } else if (details.color === 'custom' && !details.customColorName.trim()) {
+            errors.push(language === 'ar' ? 'يرجى تحديد اسم اللون المخصص' : 'Please specify the custom color name');
+            missing.push('customColorName');
         }
 
-        // Custom color validation
-        if (details.color === 'custom' && !details.customColorName.trim()) {
-            alert('Please specify the custom color name');
-            return;
-        }
-
-        // Logo Validation - MANDATORY
         const invalidLogo = (details.logos || []).some(l => !l.type || !l.placement);
         if (invalidLogo) {
-            alert(t({ en: 'Please select type and placement for all logos', ar: 'يرجى اختيار نوع ومكان كل شعار' }));
-            return;
+            errors.push(language === 'ar' ? 'يرجى اختيار نوع ومكان كل شعار' : 'Please select type and placement for all logos');
+            missing.push('logos');
         }
 
-        // Check for duplicate placements
         const placements = details.logos.map(l => l.placement).filter(Boolean);
         const uniquePlacements = new Set(placements);
         if (placements.length !== uniquePlacements.size) {
-            alert(language === 'ar' ? 'يجب أن يكون لكل شعار مكان مختلف' : 'Each logo must have a unique placement');
-            return;
+            errors.push(language === 'ar' ? 'يجب أن يكون لكل شعار مكان مختلف' : 'Each logo must have a unique placement');
+            if (!missing.includes('logos')) missing.push('logos');
         }
 
-        // Fabric validation
         if (!details.fabric) {
-            alert('Please select a fabric type');
-            return;
+            errors.push(language === 'ar' ? 'يرجى اختيار نوع القماش' : 'Please select a fabric type');
+            missing.push('fabric');
         }
 
         if (totalItems === 0) {
             console.log('❌ Validation failed: No items in size matrix');
-            alert(t(translations.atLeastOne));
+            errors.push(t(translations.atLeastOne));
+            missing.push('sizes');
+        }
+
+        if (errors.length > 0) {
+            setAlertMessage(errors);
+            setMissingFields(missing);
             return;
         }
+
+        // Clear missing fields highlights on success
+        setMissingFields([]);
 
         console.log('✅ Validation passed');
 
@@ -1166,19 +1171,22 @@ export default function SchoolWizard() {
                             <label className="block text-sm font-semibold text-gray-700 mb-3">
                                 {t(translations.selectColor)} <span className="text-red-500">*</span>
                             </label>
-                            <div className="grid grid-cols-4 gap-3">
+                            <div className={`grid grid-cols-4 gap-3 ${missingFields.includes('color') ? 'p-2 border border-red-500 rounded-lg bg-red-50' : ''}`}>
                                 {colorOptions.map((color) => (
                                     <button
                                         key={color.id}
                                         type="button"
-                                        onClick={() => setDetails({
-                                            ...details,
-                                            color: color.id,
-                                            // Reset custom fields if switching away from custom
-                                            customColorName: color.id !== 'custom' ? '' : details.customColorName,
-                                            customColorUrl: color.id !== 'custom' ? null : details.customColorUrl,
-                                            customColorFileName: color.id !== 'custom' ? null : details.customColorFileName
-                                        })}
+                                        onClick={() => {
+                                            setDetails({
+                                                ...details,
+                                                color: color.id,
+                                                // Reset custom fields if switching away from custom
+                                                customColorName: color.id !== 'custom' ? '' : details.customColorName,
+                                                customColorUrl: color.id !== 'custom' ? null : details.customColorUrl,
+                                                customColorFileName: color.id !== 'custom' ? null : details.customColorFileName
+                                            });
+                                            clearMissingField('color'); // Clear error highlight dynamically
+                                        }}
                                         className={`relative p-4 rounded-lg border-2 transition-all ${details.color === color.id
                                             ? 'border-primary ring-2 ring-primary ring-offset-2'
                                             : 'border-gray-300 hover:border-primary'
@@ -1225,9 +1233,12 @@ export default function SchoolWizard() {
                                     <input
                                         type="text"
                                         value={details.customColorName}
-                                        onChange={(e) => setDetails({ ...details, customColorName: e.target.value })}
+                                        onChange={(e) => {
+                                            setDetails({ ...details, customColorName: e.target.value });
+                                            clearMissingField('customColorName'); // Clear error highlight dynamically
+                                        }}
                                         placeholder={language === 'ar' ? 'مثال: عنابي، بانتون 19-1764، #8B0000' : 'e.g., Burgundy, Pantone 19-1764, #8B0000'}
-                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary"
+                                        className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary ${missingFields.includes('customColorName') ? 'border-red-500 ring-2 ring-red-200' : 'border-gray-300'}`}
                                     />
                                 </div>
 
@@ -1256,7 +1267,7 @@ export default function SchoolWizard() {
                         {/* Multi-Logo Selection */}
                         <div className="space-y-6">
                             {(details.logos || []).map((logo, index) => (
-                                <div key={index} className="p-4 bg-gray-50 border border-gray-200 rounded-xl relative">
+                                <div key={index} className={`p-4 border rounded-xl relative ${missingFields.includes('logos') ? 'border-red-500 bg-red-50' : 'border-gray-200 bg-gray-50'}`}>
                                     {/* Logo Section Header */}
                                     <div className="flex items-center justify-between mb-4">
                                         <h4 className="text-md font-bold text-gray-900 flex items-center gap-2">
@@ -1411,8 +1422,11 @@ export default function SchoolWizard() {
                             </label>
                             <select
                                 value={details.fabric}
-                                onChange={(e) => setDetails({ ...details, fabric: e.target.value })}
-                                className={`w-full py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary transition-all ${language === 'ar' ? '!bg-[position:left_1rem_center] !pl-12 !pr-4' : '!bg-[position:right_1rem_center] !pr-12 !pl-4'}`}
+                                onChange={(e) => {
+                                    setDetails({ ...details, fabric: e.target.value });
+                                    clearMissingField('fabric'); // Clear error highlight dynamically
+                                }}
+                                className={`w-full py-3 border rounded-lg focus:ring-2 focus:ring-primary transition-all ${language === 'ar' ? '!bg-[position:left_1rem_center] !pl-12 !pr-4' : '!bg-[position:right_1rem_center] !pr-12 !pl-4'} ${missingFields.includes('fabric') ? 'border-red-500 ring-2 ring-red-200 bg-red-50' : 'border-gray-300'}`}
                             >
                                 <option value="">{t(translations.selectFabricPlaceholder)}</option>
                                 {getFabricOptions().map(fabric => (
@@ -1494,7 +1508,7 @@ export default function SchoolWizard() {
                                     {language === 'ar' ? 'اعرف مقاسك' : 'Know Your Size'}
                                 </button>
                             </div>
-                            <div className="space-y-4">
+                            <div className={`space-y-4 ${missingFields.includes('sizes') ? 'p-3 border border-red-500 rounded-xl bg-red-50' : ''}`}>
                                 {sizes.map((size) => (
                                     <div key={size} className="flex items-center justify-between gap-4 p-3 md:p-4 border border-gray-200 rounded-xl bg-white hover:border-primary hover:shadow-sm transition-all mb-3">
                                         {/* Size Label */}
@@ -1649,6 +1663,39 @@ export default function SchoolWizard() {
                     {contactInfoSubmitted && wizardPhase === 'COMPLETED' && renderSuccessView()}
                 </div>
             </div>
+            {/* Custom Alert Modal */}
+            {alertMessage && (
+                <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full overflow-hidden animate-scale-up border border-gray-100">
+                        <div className="p-6 text-center">
+                            <div className="w-16 h-16 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <AlertTriangle size={32} />
+                            </div>
+                            <h3 className="text-xl font-bold text-gray-900 mb-2">
+                                {language === 'ar' ? 'تنبيه' : 'Attention'}
+                            </h3>
+                            <div className={`text-gray-600 mb-6 text-sm md:text-base leading-relaxed ${language === 'ar' ? 'text-right' : 'text-left'}`}>
+                                {Array.isArray(alertMessage) ? (
+                                    <ul className="list-disc list-inside space-y-2">
+                                        {alertMessage.map((msg, idx) => (
+                                            <li key={idx} className="text-red-600 font-medium">{msg}</li>
+                                        ))}
+                                    </ul>
+                                ) : (
+                                    <p>{alertMessage}</p>
+                                )}
+                            </div>
+                            <button
+                                onClick={() => setAlertMessage(null)}
+                                className="w-full py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary-700 transition-colors shadow-lg hover:shadow-xl"
+                            >
+                                {language === 'ar' ? 'حسناً' : 'OK'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             {/* Conflict Modal */}
             {showConflictModal && (
                 <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">

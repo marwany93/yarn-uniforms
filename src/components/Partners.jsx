@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import { Swiper, SwiperSlide } from 'swiper/react';
-import { Grid, Navigation, Autoplay } from 'swiper/modules';
+import { Grid, Navigation } from 'swiper/modules';
 import { useLanguage } from '@/hooks/useLanguage';
 
 // Swiper styles
@@ -53,9 +53,8 @@ export default function Partners() {
                 {/* 1. نسخة الموبايل والتابلت (صفين - 6 لوجوهات في الشاشة) */}
                 <div className="block lg:hidden">
                     <Swiper
-                        modules={[Grid, Navigation, Autoplay]}
+                        modules={[Grid, Navigation]}
                         navigation={true}
-                        autoplay={{ delay: 2500, disableOnInteraction: false }}
                         grid={{
                             rows: 2,
                             fill: 'row'
@@ -85,9 +84,8 @@ export default function Partners() {
                 {/* 2. نسخة الديسكتوب (صف واحد كبير وشياكة - 6 لوجوهات في الشاشة) */}
                 <div className="hidden lg:block">
                     <Swiper
-                        modules={[Navigation, Autoplay]}
+                        modules={[Navigation]}
                         navigation={true}
-                        autoplay={{ delay: 3000, disableOnInteraction: false }}
                         slidesPerView={6}
                         slidesPerGroup={3}
                         spaceBetween={30}

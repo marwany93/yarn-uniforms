@@ -225,7 +225,11 @@ export default function SchoolStorefront() {
                             if (!baseProduct) return null;
 
                             return (
-                                <div key={index} className="bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden border border-gray-100 flex flex-col">
+                                <div
+                                    key={index}
+                                    onClick={() => { setSelectedProduct({ ...item, baseProduct }); setSelectedSizes({}); setShowSizingGuide(false); }}
+                                    className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden border border-gray-100 hover:border-primary-300 flex flex-col cursor-pointer group"
+                                >
                                     {/* Image */}
                                     <div className="aspect-[3/4] md:aspect-[4/5] relative bg-gray-50">
                                         <Image
@@ -249,12 +253,11 @@ export default function SchoolStorefront() {
                                             <div className="text-base md:text-lg font-bold text-primary-600">
                                                 {item.price} <span className="text-xs font-normal text-gray-500">{language === 'ar' ? 'ريال' : 'SAR'}</span>
                                             </div>
-                                            <button
-                                                onClick={() => { setSelectedProduct({ ...item, baseProduct }); setSelectedSizes({}); setShowSizingGuide(false); }}
-                                                className="w-full md:w-auto px-3 py-1.5 md:px-4 md:py-2 bg-gray-900 text-white text-xs md:text-sm font-medium rounded-lg hover:bg-gray-800 transition-colors text-center"
+                                            <div
+                                                className="w-full md:w-auto px-3 py-1.5 md:px-4 md:py-2 bg-gray-900 text-white text-xs md:text-sm font-medium rounded-lg transition-colors text-center group-hover:bg-primary-600"
                                             >
                                                 {language === 'ar' ? 'اختر المقاس' : 'Choose Size'}
-                                            </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
