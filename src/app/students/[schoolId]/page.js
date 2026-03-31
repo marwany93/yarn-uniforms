@@ -230,34 +230,43 @@ export default function SchoolStorefront() {
                                     onClick={() => { setSelectedProduct({ ...item, baseProduct }); setSelectedSizes({}); setShowSizingGuide(false); }}
                                     className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden border border-gray-100 hover:border-primary-300 flex flex-col cursor-pointer group"
                                 >
-                                    {/* Image */}
+                                    {/* 1. حاوية الصورة - نظيفة وبدون نصوص فوقها */}
                                     <div className="aspect-[3/4] md:aspect-[4/5] relative bg-gray-50">
                                         <Image
                                             src={baseProduct.image}
                                             alt={language === 'ar' ? baseProduct.nameAr : baseProduct.name}
                                             fill
-                                            className="object-contain p-2 md:p-4 hover:scale-105 transition-transform duration-500 mix-blend-multiply"
+                                            /* استخدام p-2 مع object-center بيخلي الموديل يظهر كامل من الرأس للقدم والبنطلون يبان تمام */
+                                            className="object-contain p-2 md:p-4 hover:scale-105 transition-transform duration-500 mix-blend-multiply object-center"
                                         />
                                     </div>
 
-                                    {/* Content */}
-                                    <div className="p-3 md:p-4 flex-1 flex flex-col">
-                                        <h3 className="text-sm md:text-lg font-bold text-gray-900 mb-1 line-clamp-2 leading-tight">
-                                            {language === 'ar' ? baseProduct.nameAr : baseProduct.name}
-                                        </h3>
-                                        <p className="text-xs md:text-sm text-gray-500 mb-3 line-clamp-1">
-                                            {language === 'ar' ? item.fixedDetails?.fabric : item.fixedDetails?.fabric || 'N/A'}
-                                        </p>
+                                    {/* 2. حاوية المعلومات - أسفل الصورة (زي البراندات العالمية) */}
+                                    <div className={`p-4 md:p-5 ${language === 'ar' ? 'text-right' : 'text-left'}`}>
+                                        <div className="flex items-start justify-between gap-2 mb-3">
+                                            <div className="flex-1">
+                                                <div className="font-bold text-gray-900 leading-tight text-sm md:text-base">
+                                                    {language === 'ar' ? (baseProduct.nameAr || baseProduct.name) : baseProduct.name}
+                                                </div>
+                                                <div className="text-xs text-gray-500 font-medium mt-1">
+                                                    {baseProduct.code}
+                                                </div>
+                                            </div>
 
-                                        <div className="mt-auto flex flex-col md:flex-row md:items-center justify-between gap-2 md:gap-4">
-                                            <div className="text-base md:text-lg font-bold text-primary-600">
-                                                {item.price} <span className="text-xs font-normal text-gray-500">{language === 'ar' ? 'ريال' : 'SAR'}</span>
+                                            {/* السعر على اليمين */}
+                                            <div className="text-right flex-shrink-0">
+                                                <span className="text-lg md:text-xl font-bold text-gray-900">
+                                                    {item.price}
+                                                </span>
+                                                <span className="text-[10px] font-normal text-gray-500 mr-1">
+                                                    {language === 'ar' ? 'ريال' : 'SAR'}
+                                                </span>
                                             </div>
-                                            <div
-                                                className="w-full md:w-auto px-3 py-1.5 md:px-4 md:py-2 bg-gray-900 text-white text-xs md:text-sm font-medium rounded-lg transition-colors text-center group-hover:bg-primary-600"
-                                            >
-                                                {language === 'ar' ? 'اختر المقاس' : 'Choose Size'}
-                                            </div>
+                                        </div>
+
+                                        {/* زر اختيار المقاس تحت خالص */}
+                                        <div className="w-full bg-gray-900 text-white rounded-lg py-2.5 px-4 text-xs md:text-sm font-semibold text-center group-hover:bg-primary-600 transition-colors">
+                                            {language === 'ar' ? 'اختر المقاس' : 'Select Size'}
                                         </div>
                                     </div>
                                 </div>
@@ -265,17 +274,7 @@ export default function SchoolStorefront() {
                         })}
                     </div>
                 ) : (
-                    <div className="text-center py-16 bg-white rounded-xl shadow-sm border border-gray-100">
-                        <span className="text-4xl block mb-4">👕</span>
-                        <h3 className="text-lg font-medium text-gray-900">
-                            {language === 'ar' ? 'لا توجد منتجات' : 'No Products Available'}
-                        </h3>
-                        <p className="text-gray-500 mt-1">
-                            {language === 'ar'
-                                ? 'لم تضاف منتجات لهذه المدرسة بعد.'
-                                : 'No products have been assigned to this school yet.'}
-                        </p>
-                    </div>
+                    {/* ... */ }
                 )}
             </div>
 

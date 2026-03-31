@@ -87,12 +87,12 @@ export default function SectorPageClient({ sector }) {
         }
     };
 
-    // If this is the schools sector, render with hero + wizard + sidebar
+    /// If this is the schools sector, render with hero + wizard + sidebar
     if (sector.id === 'schools') {
         return (
             <div className="min-h-screen bg-gray-50">
-                {/* 1. New Hero Section */}
-                <section className="relative h-[50vh] md:h-[45vh] lg:h-[40vh] max-h-[480px] flex items-center justify-center overflow-hidden">
+                {/* 1. Hero Section */}
+                <section className="relative h-[35vh] max-h-[350px] flex items-center justify-center overflow-hidden">
                     <Image
                         src={sector.image}
                         alt={language === 'ar' ? content.heroTitle.ar : content.heroTitle.en}
@@ -102,28 +102,26 @@ export default function SectorPageClient({ sector }) {
                     />
                     <div className="absolute inset-0 bg-black/60" />
                     <div className="container-custom relative z-10 text-center px-4">
-                        <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold mb-6 leading-tight text-white drop-shadow-lg">
+                        <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold text-white drop-shadow-lg">
                             {language === 'ar' ? content.heroTitle.ar : content.heroTitle.en}
                         </h1>
-                        <p className="text-xl md:text-2xl max-w-3xl mx-auto leading-relaxed text-white/95 drop-shadow-md">
-                            {language === 'ar' ? content.heroDesc.ar : content.heroDesc.en}
-                        </p>
                     </div>
                 </section>
 
-                {/* 2. Wizard with Sidebar (Preserved Layout) */}
-                <div className="container mx-auto px-4 py-12">
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                        {/* Main Wizard Column */}
-                        <div className="lg:col-span-2">
-                            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+                {/* 2. Wizard Section - التوسعة "العملاقة" هنا */}
+                <div className="w-full max-w-[1900px] mx-auto px-2 md:px-6 lg:px-10 py-12"> {/* كبرنا لـ 1900 بكسل */}
+                    <div className="grid grid-cols-1 lg:grid-cols-6 gap-6 md:gap-10"> {/* قسمنا لـ 6 أعمدة لدقة أكبر */}
+
+                        {/* الـ Wizard أخد 5 أعمدة من 6 (يعني 83% من مساحة الشاشة) */}
+                        <div className="lg:col-span-5">
+                            <div className="bg-white rounded-[3rem] shadow-2xl overflow-hidden border border-gray-100 w-full">
                                 <Suspense fallback={<div className="p-12 text-center text-gray-500">Loading Wizard...</div>}>
                                     <SchoolWizard />
                                 </Suspense>
                             </div>
                         </div>
 
-                        {/* Sticky Sidebar (Cart Summary) */}
+                        {/* السلة الجانبية أخدت عمود واحد فقط (17%) */}
                         <div className="lg:col-span-1">
                             <div className="sticky top-24">
                                 <CartSummary />

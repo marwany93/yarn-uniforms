@@ -827,121 +827,113 @@ export default function SchoolWizard() {
 
     // Contact Info Form
     const renderContactInfoStep = () => (
-        <div className="space-y-6 animate-fade-in max-w-2xl mx-auto">
-            <div className="text-center mb-8">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 text-4xl mb-4">
-                    📝
-                </div>
-                <h2 className="text-3xl font-bold text-gray-900 mb-2">
-                    {t(translations.contactInfo)}
-                </h2>
-                <p className="text-gray-600">
-                    {language === 'ar'
-                        ? 'يرجى تقديم معلومات المدرسة الخاصة بك لبدء عملية الطلب'
-                        : 'Please provide your school information to begin the ordering process'
-                    }
-                </p>
-            </div>
+        /* جعلنا الحاوية w-full وبدون أي max-width */
+        <div className="animate-fade-in w-full">
+            {/* زودنا الـ Gap لـ lg:gap-24 عشان الكتالوج يفتح براحته */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-24 items-stretch">
 
-            <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    {t(translations.schoolName)} <span className="text-red-500">*</span>
-                </label>
-                <input
-                    type="text"
-                    value={contactInfo.schoolName}
-                    onChange={(e) => {
-                        setContactInfo({ ...contactInfo, schoolName: e.target.value });
-                        if (formErrors.schoolName) setFormErrors({ ...formErrors, schoolName: null });
-                    }}
-                    placeholder={t(translations.schoolNamePlaceholder)}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:border-transparent outline-none transition-all ${formErrors.schoolName
-                        ? 'border-red-500 focus:ring-red-200'
-                        : 'border-gray-300 focus:ring-primary'
-                        }`}
-                />
-                {formErrors.schoolName && <p className="text-red-500 text-sm mt-1">{formErrors.schoolName}</p>}
-            </div>
-
-            <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    {t(translations.contactPerson)} <span className="text-red-500">*</span>
-                </label>
-                <input
-                    type="text"
-                    value={contactInfo.contactPerson}
-                    onChange={(e) => {
-                        setContactInfo({ ...contactInfo, contactPerson: e.target.value });
-                        if (formErrors.contactPerson) setFormErrors({ ...formErrors, contactPerson: null });
-                    }}
-                    placeholder={t(translations.contactPersonPlaceholder)}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:border-transparent outline-none transition-all ${formErrors.contactPerson
-                        ? 'border-red-500 focus:ring-red-200'
-                        : 'border-gray-300 focus:ring-primary'
-                        }`}
-                />
-                {formErrors.contactPerson && <p className="text-red-500 text-sm mt-1">{formErrors.contactPerson}</p>}
-            </div>
-
-            <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    {t(translations.email)} <span className="text-red-500">*</span>
-                </label>
-                <input
-                    type="email"
-                    value={contactInfo.email}
-                    onChange={(e) => {
-                        setContactInfo({ ...contactInfo, email: e.target.value });
-                        if (formErrors.email) setFormErrors({ ...formErrors, email: null });
-                    }}
-                    placeholder={t(translations.emailPlaceholder)}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:border-transparent outline-none transition-all ${formErrors.email
-                        ? 'border-red-500 focus:ring-red-200'
-                        : 'border-gray-300 focus:ring-primary'
-                        }`}
-                />
-                {formErrors.email && <p className="text-red-500 text-sm mt-1">{formErrors.email}</p>}
-            </div>
-
-            <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    {t(translations.phone)} <span className="text-red-500">*</span>
-                </label>
-                <div className="flex direction-ltr" style={{ direction: 'ltr' }}>
-                    <div className={`phone-input-wrapper w-full px-4 py-3 border rounded-lg focus-within:ring-2 focus-within:ring-primary focus-within:border-primary transition-all ${formErrors.phone ? 'border-red-500 focus-within:ring-red-200' : 'border-gray-300'}`} style={{ direction: 'ltr' }}>
-                        <PhoneInput
-                            international
-                            defaultCountry="SA"
-                            countryCallingCodeEditable={false}
-                            value={contactInfo.phone}
-                            onChange={(val) => {
-                                setContactInfo({ ...contactInfo, phone: val });
-                                if (formErrors.phone) setFormErrors({ ...formErrors, phone: null });
-                            }}
-                            className="flex items-center gap-3"
-                            numberInputProps={{
-                                className: "w-full bg-transparent outline-none text-gray-900 placeholder-gray-400 focus:ring-0 border-none p-0"
-                            }}
+                {/* الجانب الأيسر: الكتالوج - زودنا الارتفاع لـ 900 بكسل */}
+                <div className="order-1 space-y-4 h-full">
+                    <div className="bg-gray-100 rounded-3xl overflow-hidden border-2 border-gray-200 h-[550px] lg:h-[900px] relative shadow-inner group">
+                        <iframe
+                            src="/catalog.pdf#toolbar=0"
+                            className="w-full h-full border-none scale-100 lg:scale-[1.02] origin-top transition-transform"
+                            title="School Catalog"
                         />
+                        <div className="absolute top-4 left-4 right-4 flex justify-between items-center pointer-events-none">
+                            <span className="bg-primary/90 text-white px-3 py-1 rounded-full text-xs font-bold backdrop-blur-sm shadow-lg">
+                                {language === 'ar' ? 'كتالوج المدارس 2026 📖' : 'School Catalog 2026 📖'}
+                            </span>
+                            <a
+                                href="/catalog.pdf"
+                                download
+                                className="pointer-events-auto p-2 bg-white/90 text-primary rounded-full shadow-lg hover:bg-white transition-all transform hover:scale-110"
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                            </a>
+                        </div>
                     </div>
-                    {formErrors.phone && (
-                        <p className="text-red-500 text-sm mt-1 text-right" style={{ direction: language === 'ar' ? 'rtl' : 'ltr' }}>
-                            {formErrors.phone}
-                        </p>
-                    )}
+                    <p className="text-center text-xs text-gray-500 italic">
+                        {language === 'ar' ? 'تصفح الموديلات المتوفرة في الكتالوج أعلاه' : 'Browse available models in the catalog above'}
+                    </p>
+                </div>
+
+                {/* الجانب الأيمن (أو الثاني في الموبايل): الفورم */}
+                <div className="order-2 space-y-6 bg-white p-6 md:p-10 rounded-2xl border border-gray-100 shadow-sm">
+                    <div className="text-center lg:text-start mb-8">
+                        <h2 className="text-3xl font-bold text-gray-900 mb-2">{t(translations.contactInfo)}</h2>
+                        <p className="text-gray-600">{language === 'ar' ? 'سجل بيانات المدرسة لبدء تخصيص طلبك' : 'Provide school details to begin your order'}</p>
+                    </div>
+
+                    <div className="space-y-4">
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-1.5">{t(translations.schoolName)} *</label>
+                            <input
+                                type="text"
+                                value={contactInfo.schoolName}
+                                onChange={(e) => {
+                                    setContactInfo({ ...contactInfo, schoolName: e.target.value });
+                                    if (formErrors.schoolName) setFormErrors({ ...formErrors, schoolName: null });
+                                }}
+                                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary outline-none transition-all ${formErrors.schoolName ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
+                                placeholder={t(translations.schoolNamePlaceholder)}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-1.5">{t(translations.contactPerson)} *</label>
+                            <input
+                                type="text"
+                                value={contactInfo.contactPerson}
+                                onChange={(e) => {
+                                    setContactInfo({ ...contactInfo, contactPerson: e.target.value });
+                                    if (formErrors.contactPerson) setFormErrors({ ...formErrors, contactPerson: null });
+                                }}
+                                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary outline-none transition-all ${formErrors.contactPerson ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
+                                placeholder={t(translations.contactPersonPlaceholder)}
+                            />
+                        </div>
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-1.5">{t(translations.email)} *</label>
+                            <input
+                                type="email"
+                                value={contactInfo.email}
+                                onChange={(e) => {
+                                    setContactInfo({ ...contactInfo, email: e.target.value });
+                                    if (formErrors.email) setFormErrors({ ...formErrors, email: null });
+                                }}
+                                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-primary outline-none transition-all ${formErrors.email ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}
+                                placeholder={t(translations.emailPlaceholder)}
+                            />
+                        </div>
+                        <div style={{ direction: 'ltr' }}>
+                            <label className="block text-sm font-semibold text-gray-700 mb-1.5 text-right" style={{ direction: language === 'ar' ? 'rtl' : 'ltr' }}>{t(translations.phone)} *</label>
+                            <div className={`phone-input-wrapper w-full px-4 py-3 border rounded-lg focus-within:ring-2 focus-within:ring-primary transition-all ${formErrors.phone ? 'border-red-500 bg-red-50' : 'border-gray-300'}`}>
+                                <PhoneInput
+                                    international
+                                    defaultCountry="SA"
+                                    value={contactInfo.phone}
+                                    onChange={(val) => {
+                                        setContactInfo({ ...contactInfo, phone: val });
+                                        if (formErrors.phone) setFormErrors({ ...formErrors, phone: null });
+                                    }}
+                                    className="flex items-center gap-3"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    <button
+                        onClick={handleContinueToCatalog}
+                        className="w-full py-4 mt-4 bg-primary text-white rounded-lg font-bold text-lg hover:bg-primary-700 transition-all shadow-md active:scale-95"
+                    >
+                        {t(translations.continue)}
+                    </button>
                 </div>
             </div>
-
-            <button
-                onClick={handleContinueToCatalog}
-                className="w-full py-4 mt-6 rounded-lg font-bold text-lg shadow-lg transition-all duration-300 bg-primary text-white hover:bg-primary-700 hover:shadow-xl"
-            >
-                {t(translations.continue)}
-            </button>
-        </div> // This wrapper div was missing
+        </div>
     );
 
-    // Phase 1: Multi-Category Selection Grid
+    // Phase 1: Multi-Category Selection Grid (Reverted to Overlay Design)
     const renderSelectionPhase = () => (
         <div className="space-y-6 animate-fade-in">
             <div className="text-center mb-8">
@@ -951,17 +943,9 @@ export default function SchoolWizard() {
                 <p className="text-gray-600">
                     {t(translations.selectMultipleHint)}
                 </p>
-                {selectedCategoryIds.length > 0 && (
-                    <div className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-primary/10 rounded-full">
-                        <span className="font-semibold text-primary">
-                            {selectedCategoryIds.length} {t(translations.selected)}
-                        </span>
-                    </div>
-                )}
             </div>
 
-            {/* Category Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
                 {productCategories.map((category) => {
                     const isSelected = selectedCategoryIds.includes(category.id);
                     const productsInCategory = getProductsByCategory(category.id);
@@ -971,37 +955,40 @@ export default function SchoolWizard() {
                         <button
                             key={category.id}
                             onClick={() => handleCategoryToggle(category.id)}
-                            className={`group relative rounded-2xl overflow-hidden border-4 transition-all duration-300 h-96 ${isSelected
-                                ? 'border-green-500 shadow-xl scale-105'
-                                : 'border-gray-200 hover:border-primary hover:shadow-lg'
+                            /* الحل هنا: استخدمنا aspect-[3/4.5] عشان الكارت يكون طويل كفاية يلم الموديل كله
+                               وبالتالي يقلل الـ Zoom التلقائي */
+                            className={`group relative rounded-2xl overflow-hidden border-4 transition-all duration-300 aspect-[3/4.5] md:aspect-[3/4] ${isSelected ? 'border-green-500 shadow-xl scale-[1.02]' : 'border-gray-100 hover:border-primary shadow-sm'
                                 }`}
                         >
-                            {/* Full-Size Image Background */}
-                            <div className="absolute inset-0 w-full h-full">
+                            {/* الصورة مع زوايا رؤية مخصصة لكل صنف لتقليل القص */}
+                            <div className="absolute inset-0 w-full h-full bg-gray-100">
                                 <Image
                                     src={category.image}
                                     alt={category.name}
                                     fill
-                                    className="object-cover object-top transition-transform duration-500 group-hover:scale-105"
+                                    className={`object-cover transition-transform duration-700 group-hover:scale-110 ${(category.id === 'boys_pants' || category.id === 'girls_pants') ? 'object-[center_70%]' :
+                                        (category.id === 'skirts') ? 'object-[center_60%]' :
+                                            (category.id === 'tracksuit') ? 'object-[center_45%]' :
+                                                'object-top'
+                                        }`}
                                 />
                             </div>
 
-                            {/* Text Overlay with Gradient */}
-                            <div className="absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 pt-12 text-left">
-                                <div className="text-2xl font-bold text-white mb-1">
+                            {/* التدريج الأسود: جعلناه أقصر (pt-16) وشفافيته أهدى (from-black/70) عشان ميبانش زحمة */}
+                            <div className={`absolute bottom-0 left-0 w-full bg-gradient-to-t from-black/80 via-black/20 to-transparent p-3 md:p-4 pt-16 ${language === 'ar' ? 'text-right' : 'text-left'}`}>
+                                {/* حجم النص: صغرناه في الموبايل (text-base) عشان مياكلش مساحة من البنطلون */}
+                                <div className="text-base md:text-xl font-bold text-white leading-tight">
                                     {language === 'ar' ? category.nameAr : category.name}
                                 </div>
-                                <div className="text-sm text-gray-200 font-medium">
+                                <div className="text-[10px] md:text-sm text-gray-200 font-medium mt-0.5">
                                     {productCount} {language === 'ar' ? 'منتج' : 'items'}
                                 </div>
                             </div>
 
-                            {/* Selected Badge (Top-Right) */}
+                            {/* علامة الصح */}
                             {isSelected && (
-                                <div className="absolute top-4 right-4 bg-green-500 text-white rounded-full p-2 shadow-lg z-10">
-                                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                    </svg>
+                                <div className="absolute top-3 right-3 bg-green-500 text-white rounded-full p-1 shadow-lg z-10">
+                                    <svg className="w-4 h-4 md:w-5 md:h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
                                 </div>
                             )}
                         </button>
@@ -1009,17 +996,13 @@ export default function SchoolWizard() {
                 })}
             </div>
 
-            {/* Start Customizing Button */}
-            <div className="flex justify-center pt-6">
+            <div className="flex justify-center pt-8">
                 <button
                     onClick={handleStartCustomizing}
                     disabled={selectedCategoryIds.length === 0}
-                    className={`px-10 py-4 rounded-lg font-bold text-lg shadow-lg transition-all duration-300 ${selectedCategoryIds.length > 0
-                        ? 'bg-primary text-white hover:bg-primary-700 hover:shadow-xl'
-                        : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                        }`}
+                    className="px-10 py-3.5 bg-primary text-white rounded-xl font-bold text-lg shadow-lg hover:bg-primary-700 transition-all active:scale-95 disabled:bg-gray-300 disabled:cursor-not-allowed"
                 >
-                    {t(translations.startCustomizing)} ({selectedCategoryIds.length} {t(translations.items)})
+                    {t(translations.startCustomizing)} ({selectedCategoryIds.length})
                 </button>
             </div>
         </div>
@@ -1099,7 +1082,8 @@ export default function SchoolWizard() {
                                             src={product.image}
                                             alt={product.name}
                                             fill
-                                            className="object-contain mix-blend-multiply p-2 group-hover:scale-110 transition-transform duration-500"
+                                            /* هنا خليناها object-center ثابتة عشان الرسمة تظهر في نص المربع بالظبط */
+                                            className="object-contain mix-blend-multiply p-2 group-hover:scale-110 transition-transform duration-500 object-center"
                                         />
                                     </div>
                                     <div className="p-3 bg-white">
@@ -1122,7 +1106,8 @@ export default function SchoolWizard() {
                                     src={getProductById(currentProduct).image}
                                     alt={getProductById(currentProduct).name}
                                     fill
-                                    className="object-contain"
+                                    /* بردو object-center عشان الرسمة تكون موزونة */
+                                    className="object-contain object-center"
                                 />
                             </div>
                             <div>
@@ -1264,95 +1249,87 @@ export default function SchoolWizard() {
                             </div>
                         )}
 
-                        {/* Multi-Logo Selection */}
-                        <div className="space-y-6">
+                        {/* Multi-Logo Selection - Improved Visibility Version */}
+                        <div className="space-y-10 py-6 border-y border-gray-100 my-8">
                             {(details.logos || []).map((logo, index) => (
-                                <div key={index} className={`p-4 border rounded-xl relative ${missingFields.includes('logos') ? 'border-red-500 bg-red-50' : 'border-gray-200 bg-gray-50'}`}>
-                                    {/* Logo Section Header */}
-                                    <div className="flex items-center justify-between mb-4">
-                                        <h4 className="text-md font-bold text-gray-900 flex items-center gap-2">
-                                            {details.logos.length === 1
-                                                ? (language === 'ar' ? 'الشعار' : 'Logo')
-                                                : (language === 'ar' ? `الشعار ${ordinalAr[index]}` : `${ordinalEn[index]} Logo`)}
-                                        </h4>
+                                <div key={index} className={`p-6 md:p-8 rounded-3xl border-2 transition-all relative ${missingFields.includes('logos')
+                                    ? 'border-red-300 bg-red-50/30 animate-pulse'
+                                    : 'border-primary/10 bg-white shadow-sm hover:shadow-md'
+                                    }`}>
 
-                                        {/* Remove Button for extra logos */}
+                                    {/* 1. Header القسم (مثلاً: الشعار الأول) */}
+                                    <div className="flex items-center justify-between mb-8 pb-4 border-b border-gray-100">
+                                        <div className="flex items-center gap-3">
+                                            <span className="flex items-center justify-center w-10 h-10 bg-primary text-white rounded-full font-bold text-lg shadow-lg">
+                                                {index + 1}
+                                            </span>
+                                            <h4 className="text-xl font-extrabold text-gray-900">
+                                                {details.logos.length === 1
+                                                    ? (language === 'ar' ? 'تخصيص الشعار المطبوع' : 'Logo Customization')
+                                                    : (language === 'ar' ? `تخصيص الشعار ${ordinalAr[index]}` : `Customize ${ordinalEn[index]} Logo`)}
+                                            </h4>
+                                        </div>
+
                                         {index > 0 && (
                                             <button
                                                 type="button"
                                                 onClick={() => handleRemoveLogo(index)}
-                                                className="text-red-500 hover:text-red-700 bg-red-50 p-2 rounded-full transition-colors flex items-center justify-center"
-                                                title={language === 'ar' ? 'إزالة الشعار' : 'Remove Logo'}
+                                                className="text-red-500 hover:text-red-700 bg-red-50 px-4 py-2 rounded-xl transition-all font-bold text-sm flex items-center gap-2 border border-red-100"
                                             >
-                                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
-                                                </svg>
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                                {language === 'ar' ? 'إلغاء هذا الشعار' : 'Remove'}
                                             </button>
                                         )}
                                     </div>
 
-                                    {/* Logo Type Selection */}
-                                    <div className="mb-6">
-                                        <label className="block text-sm font-semibold text-gray-700 mb-3">
-                                            {t(translations.logoType)} <span className="text-red-500">*</span>
+                                    {/* 2. اختيار النوع (Type) */}
+                                    <div className="mb-10">
+                                        <label className="inline-flex items-center gap-2 bg-primary/5 text-primary px-4 py-2 rounded-full text-sm font-bold mb-4 border border-primary/10">
+                                            <span className="w-2 h-2 bg-primary rounded-full animate-ping"></span>
+                                            {t(translations.logoType)} *
                                         </label>
-                                        <div className="grid grid-cols-3 gap-4">
+                                        <div className="grid grid-cols-3 gap-4 md:gap-6">
                                             {['embroidery', 'printing', 'wovenPatch'].map((type) => {
                                                 const imgMap = {
                                                     embroidery: '/images/customization/logo-embroidery.png',
                                                     printing: '/images/customization/logo-printing.png',
                                                     wovenPatch: '/images/customization/logo-woven.png'
                                                 };
+                                                const isSelected = logo.type === type;
                                                 return (
                                                     <button
                                                         key={type}
                                                         onClick={() => handleUpdateLogo(index, 'type', type)}
-                                                        className={`relative group flex flex-col items-center p-0 rounded-xl border-2 overflow-hidden transition-all duration-300 ${logo.type === type
-                                                            ? 'border-primary ring-2 ring-primary ring-offset-2 scale-105 shadow-md'
-                                                            : 'border-gray-200 hover:border-primary hover:shadow-lg opacity-90 hover:opacity-100'
+                                                        /* التعديل هنا: شيلنا الـ grayscale والـ opacity */
+                                                        className={`relative group rounded-2xl border-4 overflow-hidden transition-all duration-300 ${isSelected
+                                                            ? 'border-primary ring-4 ring-primary/10 scale-105 shadow-xl z-10'
+                                                            /* رجعنا الألوان كاملة هنا للكرت اللي مش متحدد */
+                                                            : 'border-gray-100 hover:border-primary/20 hover:shadow-lg'
                                                             }`}
                                                     >
-                                                        <div className="relative w-full aspect-square bg-gray-50">
-                                                            <Image
-                                                                src={imgMap[type]}
-                                                                alt={t(translations[type])}
-                                                                fill
-                                                                className="object-cover transition-transform duration-500 group-hover:scale-110"
-                                                            />
+                                                        <div className="relative aspect-[4/3] bg-gray-50">
+                                                            <Image src={imgMap[type]} alt={t(translations[type])} fill className="object-cover" />
+                                                            {isSelected && <div className="absolute inset-0 bg-primary/10 border-2 border-primary"></div>}
                                                         </div>
-                                                        <div className={`w-full py-3 text-center border-t transition-colors ${logo.type === type ? 'bg-primary/10 border-primary/20' : 'bg-white border-gray-100'
-                                                            }`}>
-                                                            <span className={`text-sm font-semibold ${logo.type === type ? 'text-primary' : 'text-gray-700'
-                                                                }`}>
-                                                                {t(translations[type])}
-                                                            </span>
+                                                        <div className={`py-3 font-bold text-sm md:text-base ${isSelected ? 'bg-primary text-white' : 'bg-white text-gray-700'}`}>
+                                                            {t(translations[type])}
                                                         </div>
-
-                                                        {logo.type === type && (
-                                                            <div className="absolute top-2 right-2 text-primary bg-white rounded-full p-0.5 shadow-sm">
-                                                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                                                </svg>
-                                                            </div>
-                                                        )}
                                                     </button>
-                                                )
+                                                );
                                             })}
                                         </div>
                                     </div>
 
-                                    {/* Logo Placement Selection */}
+                                    {/* 3. اختيار المكان (Placement) */}
                                     <div>
-                                        <label className="block text-sm font-semibold text-gray-700 mb-3">
-                                            {t(translations.logoPlacement)} <span className="text-red-500">*</span>
+                                        <label className="inline-flex items-center gap-2 bg-secondary/10 text-secondary-700 px-4 py-2 rounded-full text-sm font-bold mb-4 border border-secondary/20">
+                                            <span className="w-2 h-2 bg-secondary rounded-full animate-pulse"></span>
+                                            {t(translations.logoPlacement)} *
                                         </label>
-                                        <div className="grid grid-cols-3 gap-4">
+                                        <div className="grid grid-cols-3 gap-4 md:gap-6">
                                             {getLogoPlacementOptions().map((placement) => {
-                                                // Check if the current product is a bottom (pants, skirts, shorts)
                                                 const product = getProductById(currentProduct);
-                                                const name = (product?.name || '').toLowerCase();
-                                                const nameAr = (product?.nameAr || '').toLowerCase();
-                                                const isBottom = name.includes('pant') || name.includes('trouser') || name.includes('skirt') || name.includes('short') || nameAr.includes('بنطلون') || nameAr.includes('تنورة') || nameAr.includes('شورت') || nameAr.includes('جيب');
+                                                const isBottom = (product?.category === 'boys_pants' || product?.category === 'girls_pants' || product?.category === 'skirts');
 
                                                 const imgMap = {
                                                     chest: '/images/customization/placement-chest.png',
@@ -1361,54 +1338,43 @@ export default function SchoolWizard() {
                                                     pocket: '/images/customization/placement-pocket.png',
                                                     leg: '/images/customization/placement-leg.png'
                                                 };
+                                                const isSelected = logo.placement === placement;
+
                                                 return (
                                                     <button
                                                         key={placement}
                                                         onClick={() => handleUpdateLogo(index, 'placement', placement)}
-                                                        className={`relative group flex flex-col items-center p-0 rounded-xl border-2 overflow-hidden transition-all duration-300 ${logo.placement === placement
-                                                            ? 'border-primary ring-2 ring-primary ring-offset-2 scale-105 shadow-md'
-                                                            : 'border-gray-200 hover:border-primary hover:shadow-lg opacity-90 hover:opacity-100'
+                                                        /* التعديل هنا: شيلنا الـ grayscale والـ opacity */
+                                                        className={`relative group rounded-2xl border-4 overflow-hidden transition-all duration-300 ${isSelected
+                                                                ? 'border-secondary ring-4 ring-secondary/10 scale-105 shadow-xl z-10'
+                                                                /* رجعنا الألوان كاملة هنا للكرت اللي مش متحدد */
+                                                                : 'border-gray-100 hover:border-secondary/20 hover:shadow-lg'
                                                             }`}
                                                     >
-                                                        <div className="relative w-full aspect-square bg-gray-50">
-                                                            <Image
-                                                                src={imgMap[placement]}
-                                                                alt={t(translations[placement === 'back' ? 'logoBack' : placement])}
-                                                                fill
-                                                                className="object-cover transition-transform duration-500 group-hover:scale-110"
-                                                            />
+                                                        <div className="relative aspect-[4/3] bg-gray-50">
+                                                            <Image src={imgMap[placement]} alt={t(translations[placement === 'back' ? 'logoBack' : placement])} fill className="object-cover" />
+                                                            {isSelected && <div className="absolute inset-0 bg-secondary/5 border-2 border-secondary"></div>}
                                                         </div>
-                                                        <div className={`w-full py-3 text-center border-t transition-colors ${logo.placement === placement ? 'bg-primary/10 border-primary/20' : 'bg-white border-gray-100'
-                                                            }`}>
-                                                            <span className={`text-sm font-semibold ${logo.placement === placement ? 'text-primary' : 'text-gray-700'
-                                                                }`}>
-                                                                {t(translations[placement === 'back' ? 'logoBack' : placement])}
-                                                            </span>
+                                                        <div className={`py-3 font-bold text-sm md:text-base ${isSelected ? 'bg-secondary text-primary' : 'bg-white text-gray-700'}`}>
+                                                            {t(translations[placement === 'back' ? 'logoBack' : placement])}
                                                         </div>
-
-                                                        {logo.placement === placement && (
-                                                            <div className="absolute top-2 right-2 text-primary bg-white rounded-full p-0.5 shadow-sm">
-                                                                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                                                </svg>
-                                                            </div>
-                                                        )}
                                                     </button>
-                                                )
+                                                );
                                             })}
                                         </div>
                                     </div>
                                 </div>
                             ))}
 
+                            {/* زر إضافة شعار آخر المطور */}
                             {(details.logos || []).length < 3 && (
                                 <button
                                     type="button"
                                     onClick={handleAddLogo}
-                                    className="w-full py-4 border-2 border-dashed border-gray-300 rounded-xl text-gray-500 font-semibold hover:border-primary hover:text-primary transition-colors flex items-center justify-center gap-2"
+                                    className="w-full py-6 border-4 border-dashed border-primary/20 rounded-3xl text-primary font-extrabold text-lg hover:bg-primary/5 hover:border-primary/40 transition-all flex items-center justify-center gap-3"
                                 >
-                                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
-                                    {language === 'ar' ? 'إضافة شعار آخر' : 'Add Another Logo'}
+                                    <div className="w-8 h-8 bg-primary text-white rounded-full flex items-center justify-center text-xl">+</div>
+                                    {language === 'ar' ? 'إضافة شعار إضافي للزي' : 'Add Another Logo'}
                                 </button>
                             )}
                         </div>
@@ -1648,7 +1614,7 @@ export default function SchoolWizard() {
 
     return (
         <>
-            <div ref={wizardTopRef} className="max-w-6xl mx-auto px-4 py-8 pb-32 lg:pb-8">
+            <div ref={wizardTopRef} className="w-full mx-auto px-2 md:px-8 lg:px-16 py-8 pb-32 lg:pb-8">
                 <div className="bg-white rounded-2xl shadow-xl p-6 md:p-10">
                     {/* Contact Info Step */}
                     {!contactInfoSubmitted && renderContactInfoStep()}
