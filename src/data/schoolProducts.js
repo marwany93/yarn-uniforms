@@ -7,6 +7,7 @@ export const productCategories = [
     { id: 'boys_pants', name: 'Boys Pant', nameAr: 'بنطلون ولادي', image: '/images/categories/boys-pant.jpg' },
     { id: 'polo', name: 'Polo Shirt', nameAr: 'تيشرت بولو', image: '/images/categories/polo-shirt.png' },
     { id: 'tracksuit', name: 'Training Suit', nameAr: 'ترنج رياضي', image: '/images/categories/training-suit.png' },
+    { id: 'sweaters', name: 'Sweaters', nameAr: 'سويتر', image: '/images/categories/sweater.png' },
 ];
 
 export const schoolProducts = [
@@ -109,6 +110,16 @@ export const schoolProducts = [
     { id: 'tbe2', category: 'tracksuit', code: 'TBE 2', name: 'Training Suit TBE 2', nameAr: 'ترنج رياضي TBE 2', image: '/images/products/tracksuits/tbe2.png', price: 0 },
     { id: 'tbe3', category: 'tracksuit', code: 'TBE 3', name: 'Training Suit TBE 3', nameAr: 'ترنج رياضي TBE 3', image: '/images/products/tracksuits/tbe3.png', price: 0 },
     { id: 'tbe4', category: 'tracksuit', code: 'TBE 4', name: 'Training Suit TBE 4', nameAr: 'ترنج رياضي TBE 4', image: '/images/products/tracksuits/tbe4.png', price: 0 },
+
+
+    { id: 'sw1', category: 'sweaters', code: 'SW 1', name: 'Sweater SW 1', nameAr: 'سويتر SW 1', image: '/images/products/sweaters/sw1.png', price: 0 },
+    { id: 'sw2', category: 'sweaters', code: 'SW 2', name: 'Sweater SW 2', nameAr: 'سويتر SW 2', image: '/images/products/sweaters/sw2.png', price: 0 },
+    { id: 'sw3', category: 'sweaters', code: 'SW 3', name: 'Sweater SW 3', nameAr: 'سويتر SW 3', image: '/images/products/sweaters/sw3.png', price: 0 },
+    { id: 'sw4', category: 'sweaters', code: 'SW 4', name: 'Sweater SW 4', nameAr: 'سويتر SW 4', image: '/images/products/sweaters/sw4.png', price: 0 },
+    { id: 'sw5', category: 'sweaters', code: 'SW 5', name: 'Sweater SW 5', nameAr: 'سويتر SW 5', image: '/images/products/sweaters/sw5.png', price: 0 },
+    { id: 'sw6', category: 'sweaters', code: 'SW 6', name: 'Sweater SW 6', nameAr: 'سويتر SW 6', image: '/images/products/sweaters/sw6.png', price: 0 },
+    { id: 'sw7', category: 'sweaters', code: 'SW 7', name: 'Sweater SW 7', nameAr: 'سويتر SW 7', image: '/images/products/sweaters/sw7.png', price: 0 },
+    { id: 'sw8', category: 'sweaters', code: 'SW 8', name: 'Sweater SW 8', nameAr: 'سويتر SW 8', image: '/images/products/sweaters/sw8.png', price: 0 },
 ];
 
 export const getProductsByCategory = (categoryId) => {

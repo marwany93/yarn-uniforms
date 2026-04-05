@@ -1016,10 +1016,13 @@ export default function SchoolWizard() {
         const name = (product.name || '').toLowerCase();
         const nameAr = (product.nameAr || '').toLowerCase();
 
+        // فحص إذا كان المنتج من السفليات (بنطلون، شورت، تنورة)
         if (name.includes('pant') || name.includes('trouser') || name.includes('skirt') || name.includes('short') || nameAr.includes('بنطلون') || nameAr.includes('تنورة') || nameAr.includes('شورت') || nameAr.includes('جيب')) {
-            return ['pocket', 'leg', 'back']; // Bottoms placements
+            // التعديل هنا: تم حذف 'pocket' من المصفوفة
+            return ['leg', 'back'];
         }
-        return ['chest', 'shoulder', 'back']; // Tops placements
+        // إذا كان من العلويات (قميص، تي شيرت، إلخ)
+        return ['chest', 'shoulder', 'back'];
     };
 
     // Phase 2: Sequential Customization
@@ -1288,6 +1291,7 @@ export default function SchoolWizard() {
                                             <span className="w-2 h-2 bg-primary rounded-full animate-ping"></span>
                                             {t(translations.logoType)} *
                                         </label>
+                                        {/* الشبكة دي رجعناها 3 أعمدة ثابتين عشان تبان مظبوطة */}
                                         <div className="grid grid-cols-3 gap-4 md:gap-6">
                                             {['embroidery', 'printing', 'wovenPatch'].map((type) => {
                                                 const imgMap = {
@@ -1300,10 +1304,8 @@ export default function SchoolWizard() {
                                                     <button
                                                         key={type}
                                                         onClick={() => handleUpdateLogo(index, 'type', type)}
-                                                        /* التعديل هنا: شيلنا الـ grayscale والـ opacity */
                                                         className={`relative group rounded-2xl border-4 overflow-hidden transition-all duration-300 ${isSelected
                                                             ? 'border-primary ring-4 ring-primary/10 scale-105 shadow-xl z-10'
-                                                            /* رجعنا الألوان كاملة هنا للكرت اللي مش متحدد */
                                                             : 'border-gray-100 hover:border-primary/20 hover:shadow-lg'
                                                             }`}
                                                     >
@@ -1326,33 +1328,45 @@ export default function SchoolWizard() {
                                             <span className="w-2 h-2 bg-secondary rounded-full animate-pulse"></span>
                                             {t(translations.logoPlacement)} *
                                         </label>
-                                        <div className="grid grid-cols-3 gap-4 md:gap-6">
+                                        {/* الشبكة دي هي اللي فيها التعديل: بتوسط الصورتين لو هما 2 بس */}
+                                        <div className={`grid gap-4 md:gap-6 ${getLogoPlacementOptions().length === 2 ? 'grid-cols-2 max-w-xl mx-auto' : 'grid-cols-3'}`}>
                                             {getLogoPlacementOptions().map((placement) => {
                                                 const product = getProductById(currentProduct);
-                                                const isBottom = (product?.category === 'boys_pants' || product?.category === 'girls_pants' || product?.category === 'skirts');
+                                                const isSkirt = product?.category === 'skirts'; // فحص إذا كانت تنورة
+                                                const isBottom = (product?.category === 'boys_pants' || product?.category === 'girls_pants' || isSkirt);
 
                                                 const imgMap = {
                                                     chest: '/images/customization/placement-chest.png',
                                                     shoulder: '/images/customization/placement-shoulder.png',
-                                                    back: isBottom ? '/images/customization/placement-pant-back.png' : '/images/customization/placement-back.png',
-                                                    pocket: '/images/customization/placement-pocket.png',
-                                                    leg: '/images/customization/placement-leg.png'
+                                                    /* تعديل الظهر: لو تنورة ياخد صورتها، لو بنطلون ياخد صورته، ولو علويات ياخد الضهر العادي */
+                                                    back: isSkirt
+                                                        ? '/images/customization/placement-pant-back-skirt.png'
+                                                        : (isBottom ? '/images/customization/placement-pant-back.png' : '/images/customization/placement-back.png'),
+                                                    /* تعديل الساق: لو تنورة ياخد صورتها، غير كده ياخد صورة الساق العادية */
+                                                    leg: isSkirt
+                                                        ? '/images/customization/placement-leg-skirt.png'
+                                                        : '/images/customization/placement-leg.png'
                                                 };
+
                                                 const isSelected = logo.placement === placement;
 
                                                 return (
                                                     <button
                                                         key={placement}
                                                         onClick={() => handleUpdateLogo(index, 'placement', placement)}
-                                                        /* التعديل هنا: شيلنا الـ grayscale والـ opacity */
                                                         className={`relative group rounded-2xl border-4 overflow-hidden transition-all duration-300 ${isSelected
-                                                                ? 'border-secondary ring-4 ring-secondary/10 scale-105 shadow-xl z-10'
-                                                                /* رجعنا الألوان كاملة هنا للكرت اللي مش متحدد */
-                                                                : 'border-gray-100 hover:border-secondary/20 hover:shadow-lg'
+                                                            ? 'border-secondary ring-4 ring-secondary/10 scale-105 shadow-xl z-10'
+                                                            : 'border-gray-100 hover:border-secondary/20 hover:shadow-lg'
                                                             }`}
                                                     >
                                                         <div className="relative aspect-[4/3] bg-gray-50">
-                                                            <Image src={imgMap[placement]} alt={t(translations[placement === 'back' ? 'logoBack' : placement])} fill className="object-cover" />
+                                                            <Image
+                                                                src={imgMap[placement]}
+                                                                alt={t(translations[placement === 'back' ? 'logoBack' : placement])}
+                                                                fill
+                                                                /* لسه محافظين على رفع الكاميرا في الظهر للسفليات عشان الصور تبان واضحة */
+                                                                className={`object-cover ${placement === 'back' && isBottom ? 'object-[center_top]' : ''}`}
+                                                            />
                                                             {isSelected && <div className="absolute inset-0 bg-secondary/5 border-2 border-secondary"></div>}
                                                         </div>
                                                         <div className={`py-3 font-bold text-sm md:text-base ${isSelected ? 'bg-secondary text-primary' : 'bg-white text-gray-700'}`}>
