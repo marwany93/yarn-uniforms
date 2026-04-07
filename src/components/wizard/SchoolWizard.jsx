@@ -966,11 +966,14 @@ export default function SchoolWizard() {
                                     src={category.image}
                                     alt={category.name}
                                     fill
-                                    className={`object-cover transition-transform duration-700 group-hover:scale-110 ${(category.id === 'boys_pants' || category.id === 'girls_pants') ? 'object-[center_70%]' :
-                                        (category.id === 'skirts') ? 'object-[center_60%]' :
-                                            (category.id === 'tracksuit') ? 'object-[center_45%]' :
-                                                'object-top'
-                                        }`}
+                                    className="object-cover transition-transform duration-700 group-hover:scale-110"
+                                    style={{
+                                        objectPosition: category.id === 'pants' ? 'center 0%' :
+                                            (category.id === 'boys_pants' || category.id === 'girls_pants') ? 'center 70%' :
+                                                (category.id === 'skirts') ? 'center 60%' :
+                                                    (category.id === 'tracksuit') ? 'center 45%' :
+                                                        'center top'
+                                    }}
                                 />
                             </div>
 
@@ -1333,7 +1336,7 @@ export default function SchoolWizard() {
                                             {getLogoPlacementOptions().map((placement) => {
                                                 const product = getProductById(currentProduct);
                                                 const isSkirt = product?.category === 'skirts'; // فحص إذا كانت تنورة
-                                                const isBottom = (product?.category === 'boys_pants' || product?.category === 'girls_pants' || isSkirt);
+                                                const isBottom = (product?.category === 'boys_pants' || product?.category === 'girls_pants' || product?.category === 'pants' || product?.category === 'shorts' || isSkirt);
 
                                                 const imgMap = {
                                                     chest: '/images/customization/placement-chest.png',
