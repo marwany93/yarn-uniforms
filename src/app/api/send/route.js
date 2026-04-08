@@ -46,7 +46,7 @@ export async function POST(req) {
 
             // 2. Send Auto-Reply to Customer
             const { data, error } = await resend.emails.send({
-                from: 'Yarn Uniforms <info@yarnuniforms.com>',
+                from: 'No-Reply <no-reply@yarnuniforms.com>',
                 to: [to], // Customer email
                 subject: 'شكراً لتواصلك معنا - يارن للزي الموحد',
                 html: `
@@ -185,19 +185,76 @@ export async function POST(req) {
             : `تحديث حالة طلبك #${orderId}`;
 
         // --- Send via Resend ---
+
+        // 1. إرسال الإيميل للعميل
         const { data, error } = await resend.emails.send({
-            from: 'Yarn Uniforms <info@yarnuniforms.com>', // Update this with your verified domain
+            from: 'Yarn Uniforms <no-reply@yarnuniforms.com>', // 👈 تعديل الإيميل لـ no-reply
             to: [to],
             subject: subject,
             html: html,
         });
+
+        // 2. إرسال إيميل التنبيه للموظف/للإدارة
+        if (type === 'NEW_ORDER') {
+            const adminEmail = 'info@yarnuniforms.com';
+
+            const adminItemsHtml = items.map(item => `
+                <tr>
+                    <td style="padding: 12px; border: 1px solid #cbd5e1; color: #333;">${item.name}</td>
+                    <td style="padding: 12px; border: 1px solid #cbd5e1; color: #666; direction: ltr; text-align: right;">${item.size || '-'}</td>
+                    <td style="padding: 12px; border: 1px solid #cbd5e1; font-weight: bold; color: #1a237e;">${item.quantity}</td>
+                </tr>
+            `).join('');
+
+            await resend.emails.send({
+                from: 'Yarn Uniforms <no-reply@yarnuniforms.com>', // 👈 تعديل الإيميل لـ no-reply
+                to: [adminEmail],
+                subject: `🚨 طلب جديد رقم #${orderId} من: ${customerName}`,
+                html: `
+                    <div dir="rtl" style="font-family: Arial, sans-serif; padding: 30px; text-align: right; background-color: #f8fafc; color: #333;">
+                        <div style="max-width: 600px; margin: 0 auto; background-color: #fff; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-top: 5px solid #ef4444;">
+                            
+                            <h2 style="color: #ef4444; margin-top: 0;">تنبيه: طلب جديد يحتاج للمراجعة 📦</h2>
+                            <p style="color: #666; font-size: 16px;">تم استلام طلب جديد على النظام، يرجى مراجعته والتواصل مع العميل.</p>
+                            
+                            <div style="background-color: #f1f5f9; padding: 20px; border-radius: 8px; margin: 25px 0;">
+                                <h3 style="margin-top: 0; color: #1e293b; border-bottom: 2px solid #cbd5e1; padding-bottom: 10px;">بيانات العميل:</h3>
+                                <p style="margin: 10px 0;"><strong>اسم العميل:</strong> ${customerName}</p>
+                                <p style="margin: 10px 0;"><strong>المدرسة/الجهة:</strong> <span style="color: #1a237e; font-weight: bold;">${schoolName || 'غير محدد'}</span></p> <p style="margin: 10px 0;"><strong>البريد الإلكتروني:</strong> <a href="mailto:${to}" style="color: #2563eb;">${to}</a></p>
+                                ${phone ? `<p style="margin: 10px 0;"><strong>رقم الهاتف:</strong> <span dir="ltr">${phone}</span></p>` : ''}
+                                <p style="margin: 10px 0;"><strong>رقم الطلب:</strong> <span style="background-color: #e2e8f0; padding: 3px 8px; border-radius: 4px;">#${orderId}</span></p>
+                            </div>
+                            
+                            <h3 style="color: #1e293b; margin-bottom: 15px;">تفاصيل المنتجات المطلوبة:</h3>
+                            <table style="width: 100%; border-collapse: collapse; text-align: right;">
+                                <thead style="background-color: #f1f5f9;">
+                                    <tr>
+                                        <th style="padding: 12px; border: 1px solid #cbd5e1; color: #475569;">المنتج</th>
+                                        <th style="padding: 12px; border: 1px solid #cbd5e1; color: #475569;">المقاس والكمية</th>
+                                        <th style="padding: 12px; border: 1px solid #cbd5e1; color: #475569;">العدد</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${adminItemsHtml}
+                                </tbody>
+                            </table>
+                            
+                            <div style="margin-top: 30px; text-align: center;">
+                                <a href="${process.env.NEXT_PUBLIC_BASE_URL}/admin" style="background-color: #1a237e; color: #fff; padding: 12px 25px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">الانتقال للوحة التحكم</a>
+                            </div>
+                            
+                        </div>
+                    </div>
+                `
+            });
+        }
 
         if (error) {
             console.error('Resend Error:', error);
             return NextResponse.json({ error }, { status: 500 });
         }
 
-        return NextResponse.json({ message: 'Email sent successfully', data });
+        return NextResponse.json({ message: 'Emails sent successfully', data });
 
     } catch (error) {
         console.error('API Error:', error);

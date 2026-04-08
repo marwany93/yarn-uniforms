@@ -168,24 +168,39 @@ export default function CartPage() {
             console.log('✅ Order saved to Firestore:', newOrderId);
 
             try {
-                await fetch('/api/send', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        to: customerData?.email || 'N/A',
-                        orderId: newOrderId,
-                        customerName: customerData?.contactPerson || customerData?.name,
-                        items: cart.map(item => ({
-                            name: item.productNameAr || item.productName,
-                            size: item.details.sizes ? Object.keys(item.details.sizes).join(', ') : '',
-                            quantity: item.quantity
-                        })),
-                        total: 0,
-                        type: 'NEW_ORDER'
-                    })
-                });
+                if (customerData?.email && customerData.email.includes('@')) {
+                    await fetch('/api/send', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            to: customerData.email,
+                            phone: customerData.phone,
+                            schoolName: customerData?.schoolName || contactInfo?.schoolName || cart.find(item => item.sector === 'students')?.details?.schoolName || cart.find(item => item.sector === 'students')?.details?.schoolId || 'غير محدد',
+                            orderId: newOrderId,
+                            customerName: customerData.contactPerson || customerData.name || 'عميل يارن',
+                            items: cart.map(item => {
+                                const sizesText = item.details?.sizes
+                                    ? Object.entries(item.details.sizes)
+                                        .map(([size, qty]) => `${size} (${qty})`)
+                                        .join(' | ')
+                                    : 'مخصص';
+
+                                return {
+                                    name: language === 'ar' ? (item.productNameAr || item.productName) : item.productName,
+                                    size: sizesText,
+                                    quantity: item.quantity
+                                };
+                            }),
+                            total: 0,
+                            type: 'NEW_ORDER'
+                        })
+                    });
+                    console.log('✅ Email trigger sent to API successfully');
+                } else {
+                    console.warn('⚠️ No valid email provided by customer, skipping email sending.');
+                }
             } catch (emailError) {
-                console.error('❌ Failed to send email:', emailError);
+                console.error('❌ Failed to trigger email API:', emailError);
             }
 
             clearCart();
