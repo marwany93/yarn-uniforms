@@ -118,14 +118,15 @@ export const schoolProducts = [
     // { id: 'tbe4', category: 'tracksuit', code: 'TBE 4', name: 'Training Suit TBE 4', nameAr: 'ترنج رياضي TBE 4', image: '/images/products/tracksuits/tbe4.png', price: 0 },
 
 
-    { id: 'sw1', category: 'sweaters', code: 'SW 1', name: 'Sweater SW 1', nameAr: 'سويتر SW 1', image: '/images/products/sweaters/sw1.png', price: 0 },
-    { id: 'sw2', category: 'sweaters', code: 'SW 2', name: 'Sweater SW 2', nameAr: 'سويتر SW 2', image: '/images/products/sweaters/sw2.png', price: 0 },
-    { id: 'sw3', category: 'sweaters', code: 'SW 3', name: 'Sweater SW 3', nameAr: 'سويتر SW 3', image: '/images/products/sweaters/sw3.png', price: 0 },
-    { id: 'sw4', category: 'sweaters', code: 'SW 4', name: 'Sweater SW 4', nameAr: 'سويتر SW 4', image: '/images/products/sweaters/sw4.png', price: 0 },
-    { id: 'sw5', category: 'sweaters', code: 'SW 5', name: 'Sweater SW 5', nameAr: 'سويتر SW 5', image: '/images/products/sweaters/sw5.png', price: 0 },
-    { id: 'sw6', category: 'sweaters', code: 'SW 6', name: 'Sweater SW 6', nameAr: 'سويتر SW 6', image: '/images/products/sweaters/sw6.png', price: 0 },
-    { id: 'sw7', category: 'sweaters', code: 'SW 7', name: 'Sweater SW 7', nameAr: 'سويتر SW 7', image: '/images/products/sweaters/sw7.png', price: 0 },
-    { id: 'sw8', category: 'sweaters', code: 'SW 8', name: 'Sweater SW 8', nameAr: 'سويتر SW 8', image: '/images/products/sweaters/sw8.png', price: 0 },
+    // --- Sweaters (AS) ---
+    { id: 'as1', category: 'sweaters', code: 'AS 1', name: 'Sweater AS 1', nameAr: 'سويتر AS 1', image: '/images/products/sweaters/as1.png', price: 0 },
+    { id: 'as2', category: 'sweaters', code: 'AS 2', name: 'Sweater AS 2', nameAr: 'سويتر AS 2', image: '/images/products/sweaters/as2.png', price: 0 },
+    { id: 'as3', category: 'sweaters', code: 'AS 3', name: 'Sweater AS 3', nameAr: 'سويتر AS 3', image: '/images/products/sweaters/as3.png', price: 0 },
+    { id: 'as4', category: 'sweaters', code: 'AS 4', name: 'Sweater AS 4', nameAr: 'سويتر AS 4', image: '/images/products/sweaters/as4.png', price: 0 },
+    { id: 'as5', category: 'sweaters', code: 'AS 5', name: 'Sweater AS 5', nameAr: 'سويتر AS 5', image: '/images/products/sweaters/as5.png', price: 0 },
+    { id: 'as6', category: 'sweaters', code: 'AS 6', name: 'Sweater AS 6', nameAr: 'سويتر AS 6', image: '/images/products/sweaters/as6.png', price: 0 },
+    { id: 'as7', category: 'sweaters', code: 'AS 7', name: 'Sweater AS 7', nameAr: 'سويتر AS 7', image: '/images/products/sweaters/as7.png', price: 0 },
+    { id: 'as8', category: 'sweaters', code: 'AS 8', name: 'Sweater AS 8', nameAr: 'سويتر AS 8', image: '/images/products/sweaters/as8.png', price: 0 },
 ];
 
 export const getProductsByCategory = (categoryId) => {
