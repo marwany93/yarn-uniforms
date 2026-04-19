@@ -2,12 +2,13 @@
 import { useLanguage } from '@/hooks/useLanguage';
 import { useState, useEffect, useRef } from 'react';
 import { db, storage } from '@/lib/firebase';
-import { collection, addDoc, doc, updateDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
+import { collection, addDoc, doc, updateDoc, serverTimestamp, query, where, getDocs, writeBatch } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { schoolProducts, productCategories } from '@/data/schoolProducts';
 import Image from 'next/image';
 import Papa from 'papaparse';
 import { Upload, CheckCircle, XCircle, Loader2, ChevronDown, ChevronUp, Users } from 'lucide-react';
+
 
 const SchoolFormModal = ({ school, isOpen, onClose }) => {
     const { t, language } = useLanguage();
@@ -18,6 +19,53 @@ const SchoolFormModal = ({ school, isOpen, onClose }) => {
     const [slug, setSlug] = useState('');
     const [logoFile, setLogoFile] = useState(null);
     const [logoPreview, setLogoPreview] = useState(null);
+
+    // --- Students State & Logic ---
+    const [existingStudents, setExistingStudents] = useState([]);
+    const [isLoadingStudents, setIsLoadingStudents] = useState(false);
+    const [studentSearchTerm, setStudentSearchTerm] = useState('');
+
+    const normalizeArabic = (text) => {
+        if (!text) return '';
+        return text
+            .replace(/[أإآ]/g, 'ا')
+            .replace(/ة/g, 'ه')
+            .replace(/ى/g, 'ي')
+            .replace(/[\u064B-\u065F]/g, '')
+            .replace(/ـ/g, '')
+            .toLowerCase()
+            .trim();
+    };
+
+    useEffect(() => {
+        const fetchStudents = async () => {
+            if (school?.id && isOpen) {
+                setIsLoadingStudents(true);
+                try {
+                    const q = query(collection(db, 'students'), where('schoolId', '==', school.id));
+                    const snapshot = await getDocs(q);
+                    const studentsList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                    setExistingStudents(studentsList);
+                } catch (error) {
+                    console.error('Error fetching students:', error);
+                } finally {
+                    setIsLoadingStudents(false);
+                }
+            } else {
+                setExistingStudents([]);
+            }
+        };
+        fetchStudents();
+    }, [school, isOpen]);
+
+
+    const filteredStudents = existingStudents.filter(student => {
+        if (!studentSearchTerm) return true;
+        const search = normalizeArabic(studentSearchTerm);
+        const name = normalizeArabic(student.name || '');
+        const id = (student.nationalId || '').toLowerCase();
+        return name.includes(search) || id.includes(studentSearchTerm.toLowerCase());
+    });
 
     // Assigned Products State
     const [assignedProducts, setAssignedProducts] = useState([]);
@@ -520,130 +568,176 @@ const SchoolFormModal = ({ school, isOpen, onClose }) => {
                                     </div>
                                 </div>
 
-                                {/* Section 3: Student Roster (CSV Upload) */}
-                                <div className="border border-gray-200 rounded-xl overflow-hidden">
-                                    {/* Collapsible Header */}
-                                    <button
-                                        type="button"
-                                        onClick={() => setRosterExpanded(!rosterExpanded)}
-                                        className="w-full flex items-center justify-between px-5 py-4 bg-gray-50 hover:bg-gray-100 transition-colors"
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <Users className="w-5 h-5 text-primary-600" />
-                                            <span className="text-base font-semibold text-primary-700">{t(translations.roster)}</span>
-                                            {rosterUploadResult && (
-                                                <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">
-                                                    ✅ {rosterUploadResult.added} {language === 'ar' ? 'طالب' : 'students'} {language === 'ar' ? 'تم إضافتهم' : 'uploaded'}
-                                                </span>
-                                            )}
+                                {/* --- Section 3: إدارة الطلاب ورفع الـ CSV (Student Roster) --- */}
+                                <div className="mt-10 pt-8 border-t border-gray-200">
+                                    <div className="flex items-center gap-2 mb-6">
+                                        <Users className="w-6 h-6 text-primary-600" />
+                                        <h3 className="text-xl font-bold text-gray-900">
+                                            {language === 'ar' ? 'إدارة قائمة الطلاب' : 'Student Roster Management'}
+                                        </h3>
+                                    </div>
+
+                                    {/* 1. تنبيه للمدارس الجديدة */}
+                                    {!school?.id && (
+                                        <div className="text-sm text-amber-700 bg-amber-50 p-4 rounded-xl border border-amber-200 mb-6 flex items-center gap-3">
+                                            <span className="text-2xl">⚠️</span>
+                                            <p>{language === 'ar' ? 'يجب حفظ بيانات المدرسة أولاً قبل أن تتمكن من رفع أو إدارة قائمة الطلاب.' : 'Save the school first before uploading or managing the student roster.'}</p>
                                         </div>
-                                        {rosterExpanded ? <ChevronUp className="w-4 h-4 text-gray-500" /> : <ChevronDown className="w-4 h-4 text-gray-500" />}
-                                    </button>
+                                    )}
 
-                                    {rosterExpanded && (
-                                        <div className="p-5 space-y-4">
-                                            {/* Only allow upload for existing schools */}
-                                            {!school?.id && (
-                                                <div className="text-sm text-amber-700 bg-amber-50 p-3 rounded-lg border border-amber-200">
-                                                    ⚠️ {language === 'ar' ? 'يجب حفظ المدرسة أولاً قبل رفع قائمة الطلاب.' : 'Save the school first before uploading a student roster.'}
-                                                </div>
-                                            )}
+                                    {/* 2. منطقة رفع الملف (Dropzone) */}
+                                    {school?.id && (
+                                        <div className="bg-primary-50 border-2 border-dashed border-primary-200 rounded-2xl p-6 mb-8 text-center transition-all hover:bg-primary-100/50">
+                                            <div className="mb-3 p-3 bg-white rounded-full inline-block shadow-sm">
+                                                <Upload className="w-6 h-6 text-primary-600" />
+                                            </div>
+                                            <p className="text-sm font-bold text-gray-800 mb-1">
+                                                {language === 'ar' ? 'رفع قائمة طلاب جديدة (ملف CSV)' : 'Upload New Student Roster (CSV File)'}
+                                            </p>
+                                            <p className="text-xs text-gray-500 mb-4">
+                                                {t(translations.rosterHint)} <br />
+                                                {language === 'ar' ? 'يجب أن يحتوي الملف على عمودين: Name, NationalID' : 'File must contain exactly two columns: Name, NationalID'}
+                                            </p>
 
-                                            <p className="text-sm text-gray-500">{t(translations.rosterHint)}</p>
-
-                                            {/* File Input */}
                                             <input
                                                 ref={rosterInputRef}
                                                 type="file"
                                                 accept=".csv"
                                                 onChange={handleRosterFileChange}
-                                                disabled={!school?.id}
-                                                className="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 disabled:opacity-50"
+                                                className="block w-full max-w-sm mx-auto text-sm text-gray-500 file:mr-4 file:py-2.5 file:px-6 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-primary-600 file:text-white hover:file:bg-primary-700 transition-all cursor-pointer shadow-sm"
                                             />
 
-                                            {/* Roster Error */}
+                                            {/* Roster Error Message */}
                                             {rosterError && (
-                                                <div className="text-sm text-red-600 bg-red-50 p-3 rounded-lg border border-red-200">
+                                                <div className="mt-4 text-sm text-red-600 bg-red-50 p-3 rounded-lg border border-red-200">
                                                     {rosterError}
                                                 </div>
                                             )}
 
-                                            {/* Parsed Preview */}
-                                            {parsedStudents.length > 0 && (
-                                                <div>
-                                                    <p className="text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wider">
-                                                        {t(translations.rosterPreview)} — {parsedStudents.length} {language === 'ar' ? 'طالب' : 'students'}
-                                                    </p>
-                                                    <div className="max-h-48 overflow-y-auto rounded-lg border border-gray-200">
-                                                        <table className="w-full text-xs text-left rtl:text-right">
-                                                            <thead className="bg-gray-100 sticky top-0">
-                                                                <tr>
-                                                                    <th className="px-3 py-2 text-gray-500 font-semibold">#</th>
-                                                                    <th className="px-3 py-2 text-gray-500 font-semibold">{language === 'ar' ? 'الاسم' : 'Name'}</th>
-                                                                    <th className="px-3 py-2 text-gray-500 font-semibold">{language === 'ar' ? 'الهوية' : 'National ID'}</th>
-                                                                </tr>
-                                                            </thead>
-                                                            <tbody className="divide-y divide-gray-100">
-                                                                {parsedStudents.slice(0, 10).map((s, i) => (
-                                                                    <tr key={i} className="hover:bg-gray-50">
-                                                                        <td className="px-3 py-1.5 text-gray-400">{i + 1}</td>
-                                                                        <td className="px-3 py-1.5 font-medium text-gray-800">{s['name']}</td>
-                                                                        <td className="px-3 py-1.5 font-mono text-gray-600" dir="ltr">{s['nationalid']}</td>
-                                                                    </tr>
-                                                                ))}
-                                                                {parsedStudents.length > 10 && (
-                                                                    <tr>
-                                                                        <td colSpan={3} className="px-3 py-2 text-center text-gray-400 italic">
-                                                                            +{parsedStudents.length - 10} {language === 'ar' ? 'إضافيين...' : 'more...'}
-                                                                        </td>
-                                                                    </tr>
-                                                                )}
-                                                            </tbody>
-                                                        </table>
-                                                    </div>
-
-                                                    {/* Confirm Upload Button */}
-                                                    <button
-                                                        type="button"
-                                                        onClick={handleRosterUpload}
-                                                        disabled={isUploadingRoster}
-                                                        className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 bg-primary-600 text-white text-sm font-semibold rounded-lg hover:bg-primary-700 disabled:opacity-60 transition-colors"
-                                                    >
-                                                        {isUploadingRoster
-                                                            ? <><Loader2 className="w-4 h-4 animate-spin" />{t(translations.uploadingRoster)}</>
-                                                            : <><Upload className="w-4 h-4" />{t(translations.confirmUpload)}</>
-                                                        }
-                                                    </button>
-                                                </div>
-                                            )}
-
-                                            {/* Success Result */}
+                                            {/* Roster Success Message */}
                                             {rosterUploadResult && (
-                                                <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-lg text-sm">
-                                                    <CheckCircle className="w-5 h-5 text-green-600 shrink-0" />
-                                                    <div>
-                                                        <p className="font-semibold text-green-800">
-                                                            {language === 'ar'
-                                                                ? `تم رفع ${rosterUploadResult.added} طالب بنجاح`
-                                                                : `Successfully uploaded ${rosterUploadResult.added} students`}
-                                                        </p>
-                                                        {rosterUploadResult.skipped > 0 && (
-                                                            <p className="text-green-600 text-xs mt-0.5">
-                                                                {language === 'ar'
-                                                                    ? `تم تجاوز ${rosterUploadResult.skipped} صف غير صالح`
-                                                                    : `${rosterUploadResult.skipped} invalid rows skipped`}
-                                                            </p>
-                                                        )}
-                                                    </div>
+                                                <div className="mt-4 text-sm text-green-700 bg-green-50 p-3 rounded-lg border border-green-200 font-medium flex justify-center items-center gap-2">
+                                                    <CheckCircle className="w-4 h-4" />
+                                                    {rosterUploadResult.added} {language === 'ar' ? 'طالب تم إضافتهم بنجاح!' : 'students uploaded successfully!'}
                                                 </div>
                                             )}
                                         </div>
                                     )}
+
+                                    {/* 3. مراجعة الملف قبل التأكيد (Preview) */}
+                                    {school?.id && parsedStudents.length > 0 && (
+                                        <div className="mb-8 p-5 bg-white border-2 border-primary-100 rounded-2xl shadow-sm">
+                                            <p className="text-sm font-bold text-gray-800 mb-3 flex items-center justify-between">
+                                                <span>{t(translations.rosterPreview)}</span>
+                                                <span className="bg-primary-100 text-primary-800 px-3 py-1 rounded-full text-xs">
+                                                    {parsedStudents.length} {language === 'ar' ? 'طالب جاهز للرفع' : 'students ready'}
+                                                </span>
+                                            </p>
+
+                                            <div className="max-h-48 overflow-y-auto rounded-lg border border-gray-200 mb-4">
+                                                <table className="w-full text-xs text-left rtl:text-right">
+                                                    <thead className="bg-gray-100 sticky top-0">
+                                                        <tr>
+                                                            <th className="px-3 py-2 text-gray-500 font-semibold">#</th>
+                                                            <th className="px-3 py-2 text-gray-500 font-semibold">{language === 'ar' ? 'الاسم' : 'Name'}</th>
+                                                            <th className="px-3 py-2 text-gray-500 font-semibold">{language === 'ar' ? 'الهوية' : 'National ID'}</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody className="divide-y divide-gray-100">
+                                                        {parsedStudents.slice(0, 10).map((s, i) => (
+                                                            <tr key={i} className="hover:bg-gray-50">
+                                                                <td className="px-3 py-1.5 text-gray-400">{i + 1}</td>
+                                                                <td className="px-3 py-1.5 font-medium text-gray-800">{s['name']}</td>
+                                                                <td className="px-3 py-1.5 font-mono text-gray-600" dir="ltr">{s['nationalid']}</td>
+                                                            </tr>
+                                                        ))}
+                                                        {parsedStudents.length > 10 && (
+                                                            <tr>
+                                                                <td colSpan={3} className="px-3 py-2 text-center text-gray-400 italic">
+                                                                    +{parsedStudents.length - 10} {language === 'ar' ? 'إضافيين...' : 'more...'}
+                                                                </td>
+                                                            </tr>
+                                                        )}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+
+                                            <button
+                                                type="button"
+                                                onClick={handleRosterUpload}
+                                                disabled={isUploadingRoster}
+                                                className="w-full flex items-center justify-center gap-2 py-3 bg-primary-600 text-white text-base font-bold rounded-xl hover:bg-primary-700 disabled:opacity-60 transition-colors shadow-md"
+                                            >
+                                                {isUploadingRoster
+                                                    ? <><Loader2 className="w-5 h-5 animate-spin" />{t(translations.uploadingRoster)}</>
+                                                    : <><Upload className="w-5 h-5" />{t(translations.confirmUpload)}</>
+                                                }
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {/* 4. جدول الطلاب الحاليين مع البحث */}
+                                    {school?.id && (
+                                        <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden shadow-sm">
+                                            <div className="p-4 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gray-50">
+                                                <h5 className="font-bold text-gray-800 flex items-center gap-2">
+                                                    {language === 'ar' ? 'الطلاب المسجلين بالفعل' : 'Currently Enrolled Students'}
+                                                    <span className="bg-gray-200 text-gray-700 px-3 py-0.5 rounded-full text-sm font-bold">
+                                                        {existingStudents.length}
+                                                    </span>
+                                                </h5>
+                                                <div className="w-full sm:w-1/2">
+                                                    <input
+                                                        type="text"
+                                                        placeholder={language === 'ar' ? 'ابحث بالاسم أو الرقم...' : 'Search by name or ID...'}
+                                                        value={studentSearchTerm}
+                                                        onChange={(e) => setStudentSearchTerm(e.target.value)}
+                                                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-sm"
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <div className="max-h-72 overflow-y-auto">
+                                                {isLoadingStudents ? (
+                                                    <div className="p-8 text-center text-gray-500">
+                                                        <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-primary-600" />
+                                                        {language === 'ar' ? 'جاري جلب الطلاب...' : 'Loading students...'}
+                                                    </div>
+                                                ) : filteredStudents.length > 0 ? (
+                                                    <table className="min-w-full divide-y divide-gray-200">
+                                                        <thead className="bg-white sticky top-0 shadow-sm z-10">
+                                                            <tr>
+                                                                <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider text-right bg-gray-50/90 backdrop-blur-sm">#</th>
+                                                                <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider text-right bg-gray-50/90 backdrop-blur-sm">{language === 'ar' ? 'اسم الطالب' : 'Name'}</th>
+                                                                <th className="px-6 py-3 text-xs font-bold text-gray-500 uppercase tracking-wider text-right bg-gray-50/90 backdrop-blur-sm">{language === 'ar' ? 'الرقم الوطني / الإقامة' : 'National ID'}</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody className="divide-y divide-gray-100">
+                                                            {filteredStudents.map((student, idx) => (
+                                                                <tr key={student.id} className="hover:bg-gray-50 transition-colors">
+                                                                    <td className="px-6 py-3 text-sm text-gray-400">{idx + 1}</td>
+                                                                    <td className="px-6 py-3 text-sm font-bold text-gray-900">{student.name}</td>
+                                                                    <td className="px-6 py-3 text-sm text-gray-600 font-mono">{student.nationalId}</td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                ) : (
+                                                    <div className="p-8 text-center text-gray-500 text-sm bg-gray-50/50">
+                                                        {studentSearchTerm
+                                                            ? (language === 'ar' ? 'لا توجد نتائج تطابق بحثك.' : 'No results found.')
+                                                            : (language === 'ar' ? 'لا يوجد طلاب مسجلين حتى الآن.' : 'No students enrolled yet.')}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
+                                {/* --- نهاية قسم الطلاب --- */}
                             </div>
                         </div>
 
-                        {/* Footer */}
+                        {/* Footer (أزرار الحفظ والإلغاء) */}
                         <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse border-t border-gray-200">
                             <button
                                 type="submit"
