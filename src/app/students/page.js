@@ -33,6 +33,18 @@ export default function StudentPage() {
     // Current step: 'school' | 'id'
     const [step, setStep] = useState('school');
 
+    const normalizeArabic = (text) => {
+        if (!text) return '';
+        return text
+            .replace(/[أإآ]/g, 'ا')
+            .replace(/ة/g, 'ه')
+            .replace(/ى/g, 'ي')
+            .replace(/[\u064B-\u065F]/g, '')
+            .replace(/ـ/g, '')
+            .toLowerCase()
+            .trim();
+    };
+
     // Fetch Schools from Firebase
     useEffect(() => {
         const fetchSchools = async () => {
@@ -57,12 +69,13 @@ export default function StudentPage() {
         fetchSchools();
     }, []);
 
+    // Filter schools based on live data - Robust handling with Arabic Normalization
     const filteredSchools = schoolsList.filter(school => {
-        const q = searchQuery.toLowerCase().trim();
-        if (!q) return true;
-        const arName = school.nameAr || school.name?.ar || '';
-        const enName = school.nameEn || school.name?.en || '';
-        return arName.toLowerCase().includes(q) || enName.toLowerCase().includes(q);
+        const query = normalizeArabic(searchQuery);
+        if (!query) return true;
+        const arName = normalizeArabic(school.nameAr || school.name?.ar || '');
+        const enName = normalizeArabic(school.nameEn || school.name?.en || '');
+        return arName.includes(query) || enName.includes(query);
     });
 
     // Close dropdown when clicking outside
