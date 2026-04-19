@@ -83,7 +83,7 @@ export default function OrderDetailsDrawer({ isOpen, onClose, order }) {
 
     const stageMap = {
         'kg_primary': { ar: 'رياض أطفال وابتدائي', en: 'KG & Primary' },
-        'prep_secondary': { ar: 'إعدادي وثانوي', en: 'Middle/High School' },
+        'prep_secondary': { ar: 'متوسط وثانوي', en: 'Middle/High School' },
         'high_school': { ar: 'ثانوي', en: 'High School' }
     };
 
@@ -154,20 +154,48 @@ export default function OrderDetailsDrawer({ isOpen, onClose, order }) {
         return status;
     };
 
-    const handleUpdateOrder = async () => {
+    // دالة لحفظ التاريخ فقط بدون تغيير الحالة
+    const handleSaveDate = async () => {
         if (!order?.id) return;
         setUpdating(true);
         try {
             const orderRef = doc(db, 'orders', order.id);
             const targetDate = expectedDate ? new Date(expectedDate) : null;
-
             await updateDoc(orderRef, {
-                status: newStatus,
                 expectedCompletionDate: targetDate || null,
                 lastUpdated: new Date()
             });
+            alert('✅ ' + (language === 'ar' ? 'تم حفظ التاريخ بنجاح' : 'Date saved successfully'));
+        } catch (error) {
+            console.error('Error updating date:', error);
+            alert('❌ Failed to update date');
+        } finally {
+            setUpdating(false);
+        }
+    };
 
-            // --- Send Status Update Email ---
+    // دالة زرار الشحن الأخضر
+    const handleShipOrder = async () => {
+        if (!order?.id) return;
+
+        // رسالة تأكيد للموظف عشان ميدكش بالغلط
+        const confirmShip = window.confirm(language === 'ar' ? 'هل أنت متأكد من تسليم الطلب لشركة الشحن؟' : 'Are you sure you want to hand over to shipping?');
+        if (!confirmShip) return;
+
+        setUpdating(true);
+        try {
+            const orderRef = doc(db, 'orders', order.id);
+            const targetDate = expectedDate ? new Date(expectedDate) : null;
+
+            // تحديث الحالة في الداتابيز
+            await updateDoc(orderRef, {
+                status: 'Shipped',
+                expectedCompletionDate: targetDate || null,
+                shippedAt: new Date(),
+                lastUpdated: new Date()
+            });
+
+            // إرسال إيميل التتبع للعميل
             try {
                 await fetch('/api/send', {
                     method: 'POST',
@@ -176,21 +204,17 @@ export default function OrderDetailsDrawer({ isOpen, onClose, order }) {
                         to: order.customer?.email,
                         orderId: order.orderId,
                         customerName: order.customer?.name,
-                        status: newStatus,
-                        type: 'STATUS_UPDATE'
+                        type: 'SHIPPED' // الكود اللي Antigravity جهزه للإيميل
                     })
                 });
-                console.log('📧 Status update email sent');
             } catch (emailError) {
                 console.error('❌ Failed to send email:', emailError);
             }
-            // -------------------------------
-            alert('✅ ' + t(adminTrans.statusUpdated));
-            setTimeout(() => {
-                window.location.reload();
-            }, 1000);
+
+            alert('✅ ' + (language === 'ar' ? 'تم التسليم لشركة الشحن بنجاح!' : 'Order shipped successfully!'));
+            setTimeout(() => { window.location.reload(); }, 1000);
         } catch (error) {
-            console.error('Error updating order:', error);
+            console.error('Error shipping order:', error);
             alert('❌ Failed to update order');
         } finally {
             setUpdating(false);
@@ -201,50 +225,6 @@ export default function OrderDetailsDrawer({ isOpen, onClose, order }) {
         navigator.clipboard.writeText(text);
         setCopiedId(text);
         setTimeout(() => setCopiedId(null), 2000);
-    };
-
-    const handleShipOrder = async () => {
-        if (!order?.id) return;
-        const confirm = window.confirm(
-            language === 'ar'
-                ? 'هل أنت متأكد من تسليم الطلب لشركة الشحن؟ سيتم إشعار العميل.'
-                : 'Confirm handover to shipping company? The customer will be notified.'
-        );
-        if (!confirm) return;
-
-        setUpdating(true);
-        try {
-            const orderRef = doc(db, 'orders', order.id);
-            await updateDoc(orderRef, {
-                status: 'Shipped',
-                shippedAt: new Date(),
-                lastUpdated: new Date()
-            });
-
-            // Trigger SHIPPED email
-            try {
-                await fetch('/api/send', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        to: order.customer?.email,
-                        orderId: order.orderId,
-                        customerName: order.customer?.name,
-                        type: 'SHIPPED'
-                    })
-                });
-            } catch (emailError) {
-                console.error('❌ Failed to send shipping email:', emailError);
-            }
-
-            alert(language === 'ar' ? '✅ تم التسليم لشركة الشحن بنجاح!' : '✅ Handed over to shipping company!');
-            setTimeout(() => window.location.reload(), 1000);
-        } catch (error) {
-            console.error('Error shipping order:', error);
-            alert('❌ ' + (language === 'ar' ? 'فشل التحديث' : 'Failed to update'));
-        } finally {
-            setUpdating(false);
-        }
     };
 
     // --- Render ---
@@ -378,72 +358,54 @@ export default function OrderDetailsDrawer({ isOpen, onClose, order }) {
                     )}
 
                     {/* --- Status & Timeline --- */}
-                    <div className="bg-white border border-gray-200 rounded-lg p-4">
-                        <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">{t(adminTrans.timeline)}</h3>
-                        <div className="space-y-4">
-                            {/* Current Status */}
-                            <div>
-                                <label className="block text-sm text-gray-600 mb-2">{t(adminTrans.currentStatus)}</label>
-                                <span className={`px-3 py-1 inline-flex text-sm font-semibold rounded-full ${statusColors[order.status] || 'bg-gray-100 text-gray-800'}`}>
-                                    {getStatusLabel(order.status)}
-                                </span>
-                            </div>
+                    {order.sector?.toLowerCase() === 'students' && (
+                        <div className="bg-white border border-gray-200 rounded-lg p-4">
+                            <h3 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-3">{t(adminTrans.timeline)}</h3>
+                            <div className="space-y-4">
 
-                            {/* Primary CTA: Hand over to Shipping */}
-                            {order.status !== 'Shipped' && order.status !== 'Cancelled' && (
-                                <button
-                                    onClick={handleShipOrder}
-                                    disabled={updating}
-                                    className={`w-full flex justify-center items-center gap-2 py-3 px-4 rounded-md shadow-sm text-sm font-bold text-white ${
-                                        updating ? 'bg-gray-400 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-700 focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500'
-                                    }`}
-                                >
-                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-                                    {language === 'ar' ? '🚚 تسليم لشركة الشحن' : '🚚 Hand Over to Shipping Company'}
-                                </button>
-                            )}
-
-                            {/* Status Update Dropdown */}
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">{t(adminTrans.updateStatus)}</label>
-                                <div className="relative">
-                                    <select
-                                        value={newStatus}
-                                        onChange={(e) => setNewStatus(e.target.value)}
-                                        className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm h-10 ${language === 'ar' ? 'pl-10 text-right' : 'pr-10 text-left'}`}
-                                    >
-                                        {Object.keys(statusTranslations).map((statusKey) => (
-                                            <option key={statusKey} value={statusKey}>
-                                                {getStatusLabel(statusKey)}
-                                            </option>
-                                        ))}
-                                    </select>
+                                {/* Current Status */}
+                                <div>
+                                    <label className="block text-sm text-gray-600 mb-2">{t(adminTrans.currentStatus)}</label>
+                                    <span className={`px-3 py-1 inline-flex text-sm font-semibold rounded-full ${statusColors[order.status] || 'bg-gray-100 text-gray-800'}`}>
+                                        {getStatusLabel(order.status)}
+                                    </span>
                                 </div>
-                            </div>
 
-                            {/* Expected Date */}
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">{t(adminTrans.expectedDate)}</label>
-                                <input
-                                    type="date"
-                                    min={today}
-                                    value={expectedDate}
-                                    onChange={(e) => setExpectedDate(e.target.value)}
-                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
-                                />
-                                <p className="text-xs text-gray-500 mt-1">{t(adminTrans.dateHint)}</p>
-                            </div>
+                                {/* Expected Date with Save Button */}
+                                <div className="bg-gray-50 p-3 rounded-lg border border-gray-100">
+                                    <label className="block text-sm font-semibold text-gray-700 mb-2">{t(adminTrans.expectedDate)}</label>
+                                    <div className="flex gap-2">
+                                        <input
+                                            type="date"
+                                            min={today}
+                                            value={expectedDate}
+                                            onChange={(e) => setExpectedDate(e.target.value)}
+                                            className="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm"
+                                        />
+                                        <button
+                                            onClick={handleSaveDate}
+                                            disabled={updating}
+                                            className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md text-sm font-bold hover:bg-gray-300 transition-colors shrink-0"
+                                        >
+                                            {language === 'ar' ? 'حفظ التاريخ' : 'Save Date'}
+                                        </button>
+                                    </div>
+                                    <p className="text-xs text-gray-500 mt-2">{t(adminTrans.dateHint)}</p>
+                                </div>
 
-                            {/* Generic Update Button */}
-                            <button
-                                onClick={handleUpdateOrder}
-                                disabled={updating}
-                                className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${updating ? 'bg-gray-400 cursor-not-allowed' : 'bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500'}`}
-                            >
-                                {updating ? t(adminTrans.updating) : t(adminTrans.updateBtn)}
-                            </button>
+                                {/* Shipping Button (يختفي لو الطلب اتشحن خلاص أو اتلغى) */}
+                                {order.status !== 'Shipped' && order.status !== 'Delivered' && order.status !== 'Cancelled' && order.status !== 'cancelled' && (
+                                    <button
+                                        onClick={handleShipOrder}
+                                        disabled={updating}
+                                        className={`w-full flex items-center justify-center gap-2 py-3 px-4 border border-transparent rounded-lg shadow-sm text-lg font-bold text-white transition-all ${updating ? 'bg-gray-400 cursor-not-allowed' : 'bg-green-600 hover:bg-green-700'}`}
+                                    >
+                                        {language === 'ar' ? 'تسليم لشركة الشحن' : 'Hand over to Shipping'}
+                                    </button>
+                                )}
+                            </div>
                         </div>
-                    </div>
+                    )}
 
                     {/* --- Order Items --- */}
                     <div className="bg-white border border-gray-200 rounded-lg p-4">

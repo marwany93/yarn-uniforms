@@ -13,10 +13,10 @@ export default function AdminDashboard() {
     const router = useRouter();
     const { t, language } = useLanguage();
     const [orders, setOrders] = useState([]);
-    const [stats, setStats] = useState({ total: 0, pending: 0, processing: 0, in_production: 0, ready_for_delivery: 0, delivered: 0, cancelled: 0 });
+    const [stats, setStats] = useState({ total: 0, students: 0, sectors: 0, completed: 0 });
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [copiedId, setCopiedId] = useState(null); // Track which ID is currently showing the "Checkmark"
+    const [copiedId, setCopiedId] = useState(null);
 
     useEffect(() => {
         if (!loading && !user) router.push('/admin/login');
@@ -28,11 +28,27 @@ export default function AdminDashboard() {
         const unsubscribe = onSnapshot(q, (snapshot) => {
             const ordersData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
             setOrders(ordersData);
+
+            // حساب الإحصائيات بالتقسيمة الجديدة
             const newStats = ordersData.reduce((acc, order) => {
                 acc.total++;
-                if (order.status) acc[order.status]++;
+
+                // فصل الطلاب عن باقي القطاعات
+                if (order.sector?.toLowerCase() === 'students') {
+                    acc.students++;
+                } else {
+                    acc.sectors++;
+                }
+
+                // حساب الطلبات اللي اتشحنت أو اتسلمت
+                const status = order.status?.toLowerCase();
+                if (status === 'shipped' || status === 'delivered') {
+                    acc.completed++;
+                }
+
                 return acc;
-            }, { total: 0, pending: 0, processing: 0, in_production: 0, ready_for_delivery: 0, delivered: 0, cancelled: 0 });
+            }, { total: 0, students: 0, sectors: 0, completed: 0 });
+
             setStats(newStats);
         });
         return () => unsubscribe();
@@ -50,7 +66,7 @@ export default function AdminDashboard() {
 
     if (loading || !user) return <div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600"></div></div>;
 
-    const translations = { dashboard: { en: 'Admin Dashboard', ar: 'لوحة تحكم المسؤول' }, manageOrders: { en: 'Manage all uniform orders', ar: 'إدارة جميع طلبات الزي الموحد' }, logout: { en: 'Logout', ar: 'تسجيل خروج' }, totalOrders: { en: 'Total Orders', ar: 'إجمالي الطلبات' }, pending: { en: 'Pending', ar: 'قيد المراجعة' }, inProduction: { en: 'In Production', ar: 'قيد الإنتاج' }, delivered: { en: 'Delivered', ar: 'تم التسليم' }, recentOrders: { en: 'Recent Orders', ar: 'أحدث الطلبات' }, orderId: { en: 'Order ID', ar: 'رقم الطلب' }, customer: { en: 'Customer', ar: 'العميل' }, sector: { en: 'Sector', ar: 'القطاع' }, status: { en: 'Status', ar: 'الحالة' }, created: { en: 'Created', ar: 'تاريخ الإنشاء' }, actions: { en: 'Actions', ar: 'إجراءات' }, viewDetails: { en: 'View Details', ar: 'عرض التفاصيل' }, noOrders: { en: 'No orders found.', ar: 'لا توجد طلبات.' } };
+    const translations = { dashboard: { en: 'Admin Dashboard', ar: 'لوحة تحكم المسؤول' }, manageOrders: { en: 'Manage all uniform orders', ar: 'إدارة جميع طلبات الزي الموحد' }, logout: { en: 'Logout', ar: 'تسجيل خروج' }, totalOrders: { en: 'Total Orders', ar: 'إجمالي الطلبات' }, studentOrders: { en: 'Student Orders (B2C)', ar: 'طلبات الأفراد (طلاب)' }, sectorOrders: { en: 'Sector Orders (B2B)', ar: 'طلبات المدارس والشركات' }, completedOrders: { en: 'Shipped / Delivered', ar: 'تم الشحن والتسليم' }, recentOrders: { en: 'Recent Orders', ar: 'أحدث الطلبات' }, orderId: { en: 'Order ID', ar: 'رقم الطلب' }, customer: { en: 'Customer', ar: 'العميل' }, sector: { en: 'Sector', ar: 'القطاع' }, status: { en: 'Status', ar: 'الحالة' }, created: { en: 'Created', ar: 'تاريخ الإنشاء' }, actions: { en: 'Actions', ar: 'إجراءات' }, viewDetails: { en: 'View Details', ar: 'عرض التفاصيل' }, noOrders: { en: 'No orders found.', ar: 'لا توجد طلبات.' } };
 
     const statusMap = {
         'new': { en: 'Order Received', ar: 'تم استلام الطلب' },
@@ -88,10 +104,10 @@ export default function AdminDashboard() {
 
                 {/* Stats Grid */}
                 <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4 mb-8">
-                    <StatsCard title={t(translations.totalOrders)} value={stats.total} icon={<svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>} color="bg-blue-500" />
-                    <StatsCard title={t(translations.pending)} value={stats.pending} icon={<svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>} color="bg-yellow-500" />
-                    <StatsCard title={t(translations.inProduction)} value={stats.in_production} icon={<svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg>} color="bg-purple-500" />
-                    <StatsCard title={t(translations.delivered)} value={stats.delivered} icon={<svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>} color="bg-green-500" />
+                    <StatsCard title={t(translations.totalOrders)} value={stats.total} icon={<svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>} color="bg-blue-600" />
+                    <StatsCard title={t(translations.studentOrders)} value={stats.students} icon={<svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>} color="bg-purple-600" />
+                    <StatsCard title={t(translations.sectorOrders)} value={stats.sectors} icon={<svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>} color="bg-indigo-600" />
+                    <StatsCard title={t(translations.completedOrders)} value={stats.completed} icon={<svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>} color="bg-green-600" />
                 </div>
 
                 {/* Orders Table */}
