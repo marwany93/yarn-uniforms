@@ -61,21 +61,13 @@ export default function OrderDetailsDrawer({ isOpen, onClose, order }) {
 
     const STATUS_STAGES = [
         'Order Received',
-        'Contacting',
-        'Quotation Sent',
-        'Sample Production',
-        'Manufacturing',
-        'Delivered',
+        'Shipped',
         'Cancelled'
     ];
 
     const statusTranslations = {
         'Order Received': { en: 'Order Received', ar: 'تم استلام الطلب' },
-        'Contacting': { en: 'Contacting', ar: 'جاري التواصل' },
-        'Quotation Sent': { en: 'Quotation Sent', ar: 'تم إرسال عرض السعر' },
-        'Sample Production': { en: 'Sample Production', ar: 'تنفيذ العينة' },
-        'Manufacturing': { en: 'Manufacturing', ar: 'مرحلة التصنيع' },
-        'Delivered': { en: 'Delivered', ar: 'تم التسليم' },
+        'Shipped': { en: 'Handed to Shipping Company', ar: 'تم التسليم لشركة الشحن' },
         'Cancelled': { en: 'Cancelled', ar: 'ملغي' }
     };
 
@@ -131,11 +123,7 @@ export default function OrderDetailsDrawer({ isOpen, onClose, order }) {
 
     const statusColors = {
         'Order Received': 'bg-yellow-100 text-yellow-800',
-        'Contacting': 'bg-blue-100 text-blue-800',
-        'Quotation Sent': 'bg-indigo-100 text-indigo-800',
-        'Sample Production': 'bg-purple-100 text-purple-800',
-        'Manufacturing': 'bg-orange-100 text-orange-800',
-        'Delivered': 'bg-green-100 text-green-800',
+        'Shipped': 'bg-green-100 text-green-800',
         'Cancelled': 'bg-red-100 text-red-800'
     };
 
@@ -213,6 +201,50 @@ export default function OrderDetailsDrawer({ isOpen, onClose, order }) {
         navigator.clipboard.writeText(text);
         setCopiedId(text);
         setTimeout(() => setCopiedId(null), 2000);
+    };
+
+    const handleShipOrder = async () => {
+        if (!order?.id) return;
+        const confirm = window.confirm(
+            language === 'ar'
+                ? 'هل أنت متأكد من تسليم الطلب لشركة الشحن؟ سيتم إشعار العميل.'
+                : 'Confirm handover to shipping company? The customer will be notified.'
+        );
+        if (!confirm) return;
+
+        setUpdating(true);
+        try {
+            const orderRef = doc(db, 'orders', order.id);
+            await updateDoc(orderRef, {
+                status: 'Shipped',
+                shippedAt: new Date(),
+                lastUpdated: new Date()
+            });
+
+            // Trigger SHIPPED email
+            try {
+                await fetch('/api/send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        to: order.customer?.email,
+                        orderId: order.orderId,
+                        customerName: order.customer?.name,
+                        type: 'SHIPPED'
+                    })
+                });
+            } catch (emailError) {
+                console.error('❌ Failed to send shipping email:', emailError);
+            }
+
+            alert(language === 'ar' ? '✅ تم التسليم لشركة الشحن بنجاح!' : '✅ Handed over to shipping company!');
+            setTimeout(() => window.location.reload(), 1000);
+        } catch (error) {
+            console.error('Error shipping order:', error);
+            alert('❌ ' + (language === 'ar' ? 'فشل التحديث' : 'Failed to update'));
+        } finally {
+            setUpdating(false);
+        }
     };
 
     // --- Render ---
@@ -357,7 +389,21 @@ export default function OrderDetailsDrawer({ isOpen, onClose, order }) {
                                 </span>
                             </div>
 
-                            {/* Status Update Dropdown (Fixed RTL Arrow) */}
+                            {/* Primary CTA: Hand over to Shipping */}
+                            {order.status !== 'Shipped' && order.status !== 'Cancelled' && (
+                                <button
+                                    onClick={handleShipOrder}
+                                    disabled={updating}
+                                    className={`w-full flex justify-center items-center gap-2 py-3 px-4 rounded-md shadow-sm text-sm font-bold text-white ${
+                                        updating ? 'bg-gray-400 cursor-not-allowed' : 'bg-emerald-600 hover:bg-emerald-700 focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500'
+                                    }`}
+                                >
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                                    {language === 'ar' ? '🚚 تسليم لشركة الشحن' : '🚚 Hand Over to Shipping Company'}
+                                </button>
+                            )}
+
+                            {/* Status Update Dropdown */}
                             <div>
                                 <label className="block text-sm font-semibold text-gray-700 mb-2">{t(adminTrans.updateStatus)}</label>
                                 <div className="relative">
@@ -388,7 +434,7 @@ export default function OrderDetailsDrawer({ isOpen, onClose, order }) {
                                 <p className="text-xs text-gray-500 mt-1">{t(adminTrans.dateHint)}</p>
                             </div>
 
-                            {/* Save Button */}
+                            {/* Generic Update Button */}
                             <button
                                 onClick={handleUpdateOrder}
                                 disabled={updating}

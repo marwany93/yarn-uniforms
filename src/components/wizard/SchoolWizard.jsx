@@ -1031,7 +1031,22 @@ export default function SchoolWizard() {
     // Phase 2: Sequential Customization
     const renderCustomizationPhase = () => {
         const currentCategory = getCurrentCategory();
-        if (!currentCategory) return null;
+        if (!currentCategory) {
+            return (
+                <div className="text-center py-12 animate-fade-in">
+                    <div className="text-5xl mb-4">⚠️</div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-4">
+                        {language === 'ar' ? 'لم يتم تحديد أي قسم للتخصيص!' : 'No category selected!'}
+                    </h3>
+                    <button
+                        onClick={handleBackToSelection}
+                        className="px-8 py-3 bg-primary text-white rounded-xl font-bold hover:bg-primary-700"
+                    >
+                        {language === 'ar' ? 'العودة لاختيار المنتجات' : 'Back to Selection'}
+                    </button>
+                </div>
+            );
+        }
 
         const products = getProductsByCategory(currentCategory.id);
         const sizes = sizeCharts[details.stage] || [];

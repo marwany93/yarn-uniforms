@@ -1,11 +1,13 @@
 'use client';
 import { useLanguage } from '@/hooks/useLanguage';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { db, storage } from '@/lib/firebase';
-import { collection, addDoc, doc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, doc, updateDoc, serverTimestamp, writeBatch } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { schoolProducts, productCategories } from '@/data/schoolProducts';
 import Image from 'next/image';
+import Papa from 'papaparse';
+import { Upload, CheckCircle, XCircle, Loader2, ChevronDown, ChevronUp, Users } from 'lucide-react';
 
 const SchoolFormModal = ({ school, isOpen, onClose }) => {
     const { t, language } = useLanguage();
@@ -19,6 +21,18 @@ const SchoolFormModal = ({ school, isOpen, onClose }) => {
 
     // Assigned Products State
     const [assignedProducts, setAssignedProducts] = useState([]);
+
+    // Per-product image upload state: { [index]: { file, preview, uploading } }
+    const [productImageState, setProductImageState] = useState({});
+
+    // Student Roster State
+    const [rosterFile, setRosterFile] = useState(null);
+    const [parsedStudents, setParsedStudents] = useState([]);
+    const [rosterError, setRosterError] = useState('');
+    const [isUploadingRoster, setIsUploadingRoster] = useState(false);
+    const [rosterUploadResult, setRosterUploadResult] = useState(null); // { added, skipped }
+    const [rosterExpanded, setRosterExpanded] = useState(false);
+    const rosterInputRef = useRef(null);
 
     // UI State
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -36,6 +50,11 @@ const SchoolFormModal = ({ school, isOpen, onClose }) => {
             resetForm();
         }
         setError('');
+        setParsedStudents([]);
+        setRosterFile(null);
+        setRosterError('');
+        setRosterUploadResult(null);
+        setProductImageState({});
     }, [school, isOpen]);
 
     const resetForm = () => {
@@ -70,7 +89,9 @@ const SchoolFormModal = ({ school, isOpen, onClose }) => {
     const handleAddProduct = () => {
         setAssignedProducts([...assignedProducts, {
             productId: '',
-            price: 0,
+            price: '',
+            customPrice: '',
+            customImage: '',
             allowedStage: 'all',
             fixedDetails: {
                 color: '',
@@ -85,6 +106,10 @@ const SchoolFormModal = ({ school, isOpen, onClose }) => {
         const newProducts = [...assignedProducts];
         newProducts.splice(index, 1);
         setAssignedProducts(newProducts);
+        // Clean up image state for removed index
+        const newImageState = { ...productImageState };
+        delete newImageState[index];
+        setProductImageState(newImageState);
     };
 
     const handleProductChange = (index, field, value) => {
@@ -96,6 +121,131 @@ const SchoolFormModal = ({ school, isOpen, onClose }) => {
             newProducts[index][field] = value;
         }
         setAssignedProducts(newProducts);
+    };
+
+    // --- Product Image Upload ---
+    const handleProductImageChange = async (index, e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            setProductImageState(prev => ({
+                ...prev,
+                [index]: { file, preview: reader.result, uploading: false }
+            }));
+        };
+        reader.readAsDataURL(file);
+
+        // Upload immediately to Firebase Storage
+        setProductImageState(prev => ({ ...prev, [index]: { ...prev[index], uploading: true } }));
+        try {
+            const schoolSlug = slug || school?.slug || 'school';
+            const productId = assignedProducts[index]?.productId || `product_${index}`;
+            const storageRef = ref(storage, `schools_uniforms/${schoolSlug}/${productId}-${Date.now()}-${file.name}`);
+            const snapshot = await uploadBytes(storageRef, file);
+            const url = await getDownloadURL(snapshot.ref);
+
+            // Store URL in assignedProducts
+            handleProductChange(index, 'customImage', url);
+            setProductImageState(prev => ({
+                ...prev,
+                [index]: { file, preview: reader.result, uploading: false, url }
+            }));
+        } catch (err) {
+            console.error('Product image upload failed:', err);
+            setProductImageState(prev => ({
+                ...prev,
+                [index]: { ...prev[index], uploading: false, error: 'Upload failed' }
+            }));
+        }
+    };
+
+    // --- CSV Upload ---
+    const handleRosterFileChange = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        setRosterFile(file);
+        setRosterError('');
+        setParsedStudents([]);
+        setRosterUploadResult(null);
+
+        Papa.parse(file, {
+            header: true,
+            skipEmptyLines: true,
+            complete: (results) => {
+                // Normalize headers — allow different capitalizations
+                const rows = results.data.map(row => {
+                    const normalized = {};
+                    Object.entries(row).forEach(([k, v]) => {
+                        normalized[k.toLowerCase().trim()] = v?.toString().trim();
+                    });
+                    return normalized;
+                });
+
+                // Validate required columns
+                const valid = rows.filter(r => r['name'] && r['nationalid']);
+                if (valid.length === 0) {
+                    setRosterError(
+                        language === 'ar'
+                            ? 'ملف CSV لا يحتوي على أعمدة صحيحة. يجب أن يحتوي على: Name, NationalID'
+                            : 'CSV has no valid rows. Required columns: Name, NationalID'
+                    );
+                    return;
+                }
+                setParsedStudents(valid);
+            },
+            error: (err) => {
+                setRosterError(language === 'ar' ? 'فشل تحليل الملف.' : 'Failed to parse CSV file.');
+            }
+        });
+    };
+
+    const handleRosterUpload = async () => {
+        if (!parsedStudents.length) return;
+        const currentSchoolId = school?.id;
+        if (!currentSchoolId) {
+            setRosterError(language === 'ar' ? 'يجب حفظ المدرسة أولاً قبل رفع القائمة.' : 'Save the school first before uploading a roster.');
+            return;
+        }
+
+        setIsUploadingRoster(true);
+        setRosterError('');
+
+        try {
+            const batch = writeBatch(db);
+            let added = 0;
+            let skipped = 0;
+
+            for (const row of parsedStudents) {
+                const nationalId = row['nationalid'];
+                const name = row['name'];
+
+                if (!nationalId || !name) { skipped++; continue; }
+
+                // Use nationalId+schoolId as document ID for upsert (overwrite duplicate)
+                const docId = `${currentSchoolId}_${nationalId}`;
+                const studentRef = doc(db, 'students', docId);
+                batch.set(studentRef, {
+                    name,
+                    nationalId,
+                    schoolId: currentSchoolId,
+                    updatedAt: serverTimestamp()
+                }, { merge: true }); // merge: true = upsert (overwrite if exists)
+                added++;
+            }
+
+            await batch.commit();
+            setRosterUploadResult({ added, skipped });
+            setParsedStudents([]);
+            setRosterFile(null);
+            if (rosterInputRef.current) rosterInputRef.current.value = '';
+        } catch (err) {
+            console.error('Roster upload error:', err);
+            setRosterError(language === 'ar' ? 'فشل رفع القائمة. حاول مرة أخرى.' : 'Failed to upload roster. Please try again.');
+        } finally {
+            setIsUploadingRoster(false);
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -116,7 +266,7 @@ const SchoolFormModal = ({ school, isOpen, onClose }) => {
                 name: { en: nameEn, ar: nameAr },
                 slug: slug,
                 logo: logoUrl,
-                assignedProducts: assignedProducts.filter(p => p.productId), // Remove empty rows
+                assignedProducts: assignedProducts.filter(p => p.productId),
                 updatedAt: serverTimestamp()
             };
 
@@ -147,20 +297,21 @@ const SchoolFormModal = ({ school, isOpen, onClose }) => {
         basicInfo: { en: 'Basic Information', ar: 'البيانات الأساسية' },
         manageProducts: { en: 'Manage Products', ar: 'إدارة المنتجات' },
         addProduct: { en: '+ Add Product', ar: '+ إضافة منتج' },
-        product: { en: 'Product', ar: 'المنتج' },
-        price: { en: 'Price (SAR)', ar: 'السعر (ريال)' },
-        details: { en: 'Fixed Details', ar: 'المواصفات الثابتة' },
-        color: { en: 'Color Code', ar: 'كود اللون' },
-        fabric: { en: 'Fabric', ar: 'نوع القماش' },
-        logoType: { en: 'Logo Type', ar: 'نوع الشعار' },
         remove: { en: 'Remove', ar: 'إزالة' },
+        roster: { en: 'Student Roster', ar: 'قائمة الطلاب' },
+        rosterHint: { en: 'Upload a CSV with columns: Name, NationalID', ar: 'ارفع ملف CSV بأعمدة: Name, NationalID' },
+        uploadRoster: { en: 'Upload Roster', ar: 'رفع القائمة' },
+        uploadingRoster: { en: 'Uploading...', ar: 'جاري الرفع...' },
+        rosterPreview: { en: 'Preview', ar: 'معاينة' },
+        confirmUpload: { en: 'Confirm & Save to Firestore', ar: 'تأكيد وحفظ في قاعدة البيانات' },
+        customPrice: { en: 'Custom Price (Override)', ar: 'سعر مخصص (يلغي الافتراضي)' },
+        schoolImage: { en: 'School Uniform Photo', ar: 'صورة الزي للمدرسة' },
     };
 
     return (
         <div className="fixed inset-0 z-50 overflow-y-auto" role="dialog" aria-modal="true" dir={language === 'ar' ? 'rtl' : 'ltr'}>
             <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
                 <div className="fixed inset-0 bg-black bg-opacity-50 transition-opacity" onClick={onClose}></div>
-
                 <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
 
                 <div className="inline-block align-bottom bg-white rounded-xl text-left rtl:text-right overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl w-full">
@@ -220,6 +371,7 @@ const SchoolFormModal = ({ school, isOpen, onClose }) => {
                                     <div className="space-y-4">
                                         {assignedProducts.map((item, index) => {
                                             const product = schoolProducts.find(p => p.id === item.productId);
+                                            const imgState = productImageState[index];
                                             return (
                                                 <div key={index} className="bg-gray-50 p-4 rounded-lg border border-gray-200 relative group">
                                                     <button type="button" onClick={() => handleRemoveProduct(index)} className="absolute top-2 right-2 rtl:left-2 rtl:right-auto text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -253,20 +405,34 @@ const SchoolFormModal = ({ school, isOpen, onClose }) => {
                                                             </div>
                                                         </div>
 
-                                                        {/* Price */}
+                                                        {/* Default Price */}
                                                         <div className="md:col-span-2">
                                                             <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 block">Price</label>
                                                             <input
                                                                 type="number"
                                                                 value={item.price}
-                                                                onChange={(e) => handleProductChange(index, 'price', Number(e.target.value))}
+                                                                onChange={(e) => handleProductChange(index, 'price', e.target.value === '' ? '' : Number(e.target.value))}
                                                                 className="block w-full text-sm border-gray-300 rounded-md focus:ring-primary-500 focus:border-primary-500 border p-2"
+                                                                min="1"
+                                                                required
+                                                            />
+                                                        </div>
+
+                                                        {/* Custom Price Override */}
+                                                        <div className="md:col-span-2 hidden">
+                                                            <label className="text-xs font-semibold text-amber-600 uppercase tracking-wider mb-1 block">{t(translations.customPrice)}</label>
+                                                            <input
+                                                                type="number"
+                                                                value={item.customPrice || ''}
+                                                                onChange={(e) => handleProductChange(index, 'customPrice', e.target.value ? Number(e.target.value) : '')}
+                                                                placeholder={language === 'ar' ? 'اختياري' : 'Optional'}
+                                                                className="block w-full text-sm border-amber-200 bg-amber-50 rounded-md focus:ring-amber-400 focus:border-amber-400 border p-2 placeholder:text-amber-400"
                                                                 min="0"
                                                             />
                                                         </div>
 
-                                                        {/* Fixed Details (Color/Fabric) */}
-                                                        <div className="md:col-span-6 grid grid-cols-2 gap-2">
+                                                        {/* Fixed Details (Color / Fabric) */}
+                                                        <div className="md:col-span-4 grid grid-cols-2 gap-2 hidden">
                                                             <div>
                                                                 <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 block">Color Code</label>
                                                                 <input
@@ -278,7 +444,7 @@ const SchoolFormModal = ({ school, isOpen, onClose }) => {
                                                                 />
                                                             </div>
                                                             <div>
-                                                                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 block">Fabric</label>
+                                                                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1 block hidden">Fabric</label>
                                                                 <input
                                                                     type="text"
                                                                     placeholder="e.g. Cotton 100%"
@@ -287,6 +453,59 @@ const SchoolFormModal = ({ school, isOpen, onClose }) => {
                                                                     className="block w-full text-sm border-gray-300 rounded-md focus:ring-primary-500 border p-2"
                                                                 />
                                                             </div>
+                                                        </div>
+                                                    </div>
+
+                                                    {/* School-Specific Uniform Image */}
+                                                    <div className="mt-3 pt-3 border-t border-gray-200">
+                                                        <label className="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-2 block">
+                                                            📸 {t(translations.schoolImage)}
+                                                        </label>
+                                                        <div className="flex items-center gap-4">
+                                                            {/* Current image preview */}
+                                                            <div className="w-16 h-16 shrink-0 rounded-lg border-2 border-dashed border-gray-200 bg-gray-50 overflow-hidden flex items-center justify-center">
+                                                                {(item.customImage || imgState?.preview) ? (
+                                                                    <Image
+                                                                        src={item.customImage || imgState?.preview}
+                                                                        alt=""
+                                                                        width={64}
+                                                                        height={64}
+                                                                        className="object-contain w-full h-full"
+                                                                    />
+                                                                ) : (
+                                                                    <span className="text-gray-300 text-xs text-center">No image</span>
+                                                                )}
+                                                            </div>
+                                                            <div className="flex-1">
+                                                                <input
+                                                                    type="file"
+                                                                    accept="image/*"
+                                                                    onChange={(e) => handleProductImageChange(index, e)}
+                                                                    className="text-xs text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                                                                />
+                                                                {imgState?.uploading && (
+                                                                    <div className="flex items-center gap-1 text-xs text-blue-600 mt-1">
+                                                                        <Loader2 className="w-3 h-3 animate-spin" />
+                                                                        {language === 'ar' ? 'جاري الرفع...' : 'Uploading...'}
+                                                                    </div>
+                                                                )}
+                                                                {item.customImage && !imgState?.uploading && (
+                                                                    <div className="flex items-center gap-1 text-xs text-green-600 mt-1">
+                                                                        <CheckCircle className="w-3 h-3" />
+                                                                        {language === 'ar' ? 'تم رفع الصورة' : 'Image uploaded'}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                            {item.customImage && (
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => handleProductChange(index, 'customImage', '')}
+                                                                    className="text-gray-400 hover:text-red-500 transition-colors"
+                                                                    title="Remove image"
+                                                                >
+                                                                    <XCircle className="w-4 h-4" />
+                                                                </button>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 </div>
@@ -299,6 +518,127 @@ const SchoolFormModal = ({ school, isOpen, onClose }) => {
                                             </div>
                                         )}
                                     </div>
+                                </div>
+
+                                {/* Section 3: Student Roster (CSV Upload) */}
+                                <div className="border border-gray-200 rounded-xl overflow-hidden">
+                                    {/* Collapsible Header */}
+                                    <button
+                                        type="button"
+                                        onClick={() => setRosterExpanded(!rosterExpanded)}
+                                        className="w-full flex items-center justify-between px-5 py-4 bg-gray-50 hover:bg-gray-100 transition-colors"
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <Users className="w-5 h-5 text-primary-600" />
+                                            <span className="text-base font-semibold text-primary-700">{t(translations.roster)}</span>
+                                            {rosterUploadResult && (
+                                                <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-medium">
+                                                    ✅ {rosterUploadResult.added} {language === 'ar' ? 'طالب' : 'students'} {language === 'ar' ? 'تم إضافتهم' : 'uploaded'}
+                                                </span>
+                                            )}
+                                        </div>
+                                        {rosterExpanded ? <ChevronUp className="w-4 h-4 text-gray-500" /> : <ChevronDown className="w-4 h-4 text-gray-500" />}
+                                    </button>
+
+                                    {rosterExpanded && (
+                                        <div className="p-5 space-y-4">
+                                            {/* Only allow upload for existing schools */}
+                                            {!school?.id && (
+                                                <div className="text-sm text-amber-700 bg-amber-50 p-3 rounded-lg border border-amber-200">
+                                                    ⚠️ {language === 'ar' ? 'يجب حفظ المدرسة أولاً قبل رفع قائمة الطلاب.' : 'Save the school first before uploading a student roster.'}
+                                                </div>
+                                            )}
+
+                                            <p className="text-sm text-gray-500">{t(translations.rosterHint)}</p>
+
+                                            {/* File Input */}
+                                            <input
+                                                ref={rosterInputRef}
+                                                type="file"
+                                                accept=".csv"
+                                                onChange={handleRosterFileChange}
+                                                disabled={!school?.id}
+                                                className="text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 disabled:opacity-50"
+                                            />
+
+                                            {/* Roster Error */}
+                                            {rosterError && (
+                                                <div className="text-sm text-red-600 bg-red-50 p-3 rounded-lg border border-red-200">
+                                                    {rosterError}
+                                                </div>
+                                            )}
+
+                                            {/* Parsed Preview */}
+                                            {parsedStudents.length > 0 && (
+                                                <div>
+                                                    <p className="text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wider">
+                                                        {t(translations.rosterPreview)} — {parsedStudents.length} {language === 'ar' ? 'طالب' : 'students'}
+                                                    </p>
+                                                    <div className="max-h-48 overflow-y-auto rounded-lg border border-gray-200">
+                                                        <table className="w-full text-xs text-left rtl:text-right">
+                                                            <thead className="bg-gray-100 sticky top-0">
+                                                                <tr>
+                                                                    <th className="px-3 py-2 text-gray-500 font-semibold">#</th>
+                                                                    <th className="px-3 py-2 text-gray-500 font-semibold">{language === 'ar' ? 'الاسم' : 'Name'}</th>
+                                                                    <th className="px-3 py-2 text-gray-500 font-semibold">{language === 'ar' ? 'الهوية' : 'National ID'}</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody className="divide-y divide-gray-100">
+                                                                {parsedStudents.slice(0, 10).map((s, i) => (
+                                                                    <tr key={i} className="hover:bg-gray-50">
+                                                                        <td className="px-3 py-1.5 text-gray-400">{i + 1}</td>
+                                                                        <td className="px-3 py-1.5 font-medium text-gray-800">{s['name']}</td>
+                                                                        <td className="px-3 py-1.5 font-mono text-gray-600" dir="ltr">{s['nationalid']}</td>
+                                                                    </tr>
+                                                                ))}
+                                                                {parsedStudents.length > 10 && (
+                                                                    <tr>
+                                                                        <td colSpan={3} className="px-3 py-2 text-center text-gray-400 italic">
+                                                                            +{parsedStudents.length - 10} {language === 'ar' ? 'إضافيين...' : 'more...'}
+                                                                        </td>
+                                                                    </tr>
+                                                                )}
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+
+                                                    {/* Confirm Upload Button */}
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleRosterUpload}
+                                                        disabled={isUploadingRoster}
+                                                        className="mt-3 w-full flex items-center justify-center gap-2 py-2.5 bg-primary-600 text-white text-sm font-semibold rounded-lg hover:bg-primary-700 disabled:opacity-60 transition-colors"
+                                                    >
+                                                        {isUploadingRoster
+                                                            ? <><Loader2 className="w-4 h-4 animate-spin" />{t(translations.uploadingRoster)}</>
+                                                            : <><Upload className="w-4 h-4" />{t(translations.confirmUpload)}</>
+                                                        }
+                                                    </button>
+                                                </div>
+                                            )}
+
+                                            {/* Success Result */}
+                                            {rosterUploadResult && (
+                                                <div className="flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-lg text-sm">
+                                                    <CheckCircle className="w-5 h-5 text-green-600 shrink-0" />
+                                                    <div>
+                                                        <p className="font-semibold text-green-800">
+                                                            {language === 'ar'
+                                                                ? `تم رفع ${rosterUploadResult.added} طالب بنجاح`
+                                                                : `Successfully uploaded ${rosterUploadResult.added} students`}
+                                                        </p>
+                                                        {rosterUploadResult.skipped > 0 && (
+                                                            <p className="text-green-600 text-xs mt-0.5">
+                                                                {language === 'ar'
+                                                                    ? `تم تجاوز ${rosterUploadResult.skipped} صف غير صالح`
+                                                                    : `${rosterUploadResult.skipped} invalid rows skipped`}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>

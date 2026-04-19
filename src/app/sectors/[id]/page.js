@@ -9,8 +9,10 @@ export function generateStaticParams() {
     }));
 }
 
-export default function SectorPage({ params }) {
-    const sector = getSectorById(params.id);
+// التعديل هنا: ضفنا async قبل الدالة، وعملنا await للـ params
+export default async function SectorPage({ params }) {
+    const { id } = await params;
+    const sector = getSectorById(id);
 
     // If sector not found, trigger 404
     if (!sector) {

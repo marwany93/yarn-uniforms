@@ -5,33 +5,43 @@ import { useSearchParams } from 'next/navigation';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useLanguage } from '@/hooks/useLanguage';
+import { CheckCircle, Clock, Truck, Package } from 'lucide-react';
 
-// Enhanced Map
+// Simplified 2-step status map for B2C student orders
 const STATUS_MAP = {
-    'new': 0, 'received': 0, 'order received': 0, 'pending': 0,
-    'contacting': 1, 'contact': 1, 'in contact': 1, 'contacted': 1,
-    'quotation': 2, 'quotation sent': 2, 'quote': 2, 'offer': 2,
-    'sample': 3, 'sample production': 3, 'sampling': 3, 'samples': 3,
-    'manufacturing': 4, 'production': 4, 'in progress': 4, 'processing': 4,
-    'delivered': 5, 'shipping': 5, 'shipped': 5, 'completed': 5, 'done': 5
+    // Step 1: Order Received
+    'order received': 1, 'new': 1, 'received': 1, 'pending': 1,
+    // Step 2: Shipped
+    'shipped': 2, 'shipping': 2, 'delivered': 2, 'completed': 2, 'done': 2,
+    // Cancelled
+    'cancelled': -1
 };
 
 const translations = {
     title: { en: 'Track Your Order', ar: 'تتبع طلبك' },
-    subtitle: { en: 'Enter your order ID to see the current status', ar: 'أدخل رقم الطلب لمعرفة الحالة الحالية' },
-    placeholder: { en: 'Order ID', ar: 'رقم الطلب' },
+    subtitle: { en: 'Enter your order ID to see the latest status', ar: 'أدخل رقم الطلب لمعرفة آخر حالة' },
+    placeholder: { en: 'Order ID (e.g. YARN-XXXXX)', ar: 'رقم الطلب (مثال: YARN-XXXXX)' },
     button: { en: 'Track', ar: 'تتبع' },
     currentStatus: { en: 'Current Status', ar: 'الحالة الحالية' },
-    expectedDateTitle: { en: 'Expected Completion Date', ar: 'تاريخ الانتهاء المتوقع' },
-    errorNotFound: { en: 'Order ID not found', ar: 'رقم الطلب غير موجود' },
+    errorNotFound: { en: 'Order ID not found. Please double-check and try again.', ar: 'رقم الطلب غير موجود. تحقق من الرقم وحاول مرة أخرى.' },
     steps: [
-        { en: 'Order Received', ar: 'تم استلام الطلب' },
-        { en: 'Contacting', ar: 'جاري التواصل' },
-        { en: 'Quotation Sent', ar: 'تم إرسال عرض السعر' },
-        { en: 'Sample Production', ar: 'تنفيذ العينة' },
-        { en: 'Manufacturing', ar: 'مرحلة التصنيع' },
-        { en: 'Delivered', ar: 'تم التوصيل' }
-    ]
+        {
+            en: 'Order Received & Processing',
+            ar: 'تم استلام الطلب وجاري التجهيز',
+            desc: { en: 'Your order has been confirmed and is being prepared.', ar: 'تم تأكيد طلبك وهو قيد التجهيز.' }
+        },
+        {
+            en: 'Handed to Shipping Provider',
+            ar: 'تم التسليم لشركة الشحن',
+            desc: { en: 'Your order is on its way to you.', ar: 'طلبك في طريقه إليك.' }
+        },
+    ],
+    shippingPartner: { en: 'Shipping Partner Tracking', ar: 'تتبع شركة الشحن' },
+    shippingPartnerSoon: {
+        en: 'A direct tracking link from our shipping partner will appear here once available.',
+        ar: 'سيظهر رابط التتبع المباشر من شركة الشحن هنا فور توفره.'
+    },
+    cancelled: { en: 'Order Cancelled', ar: 'الطلب ملغي' }
 };
 
 function TrackOrderContent() {
@@ -40,78 +50,56 @@ function TrackOrderContent() {
 
     const [orderId, setOrderId] = useState('');
     const [currentStep, setCurrentStep] = useState(0);
-    const [expectedDate, setExpectedDate] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [orderFound, setOrderFound] = useState(false);
+    const [isCancelled, setIsCancelled] = useState(false);
+    const [rawStatus, setRawStatus] = useState('');
 
-    // 1. الدالة معرفة بـ async و useCallback وتسبق الـ useEffect
     const fetchOrder = useCallback(async (id) => {
         if (!id) return;
-
         setLoading(true);
         setError('');
         setOrderFound(false);
-        setExpectedDate(null);
+        setIsCancelled(false);
 
         try {
             const cleanId = id.trim().toUpperCase();
             const ordersRef = collection(db, 'orders');
-
-            // البحث عن طريق orderId (الأساسي)
             const q = query(ordersRef, where('orderId', '==', cleanId));
-            const querySnapshot = await getDocs(q);
+            const snapshot = await getDocs(q);
 
             let data = null;
-
-            if (!querySnapshot.empty) {
-                data = querySnapshot.docs[0].data();
+            if (!snapshot.empty) {
+                data = snapshot.docs[0].data();
             } else {
-                // محاولة البحث عن طريق Document ID كخيار احتياطي
                 const q2 = query(ordersRef, where('id', '==', cleanId));
-                const querySnapshot2 = await getDocs(q2);
-                if (!querySnapshot2.empty) {
-                    data = querySnapshot2.docs[0].data();
-                }
+                const snapshot2 = await getDocs(q2);
+                if (!snapshot2.empty) data = snapshot2.docs[0].data();
             }
 
             if (data) {
-                // تحديد المرحلة الحالية
-                const rawStatus = data.status || data.orderStatus || 'new';
-                const statusKey = rawStatus.toString().toLowerCase().trim();
-                const stepIndex = STATUS_MAP[statusKey] !== undefined ? STATUS_MAP[statusKey] : 0;
-                setCurrentStep(stepIndex);
+                const statusKey = (data.status || 'new').toLowerCase().trim();
+                setRawStatus(data.status || '');
 
-                // معالجة تاريخ الانتهاء المتوقع
-                const dateField = data.expectedCompletionDate || data.expectedDate || data.deliveryDate;
-
-                if (dateField) {
-                    let dateObj = null;
-                    if (dateField.toDate) {
-                        dateObj = dateField.toDate(); // Firestore Timestamp
-                    } else if (typeof dateField === 'string' || typeof dateField === 'number') {
-                        dateObj = new Date(dateField);
-                    }
-
-                    if (dateObj && !isNaN(dateObj.getTime())) {
-                        setExpectedDate(dateObj);
-                    }
+                if (statusKey === 'cancelled') {
+                    setIsCancelled(true);
+                } else {
+                    const step = STATUS_MAP[statusKey] ?? 1;
+                    setCurrentStep(step);
                 }
-
                 setOrderFound(true);
             } else {
                 setError(t(translations.errorNotFound));
             }
-
         } catch (err) {
-            console.error("Error fetching order:", err);
-            setError(language === 'ar' ? "حدث خطأ أثناء البحث" : "An error occurred during search");
+            console.error('Error fetching order:', err);
+            setError(language === 'ar' ? 'حدث خطأ أثناء البحث' : 'An error occurred. Please try again.');
         } finally {
             setLoading(false);
         }
     }, [t, language]);
 
-    // 2. استدعاء الدالة عند وجود ID في الرابط
     useEffect(() => {
         const idFromUrl = searchParams.get('id');
         if (idFromUrl) {
@@ -126,121 +114,172 @@ function TrackOrderContent() {
     };
 
     return (
-        <div className="container mx-auto px-4 py-12">
-            <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-lg overflow-hidden">
-                {/* Header */}
-                <div className="bg-primary p-8 text-center text-white">
-                    <h1 className="text-3xl font-bold mb-2">{t(translations.title)}</h1>
-                    <p className="opacity-90">{t(translations.subtitle)}</p>
+        <div className="min-h-screen bg-gray-50 py-12 px-4" dir={language === 'ar' ? 'rtl' : 'ltr'}>
+            <div className="max-w-2xl mx-auto">
+
+                {/* Header Card */}
+                <div className="bg-white rounded-2xl shadow-lg overflow-hidden mb-6">
+                    <div className="bg-primary p-8 text-center text-white">
+                        <Package className="w-12 h-12 mx-auto mb-3 opacity-90" />
+                        <h1 className="text-3xl font-bold mb-2">{t(translations.title)}</h1>
+                        <p className="opacity-80 text-sm">{t(translations.subtitle)}</p>
+                    </div>
+
+                    <div className="p-6">
+                        {/* Search Form */}
+                        <form onSubmit={handleTrack} className="flex gap-3 flex-col sm:flex-row">
+                            <input
+                                type="text"
+                                value={orderId}
+                                onChange={(e) => setOrderId(e.target.value)}
+                                placeholder={t(translations.placeholder)}
+                                className="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary/30 outline-none bg-gray-50 font-mono text-sm"
+                                dir="ltr"
+                            />
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="px-8 py-3 bg-primary text-white font-bold rounded-xl hover:bg-primary/90 transition-colors disabled:opacity-50 whitespace-nowrap"
+                            >
+                                {loading ? '...' : t(translations.button)}
+                            </button>
+                        </form>
+
+                        {/* Error */}
+                        {error && (
+                            <div className="mt-4 p-4 bg-red-50 text-red-600 rounded-xl text-sm text-center border border-red-100">
+                                {error}
+                            </div>
+                        )}
+                    </div>
                 </div>
 
-                <div className="p-8">
-                    {/* Search Input */}
-                    <form onSubmit={handleTrack} className="flex gap-4 flex-col sm:flex-row mb-8">
-                        <input
-                            type="text"
-                            value={orderId}
-                            onChange={(e) => setOrderId(e.target.value)}
-                            placeholder={t(translations.placeholder)}
-                            className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary outline-none"
-                        />
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="px-8 py-3 bg-primary text-white font-bold rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50"
-                        >
-                            {loading ? '...' : t(translations.button)}
-                        </button>
-                    </form>
+                {/* Results */}
+                {orderFound && !loading && (
+                    <div className="space-y-4">
 
-                    {/* Error Message */}
-                    {error && (
-                        <div className="p-4 mb-6 bg-red-50 text-red-600 rounded-lg text-center border border-red-100">
-                            {error}
+                        {/* Order ID badge */}
+                        <div className="bg-white rounded-2xl shadow-sm p-4 flex items-center justify-between border border-gray-100">
+                            <span className="text-sm text-gray-500 font-medium">{t(translations.currentStatus)}</span>
+                            <span className="text-primary font-mono font-bold text-sm bg-primary/5 px-3 py-1 rounded-lg">{orderId.toUpperCase()}</span>
                         </div>
-                    )}
 
-                    {/* Results Area */}
-                    {orderFound && !loading && (
-                        <div className="animate-fade-in">
-
-                            {/* Order ID Header */}
-                            <div className="flex flex-col sm:flex-row justify-between items-center border-b pb-4 mb-6">
-                                <h3 className="text-xl font-bold text-gray-800">
-                                    {t(translations.currentStatus)}
-                                </h3>
-                                <span className="text-primary font-mono font-bold text-lg bg-primary-50 px-3 py-1 rounded">
-                                    {orderId}
-                                </span>
+                        {/* Cancelled State */}
+                        {isCancelled && (
+                            <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-center">
+                                <div className="text-4xl mb-3">❌</div>
+                                <h3 className="font-bold text-red-700 text-lg">{t(translations.cancelled)}</h3>
                             </div>
+                        )}
 
-                            {/* Expected Date Badge */}
-                            {expectedDate && (
-                                <div className="mb-8 bg-blue-50 border border-blue-100 rounded-xl p-4 flex items-center gap-4 shadow-sm">
-                                    <div className="bg-blue-100 p-2 rounded-full text-blue-600 shrink-0">
-                                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                        </svg>
+                        {/* 2-Step Tracker */}
+                        {!isCancelled && (
+                            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                                <div className="p-6">
+                                    {/* Progress Bar */}
+                                    <div className="relative mb-8">
+                                        <div className="h-2 bg-gray-100 rounded-full">
+                                            <div
+                                                className="h-2 bg-primary rounded-full transition-all duration-700"
+                                                style={{ width: `${((currentStep - 1) / 1) * 100}%` }}
+                                            />
+                                        </div>
+                                        {/* Step dots */}
+                                        <div className="absolute -top-1.5 left-0 right-0 flex justify-between">
+                                            {[1, 2].map((s) => (
+                                                <div
+                                                    key={s}
+                                                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all duration-500 ${
+                                                        currentStep >= s
+                                                            ? 'bg-primary border-primary'
+                                                            : 'bg-white border-gray-300'
+                                                    }`}
+                                                >
+                                                    {currentStep > s && <CheckCircle className="w-3 h-3 text-white fill-white" />}
+                                                    {currentStep === s && <div className="w-2 h-2 rounded-full bg-white" />}
+                                                </div>
+                                            ))}
+                                        </div>
                                     </div>
-                                    <div>
-                                        <p className="text-sm text-blue-600 font-semibold mb-1">
-                                            {t(translations.expectedDateTitle)}
-                                        </p>
-                                        <p className="text-lg font-bold text-blue-900" dir="ltr">
-                                            {expectedDate.toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US', {
-                                                weekday: 'long',
-                                                year: 'numeric',
-                                                month: 'long',
-                                                day: 'numeric'
-                                            })}
-                                        </p>
+
+                                    {/* Step Cards */}
+                                    <div className="space-y-4">
+                                        {translations.steps.map((step, idx) => {
+                                            const stepNum = idx + 1;
+                                            const isCompleted = currentStep > stepNum;
+                                            const isCurrent = currentStep === stepNum;
+                                            const isPending = currentStep < stepNum;
+                                            const Icon = idx === 0 ? Clock : Truck;
+
+                                            return (
+                                                <div
+                                                    key={idx}
+                                                    className={`flex items-start gap-4 p-4 rounded-xl border transition-all duration-300 ${
+                                                        isCurrent ? 'border-primary/30 bg-primary/5 shadow-sm' :
+                                                        isCompleted ? 'border-green-200 bg-green-50' :
+                                                        'border-gray-100 bg-gray-50 opacity-50'
+                                                    }`}
+                                                >
+                                                    <div className={`w-11 h-11 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 ${
+                                                        isCompleted ? 'bg-green-500 text-white' :
+                                                        isCurrent ? 'bg-primary text-white ring-4 ring-primary/20' :
+                                                        'bg-gray-200 text-gray-400'
+                                                    }`}>
+                                                        {isCompleted
+                                                            ? <CheckCircle className="w-5 h-5" />
+                                                            : <Icon className="w-5 h-5" />
+                                                        }
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <h4 className={`font-bold text-base leading-tight ${
+                                                            isCurrent ? 'text-primary' :
+                                                            isCompleted ? 'text-green-700' :
+                                                            'text-gray-500'
+                                                        }`}>
+                                                            {language === 'ar' ? step.ar : step.en}
+                                                        </h4>
+                                                        <p className={`text-sm mt-1 ${isCurrent ? 'text-primary/70' : isCompleted ? 'text-green-600' : 'text-gray-400'}`}>
+                                                            {language === 'ar' ? step.desc.ar : step.desc.en}
+                                                        </p>
+                                                        {isCurrent && (
+                                                            <span className="inline-flex items-center gap-1 mt-2 text-xs font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full animate-pulse">
+                                                                <span className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                                                {language === 'ar' ? 'جاري الآن' : 'In Progress'}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                 </div>
-                            )}
 
-                            {/* Timeline */}
-                            <div className="relative px-2 sm:px-4">
-                                <div className={`absolute top-4 bottom-10 w-0.5 bg-gray-200 ${language === 'ar' ? 'right-[27px] sm:right-[35px]' : 'left-[27px] sm:left-[35px]'}`}></div>
-
-                                <div className="space-y-8 relative">
-                                    {translations.steps.map((step, index) => {
-                                        let statusClass = 'pending';
-                                        if (index < currentStep) statusClass = 'completed';
-                                        if (index === currentStep) statusClass = 'current';
-
-                                        return (
-                                            <div key={index} className="flex items-start gap-4 sm:gap-6 relative">
-                                                <div className={`z-10 w-14 h-14 rounded-full flex items-center justify-center border-4 shrink-0 transition-all duration-300
-                                                        ${statusClass === 'completed' ? 'bg-green-500 border-green-100 text-white shadow-md' :
-                                                        statusClass === 'current' ? 'bg-primary border-white text-white shadow-xl ring-4 ring-primary-100 scale-110' :
-                                                            'bg-white border-gray-200 text-gray-300'}`}>
-                                                    {statusClass === 'completed' ? (
-                                                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" />
-                                                        </svg>
-                                                    ) : (
-                                                        <span className="text-lg font-bold">{index + 1}</span>
-                                                    )}
-                                                </div>
-
-                                                <div className={`pt-2 transition-all duration-300 ${statusClass === 'pending' ? 'opacity-40 grayscale' : 'opacity-100'}`}>
-                                                    <h4 className={`font-bold text-lg sm:text-xl ${statusClass === 'current' ? 'text-primary' : 'text-gray-800'}`}>
-                                                        {language === 'ar' ? step.ar : step.en}
-                                                    </h4>
-                                                    {statusClass === 'current' && (
-                                                        <p className="text-sm text-primary font-medium mt-1 animate-pulse">
-                                                            {language === 'ar' ? 'جاري العمل الآن...' : 'Currently in progress...'}
-                                                        </p>
-                                                    )}
+                                {/* Shipping Partner Placeholder (shown when shipped) */}
+                                {currentStep >= 2 && (
+                                    <div className="border-t border-gray-100 p-5 bg-blue-50/50">
+                                        <div className="flex items-start gap-3">
+                                            <div className="w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center shrink-0 mt-0.5">
+                                                <Truck className="w-5 h-5 text-blue-600" />
+                                            </div>
+                                            <div className="flex-1">
+                                                <h4 className="font-bold text-blue-900 text-sm mb-1">
+                                                    {t(translations.shippingPartner)}
+                                                </h4>
+                                                <p className="text-blue-600/70 text-xs leading-relaxed">
+                                                    {t(translations.shippingPartnerSoon)}
+                                                </p>
+                                                {/* Placeholder tracking button - future API hook */}
+                                                <div className="mt-3 px-4 py-2 bg-blue-100 rounded-lg text-blue-400 text-xs font-medium text-center border border-blue-200 border-dashed cursor-not-allowed select-none">
+                                                    {language === 'ar' ? '🔗 رابط التتبع — قريباً' : '🔗 Tracking Link — Coming Soon'}
                                                 </div>
                                             </div>
-                                        );
-                                    })}
-                                </div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
-                        </div>
-                    )}
-                </div>
+                        )}
+                    </div>
+                )}
             </div>
         </div>
     );
@@ -248,7 +287,7 @@ function TrackOrderContent() {
 
 export default function TrackOrderPage() {
     return (
-        <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
+        <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary" /></div>}>
             <TrackOrderContent />
         </Suspense>
     );

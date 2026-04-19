@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Pencil, Trash2 } from 'lucide-react';
 import { useCart } from '@/context/CartContext';
 import { useLanguage } from '@/hooks/useLanguage';
+import { useStudent } from '@/context/StudentContext';
 import { db } from '@/lib/firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import CheckoutModal from '@/components/cart/CheckoutModal';
@@ -15,7 +16,7 @@ export default function CartPage() {
 
     const cartContext = useCart();
     const { cart = [], removeFromCart = () => { }, clearCart = () => { }, getCartItemCount = () => 0 } = cartContext || {};
-
+    const { student } = useStudent();
     const { t, language } = useLanguage();
     const [showSuccess, setShowSuccess] = useState(false);
     const [orderId, setOrderId] = useState(null);
@@ -141,13 +142,18 @@ export default function CartPage() {
             const orderData = {
                 orderId: newOrderId,
                 customer: {
-                    name: customerData?.contactPerson || customerData?.name || 'N/A',
+                    name: customerData?.contactPerson || customerData?.name || student?.name || 'N/A',
                     email: customerData?.email || 'N/A',
                     phone: customerData?.phone || 'N/A',
-                    // التعديل هنا: سحب كود أو اسم المدرسة من منتجات الطالب
-                    schoolName: customerData?.schoolName || contactInfo?.schoolName || cart.find(item => item.sector === 'students')?.details?.schoolName || cart.find(item => item.sector === 'students')?.details?.schoolId || 'N/A',
+                    schoolName: customerData?.schoolName || contactInfo?.schoolName || student?.schoolName || cart.find(item => item.sector === 'students')?.details?.schoolName || cart.find(item => item.sector === 'students')?.details?.schoolId || 'N/A',
                     shippingAddress: customerData?.shippingAddress || null,
-                    type: isStudentOrder ? 'B2C' : 'B2B'
+                    type: isStudentOrder ? 'B2C' : 'B2B',
+                    // Verified student identity — populated for B2C orders
+                    ...(isStudentOrder && student ? {
+                        studentName: student.name,
+                        nationalId: student.nationalId,
+                        verifiedSchoolId: student.schoolId,
+                    } : {}),
                 },
                 items: cart,
                 sector: orderSector,

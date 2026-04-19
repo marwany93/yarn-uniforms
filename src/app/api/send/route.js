@@ -136,11 +136,11 @@ export async function POST(req) {
             // 2. Status Update Template
             if (type === 'STATUS_UPDATE') {
                 const statusMap = {
-                    pending: { text: 'قيد المراجعة', color: '#f59e0b', bg: '#fef3c7' }, // Amber
-                    processing: { text: 'قيد التجهيز', color: '#3b82f6', bg: '#dbeafe' }, // Blue
-                    shipped: { text: 'تم الشحن', color: '#8b5cf6', bg: '#ede9fe' }, // Purple
-                    delivered: { text: 'تم التوصيل', color: '#10b981', bg: '#d1fae5' }, // Green
-                    cancelled: { text: 'ملغي', color: '#ef4444', bg: '#fee2e2' } // Red
+                    pending: { text: 'قيد المراجعة', color: '#f59e0b', bg: '#fef3c7' },
+                    processing: { text: 'قيد التجهيز', color: '#3b82f6', bg: '#dbeafe' },
+                    shipped: { text: 'تم الشحن', color: '#8b5cf6', bg: '#ede9fe' },
+                    delivered: { text: 'تم التوصيل', color: '#10b981', bg: '#d1fae5' },
+                    cancelled: { text: 'ملغي', color: '#ef4444', bg: '#fee2e2' }
                 };
 
                 const statusInfo = statusMap[status] || { text: status, color: '#666', bg: '#eee' };
@@ -157,7 +157,7 @@ export async function POST(req) {
 
                             <!-- Body -->
                             <div style="padding: 40px 30px; text-align: center;">
-                                <p style="color: #666; margin-bottom: 25px; font-size: 16px;">مرحباً <strong>${customerName}</strong>،<br/>تم تحديث حالة طلبك إلى:</p>
+                                <p style="color: #666; margin-bottom: 25px; font-size: 16px;">مرحباً <strong>${customerName}</strong>,<br/>تم تحديث حالة طلبك إلى:</p>
                                 
                                 <div style="display: inline-block; background-color: ${statusInfo.bg}; color: ${statusInfo.color}; padding: 12px 30px; border-radius: 50px; font-weight: bold; font-size: 20px; margin-bottom: 30px;">
                                     ${statusInfo.text}
@@ -176,12 +176,66 @@ export async function POST(req) {
                     </div>
                 `;
             }
+
+            // 3. Shipped / Handed to Shipping Company Template
+            if (type === 'SHIPPED') {
+                return `
+                    <div style="background-color: ${bgColor}; padding: 40px 20px; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; direction: rtl; text-align: right;">
+                        <div style="max-width: 600px; margin: 0 auto; background-color: ${cardColor}; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.05);">
+
+                            <!-- Header -->
+                            <div style="background-color: #059669; padding: 30px; text-align: center;">
+                                <div style="font-size: 48px; margin-bottom: 10px;">🚚</div>
+                                <h1 style="color: #fff; margin: 0; font-size: 24px; font-weight: bold;">تم تسليم طلبك لشركة الشحن!</h1>
+                                <p style="color: rgba(255,255,255,0.85); margin: 8px 0 0; font-size: 14px;">رقم الطلب #${orderId}</p>
+                            </div>
+
+                            <!-- Body -->
+                            <div style="padding: 40px 30px;">
+                                <h2 style="color: #1e293b; font-size: 20px; margin-top: 0;">أهلاً ${customerName}،</h2>
+                                <p style="color: #555; line-height: 1.8; font-size: 15px;">
+                                    يسعدنا إبلاغك بأن طلبك رقم
+                                    <strong style="color: ${primaryColor}; background-color: #e8eaf6; padding: 2px 8px; border-radius: 4px;">#${orderId}</strong>
+                                    قد تم تسليمه رسمياً لشركة الشحن وهو في طريقه إليك الآن.
+                                </p>
+
+                                <div style="background: linear-gradient(135deg, #f0fdf4, #dcfce7); border: 1px solid #86efac; border-radius: 12px; padding: 20px; margin: 25px 0; text-align: center;">
+                                    <p style="color: #166534; font-weight: bold; font-size: 16px; margin: 0;">
+                                        📦 طلبك في الطريق إليك
+                                    </p>
+                                    <p style="color: #15803d; font-size: 13px; margin: 8px 0 0;">
+                                        سيصلك قريباً — ترقّب رسائل شركة الشحن للتتبع المباشر.
+                                    </p>
+                                </div>
+
+                                <!-- CTA -->
+                                <div style="text-align: center; margin-top: 30px;">
+                                    <a href="${process.env.NEXT_PUBLIC_BASE_URL}/track-order?id=${orderId}"
+                                       style="background-color: ${accentColor}; color: #fff; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: bold; display: inline-block; font-size: 15px;">
+                                        تتبع طلبك الآن
+                                    </a>
+                                </div>
+                            </div>
+
+                            <!-- Footer -->
+                            <div style="background-color: #f9fafb; padding: 20px; text-align: center; border-top: 1px solid #eee;">
+                                <p style="margin: 0; color: #888; font-size: 12px;">إذا كان لديك أي استفسار، تواصل معنا عبر info@yarnuniforms.com</p>
+                                <p style="margin: 6px 0 0; color: #aaa; font-size: 11px;">&copy; ${new Date().getFullYear()} Yarn Uniforms. جميع الحقوق محفوظة.</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
             return '';
         };
+
 
         const html = getEmailTemplate();
         const subject = type === 'NEW_ORDER'
             ? `شكراً لطلبك من يارن للزي الموحد #${orderId}`
+            : type === 'SHIPPED'
+            ? `🚚 تم تسليم طلبك لشركة الشحن #${orderId}`
             : `تحديث حالة طلبك #${orderId}`;
 
         // --- Send via Resend ---

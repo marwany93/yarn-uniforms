@@ -7,13 +7,15 @@ import { doc, getDoc } from 'firebase/firestore';
 import { getProductById } from '@/data/schoolProducts';
 import { useLanguage } from '@/hooks/useLanguage';
 import { useCart } from '@/context/CartContext';
+import { useStudent } from '@/context/StudentContext';
 import Image from 'next/image';
 import SizingWizard from '@/components/wizard/SizingWizard';
-import { ShoppingCart, AlertTriangle } from 'lucide-react';
+import { ShoppingCart, AlertTriangle, ShieldAlert } from 'lucide-react';
 
 export default function SchoolStorefront() {
     const { t, language } = useLanguage();
     const { addToCart, cart, removeFromCart, checkCartConflict, clearCart } = useCart();
+    const { student, isHydrated } = useStudent();
     const params = useParams();
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -40,6 +42,23 @@ export default function SchoolStorefront() {
         primary: ['4', '6', '8', '10', '12', '14', '16'],
         prep_secondary: ['S', 'M', 'L', 'XL', 'XXL']
     };
+
+    useEffect(() => {
+        // Guard: wait for sessionStorage to hydrate, then check for verified student
+        if (!isHydrated) return;
+
+        if (!student) {
+            // No verified student at all → send to verification entry
+            router.replace('/students');
+            return;
+        }
+
+        if (student.schoolId !== schoolId) {
+            // Student verified for a DIFFERENT school → redirect back to choose correct school
+            router.replace('/students');
+            return;
+        }
+    }, [isHydrated, student, schoolId, router]);
 
     useEffect(() => {
         const fetchSchool = async () => {
@@ -117,7 +136,7 @@ export default function SchoolStorefront() {
             productName: selectedProduct.baseProduct.name,
             productNameAr: selectedProduct.baseProduct.nameAr,
             image: selectedProduct.baseProduct.image,
-            price: selectedProduct.price,
+            price: selectedProduct.customPrice || selectedProduct.price,
             quantity: totalQuantity,
             sector: 'students',
             sectorAr: 'أفراد (طالب/ولي أمر)',
@@ -147,6 +166,15 @@ export default function SchoolStorefront() {
             executeAddToCart(pendingCartItem);
         }
     };
+
+    // Show loading while hydrating student context (before guard fires)
+    if (!isHydrated || (isHydrated && !student)) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-600"></div>
+            </div>
+        );
+    }
 
     if (isLoading) {
         return (
@@ -230,13 +258,12 @@ export default function SchoolStorefront() {
                                     onClick={() => { setSelectedProduct({ ...item, baseProduct }); setSelectedSizes({}); setShowSizingGuide(false); }}
                                     className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden border border-gray-100 hover:border-primary-300 flex flex-col cursor-pointer group"
                                 >
-                                    {/* 1. حاوية الصورة - نظيفة وبدون نصوص فوقها */}
+                                    {/* Product Image: prefer school-specific customImage, fallback to default */}
                                     <div className="aspect-[3/4] md:aspect-[4/5] relative bg-gray-50">
                                         <Image
-                                            src={baseProduct.image}
+                                            src={item.customImage || baseProduct.image}
                                             alt={language === 'ar' ? baseProduct.nameAr : baseProduct.name}
                                             fill
-                                            /* استخدام p-2 مع object-center بيخلي الموديل يظهر كامل من الرأس للقدم والبنطلون يبان تمام */
                                             className="object-contain p-2 md:p-4 hover:scale-105 transition-transform duration-500 mix-blend-multiply object-center"
                                         />
                                     </div>
@@ -256,7 +283,7 @@ export default function SchoolStorefront() {
                                             {/* السعر على اليمين */}
                                             <div className="text-right flex-shrink-0">
                                                 <span className="text-lg md:text-xl font-bold text-gray-900">
-                                                    {item.price}
+                                                    {item.customPrice || item.price}
                                                 </span>
                                                 <span className="text-[10px] font-normal text-gray-500 mr-1">
                                                     {language === 'ar' ? 'ريال' : 'SAR'}
